@@ -5,11 +5,13 @@
 
 // GWin
 
-#include "FirstApp.hpp"
+#include "GWindow.hpp"
 
 int main()
 {
-    GWIN::FirstApp app;
+    const uint32_t HEIGHT = 500;
+    const uint32_t WIDTH = 800;
+    GWIN::GWindow app(HEIGHT, WIDTH, "Gabex Engine");
 
     try
     {
@@ -18,7 +20,8 @@ int main()
     catch (const std::exception *e)
     {
         std::cerr << e->what() << "\n";
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

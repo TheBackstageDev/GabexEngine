@@ -15,8 +15,8 @@ echo "Building Main..."
 REM Compile all .cpp files to object files first
 cl /c /EHsc %includes% %defines% src\*.cpp
 
-REM Link all object files into the final executable
-cl /EHsc %includes% %defines% *.obj %links%
+REM Link all object files into the final executable named main.exe
+cl /EHsc %includes% %defines% *.obj /Fe:main.exe %links%
 
 REM Cleanup intermediate object files
 del *.obj
