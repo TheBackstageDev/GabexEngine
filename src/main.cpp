@@ -11,7 +11,7 @@ int main()
 {
     const uint32_t HEIGHT = 500;
     const uint32_t WIDTH = 800;
-    GWIN::GWindow app(HEIGHT, WIDTH, "Gabex Engine");
+    GWIN::GWindow app(WIDTH, HEIGHT, "Gabex Engine");
 
     try
     {

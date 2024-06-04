@@ -6,6 +6,8 @@
   ],
   "files.associations": {
     ".fantomasignore": "ignore",
-    "xstring": "cpp"
-  },
+    "xstring": "cpp",
+    "vector": "cpp",
+    "stdexcept": "cpp"
+  }
 }

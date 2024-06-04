@@ -6,7 +6,15 @@
             "program": "${workspaceFolder}/main.exe",
             "type": "cppvsdbg",
             "request": "launch",
-            "cwd": "${workspaceRoot}"
+            "cwd": "${workspaceRoot}",
+            "args": [
+                "--std",
+                "c++20",
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+            ],
         }
     ]
 }
