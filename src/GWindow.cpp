@@ -15,8 +15,9 @@ namespace GWIN
         delete device;
         delete debug;
 
+        vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);
-        glfwDestroyWindow(Window);
+        glfwDestroyWindow(window);
         glfwTerminate();
     }
 
@@ -26,12 +27,12 @@ namespace GWIN
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-        Window = glfwCreateWindow((int)width, (int)height, windowName.c_str(), nullptr, nullptr);
+        window = glfwCreateWindow((int)width, (int)height, windowName.c_str(), nullptr, nullptr);
     }
 
     void GWindow::run()
     {
-        while (!glfwWindowShouldClose(Window))
+        while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
         }
@@ -43,7 +44,8 @@ namespace GWIN
     {
         createVKInstance();
         debug = new GWDebug(instance);
-        device = new GWinDevice(instance);
+        createSurface();
+        device = new GWinDevice(instance, surface, height, width);
     }
 
     void GWindow::createVKInstance()
@@ -87,6 +89,14 @@ namespace GWIN
         if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create instance!");
+        }
+    }
+
+    void GWindow::createSurface()
+    {
+        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create window surface!");
         }
     }
 
