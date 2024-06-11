@@ -8,8 +8,6 @@
 
 #include <string>
 #include <vector>
-#include "GWDevice.hpp"
-#include "GWDebug.hpp"
 
 namespace GWIN
 {
@@ -22,15 +20,16 @@ namespace GWIN
         GWindow(const GWindow &) = delete;
         GWindow &operator=(const GWindow &) = delete;
 
-        void run();
+        void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
+        bool shouldClose()
+        {
+            printf("%c", glfwWindowShouldClose(window));
+            return glfwWindowShouldClose(window);
+        }
+        VkExtent2D getExtent() { return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)}; }
 
     private:
         void initWindow();
-        void initVulkan();
-        void createVKInstance();
-
-        void createSurface();
-
         std::vector<const char *> getRequiredExtensions();
 
         short height;
@@ -38,9 +37,5 @@ namespace GWIN
         std::string windowName;
 
         GLFWwindow *window;
-        VkInstance instance;
-        GWDebug *debug;
-        VkSurfaceKHR surface;
-        GWinDevice *device;
     };
 }
