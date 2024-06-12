@@ -1,11 +1,12 @@
 #include "GWPipeLine.hpp"
 
+#include "GWModel.hpp"
+
 // std
 #include <cassert>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
-#include <filesystem>
 
 namespace GWIN
 {
@@ -32,6 +33,7 @@ namespace GWIN
 
         if (!file.is_open())
         {
+            std::cout << "File Not Open! " + filepath;
             throw std::runtime_error("Failed to open file: " + filepath);
         }
 
@@ -79,12 +81,15 @@ namespace GWIN
         shaderStages[1].pNext = nullptr;
         shaderStages[1].pSpecializationInfo = nullptr;
 
+        auto AttributeDescriptions = GWModel::Vertex::getAttributeDescriptions();
+        auto BindingDescriptions = GWModel::Vertex::getBindingDescriptions();
+
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.pVertexAttributeDescriptions = nullptr;
-        vertexInputInfo.pVertexBindingDescriptions = nullptr;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(AttributeDescriptions.size());
+        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(BindingDescriptions.size());
+        vertexInputInfo.pVertexAttributeDescriptions = AttributeDescriptions.data();
+        vertexInputInfo.pVertexBindingDescriptions = BindingDescriptions.data();
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -136,8 +141,7 @@ namespace GWIN
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
     }
 
-    void GPipeLine::defaultPipelineConfigInfo(
-        PipelineConfigInfo &configInfo, uint32_t width, uint32_t height)
+    void GPipeLine::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo, uint32_t width, uint32_t height)
     {
         configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;

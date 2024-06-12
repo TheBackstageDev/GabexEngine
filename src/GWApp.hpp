@@ -4,7 +4,9 @@
 #include "GWDevice.hpp"
 #include "GWSwapChain.hpp"
 #include "GWPipeLine.hpp"
+#include "GWModel.hpp"
 
+// std
 #include <memory>
 #include <vector>
 
@@ -29,6 +31,7 @@ namespace GWIN
         void createPipeline();
         void createCommandBuffers();
         void drawFrame();
+        void loadModels();
 
         VkPipelineLayout pipelineLayout;
         std::vector<VkCommandBuffer> commandBuffers;
@@ -37,5 +40,6 @@ namespace GWIN
         GWinDevice GDevice{GWindow};
         GWinSwapChain swapChain{GDevice, GWindow.getExtent()};
         std::unique_ptr<GPipeLine> Pipeline;
+        std::unique_ptr<GWModel> Model;
     };
 }
