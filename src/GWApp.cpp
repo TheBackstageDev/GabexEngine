@@ -6,11 +6,17 @@
 
 namespace GWIN
 {
+    struct SpushConstant
+    {
+        glm::vec2 offset;
+        alignas(16) glm::vec3 color;
+    };
+
     GWapp::GWapp()
     {
         loadModels();
         createPipelineLayout();
-        createPipeline();
+        recreateSwapChain();
         createCommandBuffers();
     }
 
@@ -21,7 +27,7 @@ namespace GWIN
 
     void GWapp::run()
     {
-        int num;
+        std::cout << "Max Push Constant Size: " << GDevice.properties.limits.maxPushConstantsSize << "\n";
         while (!GWindow.shouldClose())
         {
             glfwPollEvents();
@@ -68,24 +74,28 @@ namespace GWIN
         {
             std::vector<GWModel::Vertex> vertices;
             const std::vector<GWModel::Vertex> BaseTriangle = {
-                {{0.0f, -0.5f}, {1.0f, 0.0f, 1.0f}},
-                {{0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},
-                {{-0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}}};
+                {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
-            sierpinski(BaseTriangle, vertices, 7);
+            sierpinski(BaseTriangle, vertices, 5);
 
             Model = std::make_unique<GWModel>(GDevice, vertices);
         }
 
         void GWapp::createPipelineLayout()
         {
-            ;
+            VkPushConstantRange pushConstant{};
+            pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+            pushConstant.offset = 0;
+            pushConstant.size = sizeof(SpushConstant);
+
             VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
             pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
             pipelineLayoutInfo.setLayoutCount = 0;
             pipelineLayoutInfo.pSetLayouts = nullptr;
-            pipelineLayoutInfo.pushConstantRangeCount = 0;
-            pipelineLayoutInfo.pPushConstantRanges = nullptr;
+            pipelineLayoutInfo.pushConstantRangeCount = 1;
+            pipelineLayoutInfo.pPushConstantRanges = &pushConstant;
 
             if (vkCreatePipelineLayout(GDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
             {
@@ -98,9 +108,9 @@ namespace GWIN
             PipelineConfigInfo pipelineConfig{};
             GPipeLine::defaultPipelineConfigInfo(
                 pipelineConfig,
-                swapChain.width(),
-                swapChain.height());
-            pipelineConfig.renderPass = swapChain.getRenderPass();
+                swapChain->width(),
+                swapChain->height());
+            pipelineConfig.renderPass = swapChain->getRenderPass();
             pipelineConfig.pipelineLayout = pipelineLayout;
             Pipeline = std::make_unique<GPipeLine>(
                 GDevice,
@@ -111,7 +121,7 @@ namespace GWIN
 
         void GWapp::createCommandBuffers()
         {
-            commandBuffers.resize(swapChain.imageCount());
+            commandBuffers.resize(swapChain->imageCount());
 
             VkCommandBufferAllocateInfo allocInfo{};
             allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -125,54 +135,98 @@ namespace GWIN
                 throw std::runtime_error("failed to allocate command buffers!");
             }
 
-            for (int i = 0; i < commandBuffers.size(); i++)
+        }
+
+        void GWapp::recreateSwapChain()
+        {
+            auto extent = GWindow.getExtent();
+
+            while(extent.height == 0 || extent.width == 0)
             {
-                VkCommandBufferBeginInfo beginInfo{};
-                beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                extent = GWindow.getExtent();
+                glfwWaitEvents();
+            }
 
-                if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS)
-                {
-                    throw std::runtime_error("failed to begin recording command buffer!");
-                }
+            vkDeviceWaitIdle(GDevice.device());
+            swapChain = std::make_unique<GWinSwapChain>(GDevice, extent);
+            createPipeline();
+        }
 
-                VkRenderPassBeginInfo renderPassInfo{};
-                renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                renderPassInfo.renderPass = swapChain.getRenderPass();
-                renderPassInfo.framebuffer = swapChain.getFrameBuffer(i);
+        void GWapp::recordCommandBuffer(int imageIndex)
+        {
+            static int frame = 0;
+            frame = (frame + 1) % 1000;
+            VkCommandBufferBeginInfo beginInfo{};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-                renderPassInfo.renderArea.offset = {0, 0};
-                renderPassInfo.renderArea.extent = swapChain.getSwapChainExtent();
+            if (vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS)
+            {
+                throw std::runtime_error("failed to begin recording command buffer!");
+            }
 
-                std::array<VkClearValue, 2> clearValues{};
-                clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
-                clearValues[1].depthStencil = {1.0f, 0};
-                renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-                renderPassInfo.pClearValues = clearValues.data();
+            VkRenderPassBeginInfo renderPassInfo{};
+            renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            renderPassInfo.renderPass = swapChain->getRenderPass();
+            renderPassInfo.framebuffer = swapChain->getFrameBuffer(imageIndex);
 
-                vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+            renderPassInfo.renderArea.offset = {0, 0};
+            renderPassInfo.renderArea.extent = swapChain->getSwapChainExtent();
 
-                Pipeline->bind(commandBuffers[i]);
-                Model->bind(commandBuffers[i]);
-                Model->draw(commandBuffers[i]);
+            std::array<VkClearValue, 2> clearValues{};
+            clearValues[0].color = {0.01f, 0.01f, 0.01f, 1.0f};
+            clearValues[1].depthStencil = {1.0f, 0};
+            renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+            renderPassInfo.pClearValues = clearValues.data();
 
-                vkCmdEndRenderPass(commandBuffers[i]);
-                if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
-                {
-                    throw std::runtime_error("failed to record command buffer!");
-                }
+            vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+            Pipeline->bind(commandBuffers[imageIndex]);
+            Model->bind(commandBuffers[imageIndex]);
+
+            for (int i = 0; i < 4; i++)
+            {
+                SpushConstant push{};
+                push.offset = {-0.5f + frame * 0.002f, -0.4f + i * 0.25f};
+                push.color = {0.0f, 0.0f, 0.2f + 0.2f * i};
+
+                vkCmdPushConstants(commandBuffers[imageIndex], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SpushConstant), &push);
+                Model->draw(commandBuffers[imageIndex]);
+            }
+
+            vkCmdEndRenderPass(commandBuffers[imageIndex]);
+            if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS)
+            {
+                throw std::runtime_error("failed to record command buffer!");
             }
         }
 
         void GWapp::drawFrame()
         {
             uint32_t imageIndex;
-            auto result = swapChain.acquireNextImage(&imageIndex);
+            auto result = swapChain->acquireNextImage(&imageIndex);
+
+            if (result == VK_ERROR_OUT_OF_DATE_KHR)
+            {
+                recreateSwapChain();
+                return;
+            }
+
             if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
             {
                 throw std::runtime_error("failed to acquire swap chain image!");
             }
 
-            result = swapChain.submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+
+            recordCommandBuffer(imageIndex);
+            result = swapChain->submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+
+            if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR || GWindow.hasWindowBeenResized())
+            {
+                GWindow.frameBufferResizedFlagReset();
+                recreateSwapChain();
+                return;
+            }
+
             if (result != VK_SUCCESS)
             {
                 throw std::runtime_error("failed to present swap chain image!");

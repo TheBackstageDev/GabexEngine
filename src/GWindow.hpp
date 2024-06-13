@@ -26,16 +26,20 @@ namespace GWIN
             printf("%c", glfwWindowShouldClose(window));
             return glfwWindowShouldClose(window);
         }
+
+        bool hasWindowBeenResized() { return frameBufferResized; };
+        void frameBufferResizedFlagReset() { frameBufferResized = false; };
+
         VkExtent2D getExtent() { return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)}; }
 
     private:
-        void initWindow();
-        std::vector<const char *> getRequiredExtensions();
+        static void frameBufferResizeCallback(GLFWwindow *window, int width, int height);
 
         short height;
         short width;
         std::string windowName;
 
+        bool frameBufferResized = false;
         GLFWwindow *window;
     };
 }

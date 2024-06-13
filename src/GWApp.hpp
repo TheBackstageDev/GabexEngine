@@ -32,13 +32,15 @@ namespace GWIN
         void createCommandBuffers();
         void drawFrame();
         void loadModels();
+        void recreateSwapChain();
+        void recordCommandBuffer(int imageIndex);
 
         VkPipelineLayout pipelineLayout;
         std::vector<VkCommandBuffer> commandBuffers;
 
         GWindow GWindow{WIDTH, HEIGHT, "Gabex Engine"};
         GWinDevice GDevice{GWindow};
-        GWinSwapChain swapChain{GDevice, GWindow.getExtent()};
+        std::unique_ptr<GWinSwapChain> swapChain;
         std::unique_ptr<GPipeLine> Pipeline;
         std::unique_ptr<GWModel> Model;
     };
