@@ -4,7 +4,7 @@
 #include "GWDevice.hpp"
 #include "GWSwapChain.hpp"
 #include "GWPipeLine.hpp"
-#include "GWModel.hpp"
+#include "GWGameObject.hpp"
 
 // std
 #include <memory>
@@ -31,7 +31,8 @@ namespace GWIN
         void createPipeline();
         void createCommandBuffers();
         void drawFrame();
-        void loadModels();
+        void loadGameObjects();
+        void renderGameObjects(VkCommandBuffer commandBuffer);
         void recreateSwapChain();
         void recordCommandBuffer(int imageIndex);
 
@@ -42,6 +43,6 @@ namespace GWIN
         GWinDevice GDevice{GWindow};
         std::unique_ptr<GWinSwapChain> swapChain;
         std::unique_ptr<GPipeLine> Pipeline;
-        std::unique_ptr<GWModel> Model;
+        std::vector<GWGameObject> gameObjects;
     };
 }

@@ -3,18 +3,22 @@
 #include <array>
 #include <iostream>
 #include <functional>
+#include <cassert>
+
+#include <glm/gtc/constants.hpp>
 
 namespace GWIN
 {
     struct SpushConstant
     {
+        glm::mat2 transform{1.f};
         glm::vec2 offset;
         alignas(16) glm::vec3 color;
     };
 
     GWapp::GWapp()
     {
-        loadModels();
+        loadGameObjects();
         createPipelineLayout();
         recreateSwapChain();
         createCommandBuffers();
@@ -70,7 +74,7 @@ namespace GWIN
         sierpinski(tri3, vertices, depth - 1);
     }
 
-        void GWapp::loadModels()
+        void GWapp::loadGameObjects()
         {
             std::vector<GWModel::Vertex> vertices;
             const std::vector<GWModel::Vertex> BaseTriangle = {
@@ -80,7 +84,16 @@ namespace GWIN
 
             sierpinski(BaseTriangle, vertices, 5);
 
-            Model = std::make_unique<GWModel>(GDevice, vertices);
+            auto lveModel = std::make_shared<GWModel>(GDevice, vertices);
+
+            auto triangle = GWGameObject::createGameObject();
+            triangle.model = lveModel;
+            triangle.color = {.1f, .8f, .1f};
+            triangle.transform2d.translation.x = .2f;
+            triangle.transform2d.scale = {1.f, 1.f};
+            triangle.transform2d.rotation = .25f * glm::two_pi<float>();
+
+            gameObjects.push_back(std::move(triangle));
         }
 
         void GWapp::createPipelineLayout()
@@ -105,13 +118,14 @@ namespace GWIN
 
         void GWapp::createPipeline()
         {
+            assert(swapChain != nullptr && "Cannot create pipeline before swap chain");
+            assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
+
             PipelineConfigInfo pipelineConfig{};
-            GPipeLine::defaultPipelineConfigInfo(
-                pipelineConfig,
-                swapChain->width(),
-                swapChain->height());
+            GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
             pipelineConfig.renderPass = swapChain->getRenderPass();
             pipelineConfig.pipelineLayout = pipelineLayout;
+
             Pipeline = std::make_unique<GPipeLine>(
                 GDevice,
                 "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/shader.vert.spv",
@@ -154,8 +168,6 @@ namespace GWIN
 
         void GWapp::recordCommandBuffer(int imageIndex)
         {
-            static int frame = 0;
-            frame = (frame + 1) % 1000;
             VkCommandBufferBeginInfo beginInfo{};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -180,23 +192,48 @@ namespace GWIN
 
             vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-            Pipeline->bind(commandBuffers[imageIndex]);
-            Model->bind(commandBuffers[imageIndex]);
+            VkViewport viewport{};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = static_cast<float>(swapChain->getSwapChainExtent().width);
+            viewport.height = static_cast<float>(swapChain->getSwapChainExtent().height);
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
+            VkRect2D scissor{{0, 0}, swapChain->getSwapChainExtent()};
+            vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+            vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
-            for (int i = 0; i < 4; i++)
-            {
-                SpushConstant push{};
-                push.offset = {-0.5f + frame * 0.002f, -0.4f + i * 0.25f};
-                push.color = {0.0f, 0.0f, 0.2f + 0.2f * i};
-
-                vkCmdPushConstants(commandBuffers[imageIndex], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SpushConstant), &push);
-                Model->draw(commandBuffers[imageIndex]);
-            }
+            renderGameObjects(commandBuffers[imageIndex]);
 
             vkCmdEndRenderPass(commandBuffers[imageIndex]);
             if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS)
             {
                 throw std::runtime_error("failed to record command buffer!");
+            }
+        }
+
+        void GWapp::renderGameObjects(VkCommandBuffer commandBuffer)
+        {
+            Pipeline->bind(commandBuffer);
+
+            for (auto &obj : gameObjects)
+            {
+                obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.01f, glm::two_pi<float>());
+
+                SpushConstant push{};
+                push.offset = obj.transform2d.translation;
+                push.color = obj.color;
+                push.transform = obj.transform2d.mat2();
+
+                vkCmdPushConstants(
+                    commandBuffer,
+                    pipelineLayout,
+                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                    0,
+                    sizeof(SpushConstant),
+                    &push);
+                obj.model->bind(commandBuffer);
+                obj.model->draw(commandBuffer);
             }
         }
 
