@@ -2,7 +2,7 @@
 
 #include "GWindow.hpp"
 #include "GWDevice.hpp"
-#include "GWSwapChain.hpp"
+#include "GWRenderer.hpp"
 #include "GWPipeLine.hpp"
 #include "GWGameObject.hpp"
 
@@ -29,19 +29,15 @@ namespace GWIN
     private:
         void createPipelineLayout();
         void createPipeline();
-        void createCommandBuffers();
-        void drawFrame();
         void loadGameObjects();
         void renderGameObjects(VkCommandBuffer commandBuffer);
-        void recreateSwapChain();
-        void recordCommandBuffer(int imageIndex);
 
         VkPipelineLayout pipelineLayout;
-        std::vector<VkCommandBuffer> commandBuffers;
 
         GWindow GWindow{WIDTH, HEIGHT, "Gabex Engine"};
         GWinDevice GDevice{GWindow};
-        std::unique_ptr<GWinSwapChain> swapChain;
+        GWRenderer GRenderer{GWindow, GDevice};
+
         std::unique_ptr<GPipeLine> Pipeline;
         std::vector<GWGameObject> gameObjects;
     };

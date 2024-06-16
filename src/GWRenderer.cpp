@@ -60,7 +60,7 @@ namespace GWIN
 
         VkCommandBuffer GWRenderer::startFrame()
         {
-            assert(!hasFrameBegan && "Cannot call startFrame when frame alreadly in progress! ");
+            assert(!hasFrameStarted && "Cannot call startFrame is frame has alreadly began!");
             auto result = swapChain->acquireNextImage(&currentImageIndex);
 
             if (result == VK_ERROR_OUT_OF_DATE_KHR)

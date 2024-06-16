@@ -21,7 +21,7 @@ namespace GWIN
         GWRenderer(const GWRenderer &) = delete;
         GWRenderer &operator=(const GWRenderer &) = delete;
 
-        VkRenderPass getSwapChainRenderPass() const { return swapChain->getRenderPass(); }
+        VkRenderPass getRenderPass() const { return swapChain->getRenderPass(); }
 
         bool hasFrameBegan() { return hasFrameStarted; };
 
