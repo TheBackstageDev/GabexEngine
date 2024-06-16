@@ -21,7 +21,7 @@ namespace GWIN
 
         GWinSwapChain(const GWinSwapChain &) = delete;
         void operator=(const GWinSwapChain &) = delete;
-
+        
         VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
         VkRenderPass getRenderPass() { return renderPass; }
         VkImageView getImageView(int index) { return swapChainImageViews[index]; }

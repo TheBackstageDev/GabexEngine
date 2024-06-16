@@ -14,7 +14,7 @@ namespace GWIN
     {
         freeCommandBuffers();
     }
-
+    
         void GWRenderer::createCommandBuffers()
         {
             commandBuffers.resize(swapChain->imageCount());
@@ -46,6 +46,7 @@ namespace GWIN
             vkDeviceWaitIdle(GDevice.device());
             swapChain = std::make_unique<GWinSwapChain>(GDevice, extent);
 
+            window.frameBufferResizedFlagReset();
         }
 
         void GWRenderer::freeCommandBuffers()
@@ -63,7 +64,7 @@ namespace GWIN
             assert(!hasFrameStarted && "Cannot call startFrame is frame has alreadly began!");
             auto result = swapChain->acquireNextImage(&currentImageIndex);
 
-            if (result == VK_ERROR_OUT_OF_DATE_KHR)
+            if (result == VK_ERROR_OUT_OF_DATE_KHR || window.hasWindowBeenResized())
             {
                 recreateSwapChain();
                 return nullptr;
