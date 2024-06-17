@@ -6,8 +6,7 @@ namespace GWIN
 {
     struct SpushConstant
     {
-        glm::mat2 transform{1.f};
-        glm::vec2 offset;
+        glm::mat4 transform{1.f};
         alignas(16) glm::vec3 color;
     };
 
@@ -26,7 +25,6 @@ namespace GWIN
     {
         VkPushConstantRange pushConstant{};
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-        pushConstant.offset = 0;
         pushConstant.size = sizeof(SpushConstant);
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -64,10 +62,10 @@ namespace GWIN
         Pipeline->bind(commandBuffer);
         for (auto &obj : gameObjects)
         {
+            obj.transform.rotation.y = glm::mod(obj.transform.rotation.y + 0.1f, glm::two_pi<float>());
             SpushConstant push{};
-            push.offset = obj.transform2d.translation;
             push.color = obj.color;
-            push.transform = obj.transform2d.mat2();
+            push.transform = obj.transform.mat4();
 
             vkCmdPushConstants(
                 commandBuffer,

@@ -23,12 +23,18 @@ namespace GWIN
 
         VkRenderPass getRenderPass() const { return swapChain->getRenderPass(); }
 
-        bool hasFrameBegan() { return hasFrameStarted; };
+        bool hasFrameBegan() const { return hasFrameStarted; };
 
-        VkCommandBuffer getCurrentCommandBuffer() { 
+        VkCommandBuffer getCurrentCommandBuffer() const { 
             assert(hasFrameStarted && "Cannot get commandBuffer when frame not in Progress!");
-            return commandBuffers[currentImageIndex]; 
+            return commandBuffers[currentFrameIndex];
         };
+
+        int getFrameIndex() const
+        {
+            assert(hasFrameStarted && "Cannot get frameIndex when frame not in Progress!");
+            return currentFrameIndex;
+        }
 
         VkCommandBuffer startFrame();
         void endFrame();
@@ -47,6 +53,7 @@ namespace GWIN
         GWinDevice &GDevice;
         
         uint32_t currentImageIndex{0};
+        int currentFrameIndex{0};
         bool hasFrameStarted{false};
     };
 }

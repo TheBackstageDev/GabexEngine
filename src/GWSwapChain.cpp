@@ -15,6 +15,19 @@ namespace GWIN
     GWinSwapChain::GWinSwapChain(GWinDevice &deviceRef, VkExtent2D extent)
         : device{deviceRef}, windowExtent{extent}
     {
+        init();
+    }
+
+    GWinSwapChain::GWinSwapChain(
+        GWinDevice &deviceRef, VkExtent2D extent, std::shared_ptr<GWinSwapChain> previous)
+        : device{deviceRef}, windowExtent{extent}, oldSwapChain{previous}
+    {
+        init();
+        oldSwapChain = nullptr;
+    }
+
+    void GWinSwapChain::init()
+    {
         createSwapChain();
         createImageViews();
         createRenderPass();
@@ -312,6 +325,7 @@ namespace GWIN
     void GWinSwapChain::createDepthResources()
     {
         VkFormat depthFormat = findDepthFormat();
+        swapChainDepthFormat = depthFormat;
         VkExtent2D swapChainExtent = getSwapChainExtent();
 
         depthImages.resize(imageCount());

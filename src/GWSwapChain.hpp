@@ -8,6 +8,7 @@
 // std lib headers
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace GWIN
 {
@@ -17,11 +18,13 @@ namespace GWIN
         static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
         GWinSwapChain(GWinDevice &deviceRef, VkExtent2D windowExtent);
+        GWinSwapChain(GWinDevice &deviceRef, VkExtent2D windowExtent, std::shared_ptr<GWinSwapChain> previous);
         ~GWinSwapChain();
 
         GWinSwapChain(const GWinSwapChain &) = delete;
         void operator=(const GWinSwapChain &) = delete;
         
+        void init();
         VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
         VkRenderPass getRenderPass() { return renderPass; }
         VkImageView getImageView(int index) { return swapChainImageViews[index]; }
@@ -40,6 +43,11 @@ namespace GWIN
         VkResult acquireNextImage(uint32_t *imageIndex);
         VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
+        bool compareSwapChainFormats(const GWinSwapChain& swapChain) const
+        {
+            return swapChainImageFormat == swapChain.swapChainImageFormat && swapChainDepthFormat == swapChain.swapChainDepthFormat;
+        }
+
     private:
         void createSwapChain();
         void createImageViews();
@@ -57,6 +65,7 @@ namespace GWIN
         VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
         VkFormat swapChainImageFormat;
+        VkFormat swapChainDepthFormat;
         VkExtent2D swapChainExtent;
 
         std::vector<VkFramebuffer> swapChainFramebuffers;
@@ -72,6 +81,7 @@ namespace GWIN
         VkExtent2D windowExtent;
         VkCommandPool commandPool;
         VkSwapchainKHR swapChain;
+        std::shared_ptr<GWinSwapChain> oldSwapChain;
 
         std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;

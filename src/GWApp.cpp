@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <glm/gtc/constants.hpp>
+#include <glm/glm.hpp>
 
 namespace GWIN
 {
@@ -29,57 +30,75 @@ namespace GWIN
         vkDeviceWaitIdle(GDevice.device());
     }
 
-    void sierpinski(const std::vector<GWModel::Vertex> &triangle, std::vector<GWModel::Vertex> &vertices, int depth)
+    std::unique_ptr<GWModel> createCubeModel(GWinDevice &device, glm::vec3 offset)
     {
-        if (depth == 0)
+        std::vector<GWModel::Vertex> vertices{
+
+            // left face (white)
+            {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+            {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+            {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
+            {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+            {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
+            {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+
+            // right face (yellow)
+            {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+            {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+            {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
+            {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+            {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
+            {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+
+            // top face (orange, remember y axis points down)
+            {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+            {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+            {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+            {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+            {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+            {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+
+            // bottom face (red)
+            {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+            {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+            {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
+            {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+            {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+            {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+
+            // nose face (blue)
+            {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+            {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+            {{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+            {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+            {{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+            {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+
+            // tail face (green)
+            {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+            {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+            {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+            {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+            {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+            {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+
+        };
+        for (auto &v : vertices)
         {
-            vertices.insert(vertices.end(), triangle.begin(), triangle.end());
-            return;
+            v.position += offset;
         }
-
-        GWModel::Vertex mid1 = {{
-            (triangle[0].position.x + triangle[1].position.x) / 2,
-            (triangle[0].position.y + triangle[1].position.y) / 2
-        }, triangle[1].color};
-
-        GWModel::Vertex mid2 = {{
-            (triangle[1].position.x + triangle[2].position.x) / 2,
-            (triangle[1].position.y + triangle[2].position.y) / 2
-        }, triangle[1].color};
-
-        GWModel::Vertex mid3 = {{
-            (triangle[2].position.x + triangle[0].position.x) / 2,
-            (triangle[2].position.y + triangle[0].position.y) / 2
-        },  triangle[1].color};
-
-        //Triangles
-        std::vector<GWModel::Vertex> tri1 = {triangle[0], mid1, mid3};
-        std::vector<GWModel::Vertex> tri2 = {mid1, triangle[1], mid2};
-        std::vector<GWModel::Vertex> tri3 = {mid2, mid3, triangle[2]};
-
-        sierpinski(tri1, vertices, depth - 1);
-        sierpinski(tri2, vertices, depth - 1);
-        sierpinski(tri3, vertices, depth - 1);
+        return std::make_unique<GWModel>(device, vertices);
     }
 
     void GWapp::loadGameObjects()
-        {
-            std::vector<GWModel::Vertex> vertices;
-            std::vector<GWModel::Vertex> BaseTriangle{
-                {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-                {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+    {
+        std::shared_ptr<GWModel> Model = createCubeModel(GDevice, {0.f, 0.f, 0.f});
 
-            sierpinski(BaseTriangle, vertices, 5);
-            auto Model = std::make_shared<GWModel>(GDevice, vertices);
-            
-            auto triangle = GWGameObject::createGameObject();
-            triangle.color = {1.f, .5f, 1.f};
-            triangle.model = Model;
-            triangle.transform2d.translation.x = .25f;
-            triangle.transform2d.scale = {1.f, 1.f}; 
-            triangle.transform2d.rotation = .25f * glm::two_pi<float>();
+        auto Cube = GWGameObject::createGameObject();
+        Cube.model = Model;
+        Cube.transform.translation = {0.f, 0.f, 0.5f};
+        Cube.transform.scale = {.5f, .5f, .5f};
 
-            gameObjects.push_back(std::move(triangle));
-        }
+        gameObjects.push_back(std::move(Cube));
     }
+}

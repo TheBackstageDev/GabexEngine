@@ -17,7 +17,7 @@ namespace GWIN
     
         void GWRenderer::createCommandBuffers()
         {
-            commandBuffers.resize(swapChain->imageCount());
+            commandBuffers.resize(GWinSwapChain::MAX_FRAMES_IN_FLIGHT);
 
             VkCommandBufferAllocateInfo allocInfo{};
             allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -44,7 +44,24 @@ namespace GWIN
             }
 
             vkDeviceWaitIdle(GDevice.device());
-            swapChain = std::make_unique<GWinSwapChain>(GDevice, extent);
+            if(swapChain == nullptr)
+            {
+                swapChain = std::make_unique<GWinSwapChain>(GDevice, extent);
+            } else {
+                std::shared_ptr<GWinSwapChain> oldSwapChain = std::move(swapChain);
+                swapChain = std::make_unique<GWinSwapChain>(GDevice, extent, oldSwapChain);
+
+                if(!oldSwapChain->compareSwapChainFormats(*swapChain.get()))
+                {
+                    throw std::runtime_error("Swap chain image(or depth) format has changed!");
+                }
+
+                if(swapChain->imageCount() != commandBuffers.size())
+                {
+                    freeCommandBuffers();
+                    createCommandBuffers();
+                }
+            }
 
             window.frameBufferResizedFlagReset();
         }
@@ -114,6 +131,7 @@ namespace GWIN
             }
 
             hasFrameStarted = false;
+            currentFrameIndex = (currentFrameIndex + 1) % GWinSwapChain::MAX_FRAMES_IN_FLIGHT;
         }
 
         void GWRenderer::startSwapChainRenderPass(VkCommandBuffer commandBuffer)
