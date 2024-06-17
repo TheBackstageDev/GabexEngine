@@ -1,36 +1,18 @@
 #include "GWApp.hpp"
-#include <stdexcept>
-#include <array>
 #include <iostream>
-#include <functional>
-#include <cassert>
 
 #include <glm/gtc/constants.hpp>
 
 namespace GWIN
 {
-    struct SpushConstant
-    {
-        glm::mat2 transform{1.f};
-        glm::vec2 offset;
-        alignas(16) glm::vec3 color;
-    };
-
     GWapp::GWapp()
     {
         loadGameObjects();
-        createPipelineLayout();
-        createPipeline();
-    }
-
-    GWapp::~GWapp()
-    {
-        vkDestroyPipelineLayout(GDevice.device(), pipelineLayout, nullptr);
     }
 
     void GWapp::run()
     {
-        std::cout << "Max Push Constant Size: " << GDevice.properties.limits.maxPushConstantsSize << "\n";
+        RenderSystem renderSystem{GDevice, GRenderer.getRenderPass()};
         while (!GWindow.shouldClose())
         {
             glfwPollEvents();
@@ -38,7 +20,7 @@ namespace GWIN
             if(auto commandBuffer = GRenderer.startFrame())
             {
                 GRenderer.startSwapChainRenderPass(commandBuffer);
-                renderGameObjects(commandBuffer);
+                renderSystem.renderGameObjects(commandBuffer, gameObjects);
                 GRenderer.endSwapChainRenderPass(commandBuffer);
                 GRenderer.endFrame();
             }
@@ -80,102 +62,24 @@ namespace GWIN
         sierpinski(tri3, vertices, depth - 1);
     }
 
-        void GWapp::loadGameObjects()
+    void GWapp::loadGameObjects()
         {
-            std::vector<GWModel::Vertex> vertices{
+            std::vector<GWModel::Vertex> vertices;
+            std::vector<GWModel::Vertex> BaseTriangle{
                 {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
                 {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
                 {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+
+            sierpinski(BaseTriangle, vertices, 5);
             auto Model = std::make_shared<GWModel>(GDevice, vertices);
+            
+            auto triangle = GWGameObject::createGameObject();
+            triangle.color = {1.f, .5f, 1.f};
+            triangle.model = Model;
+            triangle.transform2d.translation.x = .25f;
+            triangle.transform2d.scale = {1.f, 1.f}; 
+            triangle.transform2d.rotation = .25f * glm::two_pi<float>();
 
-            // https://www.color-hex.com/color-palette/5361
-            std::vector<glm::vec3> colors{
-                {1.f, .7f, .73f},
-                {1.f, .87f, .73f},
-                {1.f, 1.f, .73f},
-                {.73f, 1.f, .8f},
-                {.73, .88f, 1.f} //
-            };
-            for (auto &color : colors)
-            {
-                color = glm::pow(color, glm::vec3{2.2f});
-            }
-            for (int i = 0; i < 100; i++)
-            {
-                auto triangle = GWGameObject::createGameObject();
-                triangle.model = Model;
-                triangle.transform2d.scale = glm::vec2(.5f) + i * 0.010f;
-                triangle.transform2d.rotation = i * glm::pi<float>() * .025f;
-                triangle.color = colors[i % colors.size()];
-                gameObjects.push_back(std::move(triangle));
-            }
-        }
-
-        void GWapp::createPipelineLayout()
-        {
-            VkPushConstantRange pushConstant{};
-            pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-            pushConstant.offset = 0;
-            pushConstant.size = sizeof(SpushConstant);
-
-            VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-            pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            pipelineLayoutInfo.setLayoutCount = 0;
-            pipelineLayoutInfo.pSetLayouts = nullptr;
-            pipelineLayoutInfo.pushConstantRangeCount = 1;
-            pipelineLayoutInfo.pPushConstantRanges = &pushConstant;
-
-            if (vkCreatePipelineLayout(GDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-            {
-                throw std::runtime_error("Failed to Create Pipeline Layout!");
-            }
-        }
-
-        void GWapp::createPipeline()
-        {
-            assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
-
-            PipelineConfigInfo pipelineConfig{};
-            GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
-            pipelineConfig.renderPass = GRenderer.getRenderPass();
-            pipelineConfig.pipelineLayout = pipelineLayout;
-
-            Pipeline = std::make_unique<GPipeLine>(
-                GDevice,
-                "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/shader.vert.spv",
-                "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/shader.frag.spv",
-                pipelineConfig);
-        }
-
-        void GWapp::renderGameObjects(VkCommandBuffer commandBuffer)
-        {
-            // update
-            int i = 0;
-            for (auto &obj : gameObjects)
-            {
-                i += 1;
-                obj.transform2d.rotation =
-                    glm::mod<float>(obj.transform2d.rotation + 0.001f * i, 2.f * glm::pi<float>());
-            }
-
-            // render
-            Pipeline->bind(commandBuffer);
-            for (auto &obj : gameObjects)
-            {
-                SpushConstant push{};
-                push.offset = obj.transform2d.translation;
-                push.color = obj.color;
-                push.transform = obj.transform2d.mat2();
-
-                vkCmdPushConstants(
-                    commandBuffer,
-                    pipelineLayout,
-                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                    0,
-                    sizeof(SpushConstant),
-                    &push);
-                obj.model->bind(commandBuffer);
-                obj.model->draw(commandBuffer);
-            }
+            gameObjects.push_back(std::move(triangle));
         }
     }

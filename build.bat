@@ -13,7 +13,14 @@ SET defines=/DDEBUG
 echo "Building Main..."
 
 REM Compile all .cpp files to object files first
-cl /std:c++17 /c /EHsc %includes% %defines% src\*.cpp
+for /R src %%f in (*.cpp) do (
+    if not "%%~nxf"=="main.cpp" (
+        cl /std:c++17 /c /EHsc %includes% %defines% "%%f"
+    )
+)
+
+REM Compile main.cpp last
+cl /std:c++17 /c /EHsc %includes% %defines% src\main.cpp
 
 REM Link all object files into the final executable named main.exe
 cl /std:c++17 /EHsc %includes% %defines% *.obj /Fe:main.exe %links%

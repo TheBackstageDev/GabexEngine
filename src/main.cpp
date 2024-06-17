@@ -10,7 +10,6 @@
 int main()
 {
     GWIN::GWapp app{};
-
     try
     {
         app.run();

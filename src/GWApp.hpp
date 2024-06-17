@@ -1,10 +1,7 @@
 #pragma once
 
-#include "GWindow.hpp"
-#include "GWDevice.hpp"
-#include "GWRenderer.hpp"
-#include "GWPipeLine.hpp"
-#include "GWGameObject.hpp"
+#include "./ECSSystems/GWRenderer.hpp"
+#include "./ECSSystems/RenderSystem.hpp"
 
 // std
 #include <memory>
@@ -19,7 +16,6 @@ namespace GWIN
         static constexpr int HEIGHT = 800;
 
         GWapp();
-        ~GWapp();
 
         GWapp(const GWapp &) = delete;
         GWapp &operator=(const GWapp &) = delete;
@@ -27,18 +23,12 @@ namespace GWIN
         void run();
 
     private:
-        void createPipelineLayout();
-        void createPipeline();
         void loadGameObjects();
-        void renderGameObjects(VkCommandBuffer commandBuffer);
-
-        VkPipelineLayout pipelineLayout;
 
         GWindow GWindow{WIDTH, HEIGHT, "Gabex Engine"};
         GWinDevice GDevice{GWindow};
         GWRenderer GRenderer{GWindow, GDevice};
 
-        std::unique_ptr<GPipeLine> Pipeline;
         std::vector<GWGameObject> gameObjects;
     };
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "GWindow.hpp"
-#include "GWSwapChain.hpp"
+#include "../GWindow.hpp"
+#include "../GWSwapChain.hpp"
 
 //std
 #include <array>
@@ -45,7 +45,7 @@ namespace GWIN
         std::unique_ptr<GWinSwapChain> swapChain;
         GWindow& window;
         GWinDevice &GDevice;
-
+        
         uint32_t currentImageIndex{0};
         bool hasFrameStarted{false};
     };
