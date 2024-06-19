@@ -1,6 +1,8 @@
 #pragma once
 
 #include "GWGameObject.hpp"
+#include "RenderSystem.hpp"
+#include "GWRenderer.hpp"
 #include "../GWindow.hpp"
 
 namespace GWIN
@@ -20,6 +22,7 @@ namespace GWIN
             int lookRight = GLFW_KEY_RIGHT;
             int lookUp = GLFW_KEY_UP;
             int lookDown = GLFW_KEY_DOWN;
+            int activateWireframe = GLFW_KEY_F;
         };
 
         void moveInPlaneXZ(GLFWwindow *window, float dt, GWGameObject& gameObject);

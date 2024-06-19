@@ -37,7 +37,7 @@ namespace GWIN
         ~GPipeLine();
 
         GPipeLine(const GPipeLine &) = delete;
-        void operator=(const GPipeLine &) = delete;
+        GPipeLine operator=(const GPipeLine &) = delete;
 
         void bind(VkCommandBuffer commandBuffer);
 

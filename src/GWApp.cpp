@@ -17,13 +17,17 @@ namespace GWIN
 
     void GWapp::run()
     {
-        RenderSystem renderSystem{GDevice, GRenderer.getRenderPass()};
+        RenderSystem renderSystem{GDevice, GRenderer.getRenderPass(), false};
+        RenderSystem WireFramerenderSystem{GDevice, GRenderer.getRenderPass(), true};
+
         GWCamera camera{};
 
         auto viewerObject = GWGameObject::createGameObject();
         keyboardMovementController cameraController{};
 
         auto currentTime = std::chrono::high_resolution_clock::now();
+
+        bool isWireFrameActivated = false;
 
         while (!GWindow.shouldClose())
         {
@@ -37,78 +41,92 @@ namespace GWIN
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
             float aspect = GRenderer.getAspectRatio();
-            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
-            if(auto commandBuffer = GRenderer.startFrame())
+            if (glfwGetKey(GWindow.getWindow(), cameraController.keys.activateWireframe))
+            {
+                isWireFrameActivated = true;
+            }
+
+            if (auto commandBuffer = GRenderer.startFrame())
             {
                 GRenderer.startSwapChainRenderPass(commandBuffer);
-                renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
+
+                if (isWireFrameActivated)
+                {
+                    WireFramerenderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
+                }
+                else
+                {
+                    renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
+                }
+
                 GRenderer.endSwapChainRenderPass(commandBuffer);
                 GRenderer.endFrame();
             }
+
+            isWireFrameActivated = false;
         }
 
         vkDeviceWaitIdle(GDevice.device());
     }
 
+    // temporary helper function, creates a 1x1x1 cube centered at offset with an index buffer
     std::unique_ptr<GWModel> createCubeModel(GWinDevice &device, glm::vec3 offset)
     {
-        std::vector<GWModel::Vertex> vertices{
-
+        GWModel::Builder modelBuilder{};
+        modelBuilder.vertices = {
             // left face (white)
             {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
             {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
             {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
-            {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
             {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
-            {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
 
             // right face (yellow)
             {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
             {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
             {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
-            {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
             {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
-            {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
 
             // top face (orange, remember y axis points down)
             {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
             {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
             {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-            {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
             {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-            {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
 
             // bottom face (red)
             {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
             {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
             {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
-            {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
             {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-            {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
 
             // nose face (blue)
             {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
             {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
             {{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-            {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
             {{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-            {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
 
             // tail face (green)
             {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
             {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
             {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-            {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
             {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-            {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-
         };
-        for (auto &v : vertices)
+        for (auto &v : modelBuilder.vertices)
         {
             v.position += offset;
         }
-        return std::make_unique<GWModel>(device, vertices);
+
+        modelBuilder.indices = {
+            0, 2, 1, 0, 1, 3,       // left face
+            4, 6, 5, 4, 5, 7,       // right face
+            8, 10, 9, 8, 9, 11,     // top face
+            12, 14, 13, 12, 13, 15, // bottom face
+            16, 18, 17, 16, 17, 19, // nose face
+            20, 22, 21, 20, 21, 23  // tail face
+        };
+
+        return std::make_unique<GWModel>(device, modelBuilder);
     }
 
     void GWapp::loadGameObjects()

@@ -10,10 +10,10 @@ namespace GWIN
         alignas(16) glm::vec3 color;
     };
 
-    RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass) : GDevice(device)
+    RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame) : GDevice(device)
     {
         createPipelineLayout();
-        createPipeline(renderPass);
+        createPipeline(renderPass, isWireFrame);
     }
 
     RenderSystem::~RenderSystem()
@@ -40,7 +40,7 @@ namespace GWIN
         }
     }
 
-    void RenderSystem::createPipeline(VkRenderPass renderPass)
+    void RenderSystem::createPipeline(VkRenderPass renderPass, bool isWireFrame)
     {
         assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
@@ -48,6 +48,11 @@ namespace GWIN
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
         pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
+
+        if (isWireFrame)
+        {
+            pipelineConfig.rasterizationInfo.polygonMode = VK_POLYGON_MODE_LINE;
+        }
 
         Pipeline = std::make_unique<GPipeLine>(
             GDevice,

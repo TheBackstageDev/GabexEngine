@@ -16,7 +16,7 @@ namespace GWIN
     class RenderSystem
     {
     public:
-        RenderSystem(GWinDevice &device, VkRenderPass renderPass);
+        RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame);
         ~RenderSystem();
 
         RenderSystem(const RenderSystem &) = delete;
@@ -25,7 +25,7 @@ namespace GWIN
         void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GWGameObject> &gameObjects, const GWCamera& camera);
     private:
         void createPipelineLayout();
-        void createPipeline(VkRenderPass renderPass);
+        void createPipeline(VkRenderPass renderPass, bool isWireFrame);
 
         VkPipelineLayout pipelineLayout;
 
