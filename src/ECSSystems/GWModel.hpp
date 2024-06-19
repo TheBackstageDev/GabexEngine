@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GWDevice.hpp"
+#include "../GWDevice.hpp"
 #include <vector>
 
 #define GLM_FORCE_RADIANS

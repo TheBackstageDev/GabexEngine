@@ -15,9 +15,9 @@ namespace GWIN
 {
     struct TransformComponent
     {
-        glm::vec3 translation{}; // (position offset)
-        glm::vec3 scale{1.f, 1.f, 1.f};
-        glm::vec3 rotation{1.f, 1.f, 1.f};
+        glm::vec3 translation{0}; // (position offset)
+        glm::vec3 scale{1.f};
+        glm::vec3 rotation{0};
 
         glm::mat4 mat4()
         {
@@ -46,8 +46,7 @@ namespace GWIN
                     scale.z * (c1 * c2),
                     0.0f,
                 },
-                {translation.x, translation.y, translation.z, 1.0f}};
-            ;
+            {translation.x, translation.y, translation.z, 1.0f}};
         }
     };
 

@@ -22,6 +22,7 @@ namespace GWIN
         GWRenderer &operator=(const GWRenderer &) = delete;
 
         VkRenderPass getRenderPass() const { return swapChain->getRenderPass(); }
+        float getAspectRatio() const { return swapChain->extentAspectRatio(); }
 
         bool hasFrameBegan() const { return hasFrameStarted; };
 

@@ -1,8 +1,12 @@
 #include "GWApp.hpp"
-#include <iostream>
+#include "./ECSSystems/GWCamera.hpp"
+#include "./ECSSystems/keyboard_movement_controller.hpp"
 
 #include <glm/gtc/constants.hpp>
 #include <glm/glm.hpp>
+
+#include <iostream>
+#include <chrono>
 
 namespace GWIN
 {
@@ -14,14 +18,31 @@ namespace GWIN
     void GWapp::run()
     {
         RenderSystem renderSystem{GDevice, GRenderer.getRenderPass()};
+        GWCamera camera{};
+
+        auto viewerObject = GWGameObject::createGameObject();
+        keyboardMovementController cameraController{};
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+
         while (!GWindow.shouldClose())
         {
             glfwPollEvents();
 
+            auto newTime = std::chrono::high_resolution_clock::now();
+            float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
+            currentTime = newTime;
+
+            cameraController.moveInPlaneXZ(GWindow.getWindow(), deltaTime, viewerObject);
+            camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+
+            float aspect = GRenderer.getAspectRatio();
+            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+
             if(auto commandBuffer = GRenderer.startFrame())
             {
                 GRenderer.startSwapChainRenderPass(commandBuffer);
-                renderSystem.renderGameObjects(commandBuffer, gameObjects);
+                renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
                 GRenderer.endSwapChainRenderPass(commandBuffer);
                 GRenderer.endFrame();
             }
@@ -92,13 +113,17 @@ namespace GWIN
 
     void GWapp::loadGameObjects()
     {
-        std::shared_ptr<GWModel> Model = createCubeModel(GDevice, {0.f, 0.f, 0.f});
+        for (int i = 1; i <= 2; i++)
+        {
+            std::shared_ptr<GWModel> Model = createCubeModel(GDevice, {0.f, 0.f, 0.f});
 
-        auto Cube = GWGameObject::createGameObject();
-        Cube.model = Model;
-        Cube.transform.translation = {0.f, 0.f, 0.5f};
-        Cube.transform.scale = {.5f, .5f, .5f};
+            auto Cube = GWGameObject::createGameObject();
+            Cube.model = Model;
+            Cube.transform.translation = {0.f, 0.f, 2.5f * i};
+            Cube.transform.scale = {.5f, .5f, .5f};
 
-        gameObjects.push_back(std::move(Cube));
+            gameObjects.push_back(std::move(Cube));
+        }
+
     }
 }

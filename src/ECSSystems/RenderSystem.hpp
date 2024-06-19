@@ -3,7 +3,8 @@
 #include "../GWindow.hpp"
 #include "../GWDevice.hpp"
 #include "../GWPipeLine.hpp"
-#include "../GWGameObject.hpp"
+#include "GWGameObject.hpp"
+#include "GWCamera.hpp"
 
 // std
 #include <memory>
@@ -21,7 +22,7 @@ namespace GWIN
         RenderSystem(const RenderSystem &) = delete;
         RenderSystem &operator=(const RenderSystem &) = delete;
 
-        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GWGameObject> &gameObjects);
+        void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GWGameObject> &gameObjects, const GWCamera& camera);
     private:
         void createPipelineLayout();
         void createPipeline(VkRenderPass renderPass);
