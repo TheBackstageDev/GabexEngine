@@ -2,6 +2,7 @@
 
 #include "./ECSSystems/GWRenderer.hpp"
 #include "./ECSSystems/RenderSystem.hpp"
+#include "./ECSSystems/GWModelLoader.hpp"
 
 // std
 #include <memory>

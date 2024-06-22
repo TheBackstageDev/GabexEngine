@@ -76,6 +76,20 @@
     "unordered_map": "cpp",
     "expected": "cpp",
     "map": "cpp",
-    "span": "cpp"
+    "span": "cpp",
+    "*.tcc": "cpp",
+    "cstdarg": "cpp",
+    "cwctype": "cpp",
+    "deque": "cpp",
+    "memory_resource": "cpp",
+    "numeric": "cpp",
+    "random": "cpp",
+    "string_view": "cpp",
+    "numbers": "cpp",
+    "cinttypes": "cpp",
+    "variant": "cpp",
+    "gwbuffer,cpp": "c",
+    "gwbuffer.hpp": "c",
+    "gwdevice.hpp": "c"
   }
 }

@@ -1,6 +1,7 @@
 #include "GWApp.hpp"
 #include "./ECSSystems/GWCamera.hpp"
 #include "./ECSSystems/keyboard_movement_controller.hpp"
+#include "GWBuffer.hpp"
 
 #include <glm/gtc/constants.hpp>
 #include <glm/glm.hpp>
@@ -10,6 +11,12 @@
 
 namespace GWIN
 {
+    struct GlobalUbo
+    {
+        glm::mat4 projectionView{1.f};
+        glm::vec3 lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
+    };
+
     GWapp::GWapp()
     {
         loadGameObjects();
@@ -17,17 +24,30 @@ namespace GWIN
 
     void GWapp::run()
     {
+        GWBuffer globalUboBuffer{
+            GDevice, 
+            sizeof(GlobalUbo), 
+            GWinSwapChain::MAX_FRAMES_IN_FLIGHT, 
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+            GDevice.properties.limits.minUniformBufferOffsetAlignment
+        };
+        globalUboBuffer.map();
+
         RenderSystem renderSystem{GDevice, GRenderer.getRenderPass(), false};
         RenderSystem WireFramerenderSystem{GDevice, GRenderer.getRenderPass(), true};
 
+
         GWCamera camera{};
+
+        bool isWireFrameActivated = false;
 
         auto viewerObject = GWGameObject::createGameObject();
         keyboardMovementController cameraController{};
-
         auto currentTime = std::chrono::high_resolution_clock::now();
 
-        bool isWireFrameActivated = false;
+        int frameCount = 0;
+        float totalTime = 0.0f;
 
         while (!GWindow.shouldClose())
         {
@@ -43,6 +63,18 @@ namespace GWIN
             float aspect = GRenderer.getAspectRatio();
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
+            totalTime += deltaTime;
+            frameCount++;
+
+            if (totalTime >= 1.0f)
+            {
+                float fps = static_cast<float>(frameCount) / totalTime;
+                std::cout << "FPS: " << fps << std::endl;
+
+                frameCount = 0;
+                totalTime = 0.0f;
+            }
+
             if (glfwGetKey(GWindow.getWindow(), cameraController.keys.activateWireframe))
             {
                 isWireFrameActivated = true;
@@ -50,6 +82,15 @@ namespace GWIN
 
             if (auto commandBuffer = GRenderer.startFrame())
             {
+                int frameIndex = GRenderer.getFrameIndex();
+
+                //update
+                GlobalUbo ubo{};
+                ubo.projectionView = camera.getProjection() * camera.getView();
+                globalUboBuffer.writeToIndex(&ubo, frameIndex);
+                globalUboBuffer.flushIndex(frameIndex);
+
+                //render
                 GRenderer.startSwapChainRenderPass(commandBuffer);
 
                 if (isWireFrameActivated)
@@ -71,77 +112,18 @@ namespace GWIN
         vkDeviceWaitIdle(GDevice.device());
     }
 
-    // temporary helper function, creates a 1x1x1 cube centered at offset with an index buffer
-    std::unique_ptr<GWModel> createCubeModel(GWinDevice &device, glm::vec3 offset)
-    {
-        GWModel::Builder modelBuilder{};
-        modelBuilder.vertices = {
-            // left face (white)
-            {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
-            {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
-            {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
-            {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
-
-            // right face (yellow)
-            {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
-            {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
-            {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
-            {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
-
-            // top face (orange, remember y axis points down)
-            {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-            {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-            {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
-            {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
-
-            // bottom face (red)
-            {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-            {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
-            {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
-            {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
-
-            // nose face (blue)
-            {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-            {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-            {{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
-            {{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
-
-            // tail face (green)
-            {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-            {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-            {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
-            {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
-        };
-        for (auto &v : modelBuilder.vertices)
-        {
-            v.position += offset;
-        }
-
-        modelBuilder.indices = {
-            0, 2, 1, 0, 1, 3,       // left face
-            4, 6, 5, 4, 5, 7,       // right face
-            8, 10, 9, 8, 9, 11,     // top face
-            12, 14, 13, 12, 13, 15, // bottom face
-            16, 18, 17, 16, 17, 19, // nose face
-            20, 22, 21, 20, 21, 23  // tail face
-        };
-
-        return std::make_unique<GWModel>(device, modelBuilder);
-    }
-
     void GWapp::loadGameObjects()
     {
-        for (int i = 1; i <= 2; i++)
-        {
-            std::shared_ptr<GWModel> Model = createCubeModel(GDevice, {0.f, 0.f, 0.f});
+        GWModelLoader modelLoader{GDevice};
+        std::shared_ptr<GWModel> Model;
+        modelLoader.importFile("C:/Users/viega/Desktop/CoisaDoGabriel/GabexEngine/src/models/Suzane.obj", Model);
 
-            auto Cube = GWGameObject::createGameObject();
-            Cube.model = Model;
-            Cube.transform.translation = {0.f, 0.f, 2.5f * i};
-            Cube.transform.scale = {.5f, .5f, .5f};
+        auto Suzane = GWGameObject::createGameObject();
+        Suzane.model = Model;
+        Suzane.transform.translation = {0.f, 0.f, 2.5f};
+        Suzane.transform.rotation.y = .5f * glm::two_pi<float>();
+        Suzane.transform.scale = .5f;
 
-            gameObjects.push_back(std::move(Cube));
-        }
-
+        gameObjects.push_back(std::move(Suzane));
     }
 }

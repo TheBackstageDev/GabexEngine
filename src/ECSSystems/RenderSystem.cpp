@@ -7,7 +7,7 @@ namespace GWIN
     struct SpushConstant
     {
         glm::mat4 transform{1.f};
-        alignas(16) glm::vec3 color;
+        glm::mat4 modelMatrix{1.f};
     };
 
     RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame) : GDevice(device)
@@ -56,8 +56,8 @@ namespace GWIN
 
         Pipeline = std::make_unique<GPipeLine>(
             GDevice,
-            "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/shader.vert.spv",
-            "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/shader.frag.spv",
+            "C:/Users/viega/Desktop/CoisaDoGabriel/GabexEngine/src/shaders/shader.vert.spv",
+            "C:/Users/viega/Desktop/CoisaDoGabriel/GabexEngine/src/shaders/shader.frag.spv",
             pipelineConfig);
     }
 
@@ -70,10 +70,10 @@ namespace GWIN
 
         for (auto &obj : gameObjects)
         {
-            obj.transform.rotation.y += glm::mod(0.01f, glm::two_pi<float>());
             SpushConstant push{};
-            push.color = obj.color;
-            push.transform = projectionView * obj.transform.mat4();
+            auto modelMatrix = obj.transform.mat4();
+            push.transform = projectionView * modelMatrix;
+            push.modelMatrix = modelMatrix;
 
             vkCmdPushConstants(
                 commandBuffer,

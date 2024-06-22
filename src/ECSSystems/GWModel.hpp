@@ -1,7 +1,10 @@
 #pragma once
 
 #include "../GWDevice.hpp"
+#include "../GWBuffer.hpp"
+
 #include <vector>
+#include <memory>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -16,6 +19,8 @@ namespace GWIN
         {
             glm::vec3 position;
             glm::vec3 color;
+            glm::vec3 normal;
+            glm::vec2 uv;
 
             static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
             static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
@@ -33,6 +38,7 @@ namespace GWIN
         GWModel(const GWModel &) = delete;
         GWModel &operator=(const GWModel &) = delete;
 
+
         void bind(VkCommandBuffer commandBuffer);
         void draw(VkCommandBuffer commandBuffer);
 
@@ -42,12 +48,10 @@ namespace GWIN
 
         GWinDevice &device;
 
-        VkBuffer vertexBuffer;
-        VkDeviceMemory vertexBufferMemory;
+        std::unique_ptr<GWBuffer> vertexBuffer;
         uint32_t vertexCount;
 
-        VkBuffer indexBuffer;
-        VkDeviceMemory indexBufferMemory;
+        std::unique_ptr<GWBuffer> indexBuffer;
         uint32_t indexCount;
 
         bool hasIndexBuffers{false};

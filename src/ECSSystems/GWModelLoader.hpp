@@ -5,21 +5,25 @@
 #include <assimp/postprocess.h>
 
 #include "GWGameObject.hpp"
+#include "GWModel.hpp"
 
 #include <optional>
 #include <string>
 #include <vector>
+#include <cassert>
 
 namespace GWIN
 {
     class GWModelLoader
     {
     public:
-        bool importFile(const std::string &pFile, const GWGameObject& gameObject, const std::optional<std::vector<GWGameObject>>& gameObjects);
+        GWModelLoader(GWinDevice& device) : device(device) {};
+        bool importFile(const std::string& pfile, std::shared_ptr<GWModel>& model);
     private:
         Assimp::Importer importer;
+        GWinDevice& device;
 
-        std::vector<GWModel> processScene(aiScene *scene);
-        GWModel processMesh(aiMesh *mesh);
+        std::vector<std::shared_ptr<GWModel>> processScene(const aiScene *scene);
+        std::shared_ptr<GWModel> processMesh(aiMesh *mesh);
     };
 }

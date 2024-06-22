@@ -30,11 +30,11 @@ cl /std:c++17 /EHsc %includes% %defines% *.obj /Fe:main.exe %links%
 REM Cleanup intermediate object files
 del *.obj
 
-cd C:\Users\cleve\OneDrive\Documents\GitHub\GabexEngine\src\shaders
+cd C:/Users/viega/Desktop/CoisaDoGabriel/GabexEngine/src/shaders
 
 C:\VulkanSDK\1.3.283.0\Bin\glslc.exe shader.vert -o shader.vert.spv
 C:\VulkanSDK\1.3.283.0\Bin\glslc.exe shader.frag -o shader.frag.spv
 
 echo "Build complete."
 
-C:\Users\cleve\OneDrive\Documents\GitHub\GabexEngine\main.exe
+C:\Users\viega\Desktop\CoisaDoGabriel\GabexEngine\main.exe
