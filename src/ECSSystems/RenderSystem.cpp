@@ -6,13 +6,12 @@ namespace GWIN
 {
     struct SpushConstant
     {
-        glm::mat4 transform{1.f};
         glm::mat4 modelMatrix{1.f};
     };
 
-    RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame) : GDevice(device)
+    RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, VkDescriptorSetLayout globalSetLayout ) : GDevice(device)
     {
-        createPipelineLayout();
+        createPipelineLayout(globalSetLayout);
         createPipeline(renderPass, isWireFrame);
     }
 
@@ -21,16 +20,18 @@ namespace GWIN
         vkDestroyPipelineLayout(GDevice.device(), pipelineLayout, nullptr);
     }
 
-    void RenderSystem::createPipelineLayout()
+    void RenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout)
     {
         VkPushConstantRange pushConstant{};
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstant.size = sizeof(SpushConstant);
 
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
+
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 0;
-        pipelineLayoutInfo.pSetLayouts = nullptr;
+        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+        pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushConstant;
 
@@ -61,29 +62,38 @@ namespace GWIN
             pipelineConfig);
     }
 
-    void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<GWGameObject> &gameObjects, const GWCamera& camera)
+    void RenderSystem::renderGameObjects(FrameInfo& frameInfo)
     {
         // render
-        Pipeline->bind(commandBuffer);
+        Pipeline->bind(frameInfo.commandBuffer);
 
-        auto projectionView = camera.getProjection() * camera.getView();
+        vkCmdBindDescriptorSets(
+            frameInfo.commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout,
+            0, 1,
+            &frameInfo.globalDescriptorSet,
+            0,
+            nullptr
+        );
 
-        for (auto &obj : gameObjects)
+        for (auto &kv : frameInfo.gameObjects)
         {
+            auto& obj = kv.second;
+            if (obj.model == nullptr) continue;
+
             SpushConstant push{};
-            auto modelMatrix = obj.transform.mat4();
-            push.transform = projectionView * modelMatrix;
-            push.modelMatrix = modelMatrix;
+            push.modelMatrix = obj.transform.mat4();
 
             vkCmdPushConstants(
-                commandBuffer,
+                frameInfo.commandBuffer,
                 pipelineLayout,
                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                 0,
                 sizeof(SpushConstant),
                 &push);
-            obj.model->bind(commandBuffer);
-            obj.model->draw(commandBuffer);
+            obj.model->bind(frameInfo.commandBuffer);
+            obj.model->draw(frameInfo.commandBuffer);
         }
     }
 }

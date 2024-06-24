@@ -14,19 +14,20 @@
 
 namespace GWIN
 {
-    class RenderSystem
+    class PointLightSystem
     {
     public:
-        RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, VkDescriptorSetLayout globalSetLayout );
-        ~RenderSystem();
+        PointLightSystem(GWinDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout );
+        ~PointLightSystem();
 
-        RenderSystem(const RenderSystem &) = delete;
-        RenderSystem &operator=(const RenderSystem &) = delete;
+        PointLightSystem(const PointLightSystem &) = delete;
+        PointLightSystem &operator=(const PointLightSystem &) = delete;
 
-        void renderGameObjects(FrameInfo& frameInfo);
+        void update(FrameInfo& frameInfo, GlobalUbo& Ubo);
+        void render(FrameInfo& frameInfo);
     private:
         void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
-        void createPipeline(VkRenderPass renderPass, bool isWireFrame);
+        void createPipeline(VkRenderPass renderPass);
 
         VkPipelineLayout pipelineLayout;
 

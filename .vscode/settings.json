@@ -90,6 +90,7 @@
     "variant": "cpp",
     "gwbuffer,cpp": "c",
     "gwbuffer.hpp": "c",
-    "gwdevice.hpp": "c"
+    "gwdevice.hpp": "c",
+    "codecvt": "cpp"
   }
 }

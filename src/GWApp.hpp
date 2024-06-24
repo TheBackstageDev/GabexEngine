@@ -1,8 +1,8 @@
 #pragma once
 
 #include "./ECSSystems/GWRenderer.hpp"
-#include "./ECSSystems/RenderSystem.hpp"
 #include "./ECSSystems/GWModelLoader.hpp"
+#include "./ECSSystems/GWDescriptors.hpp"
 
 // std
 #include <memory>
@@ -30,6 +30,7 @@ namespace GWIN
         GWinDevice GDevice{GWindow};
         GWRenderer GRenderer{GWindow, GDevice};
 
-        std::vector<GWGameObject> gameObjects;
+        std::unique_ptr<GWDescriptorPool> globalPool{};
+        GWGameObject::map gameObjects;
     };
 }
