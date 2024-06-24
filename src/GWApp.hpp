@@ -1,8 +1,8 @@
 #pragma once
 
-#include "./ECSSystems/GWRenderer.hpp"
-#include "./ECSSystems/GWModelLoader.hpp"
-#include "./ECSSystems/GWDescriptors.hpp"
+#include "./EC/GWRenderer.hpp"
+#include "./EC/GWModelLoader.hpp"
+#include "./EC/GWDescriptors.hpp"
 
 // std
 #include <memory>

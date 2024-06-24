@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GWGameObject.hpp"
-#include "RenderSystem.hpp"
+#include "../systems/RenderSystem.hpp"
 #include "GWRenderer.hpp"
 #include "../GWindow.hpp"
 

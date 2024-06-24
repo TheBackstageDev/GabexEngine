@@ -3,9 +3,9 @@
 #include "../GWindow.hpp"
 #include "../GWDevice.hpp"
 #include "../GWPipeLine.hpp"
-#include "GWFrameInfo.hpp"
-#include "GWGameObject.hpp"
-#include "GWCamera.hpp"
+#include "../EC/GWFrameInfo.hpp"
+#include "../EC/GWGameObject.hpp"
+#include "../EC/GWCamera.hpp"
 
 // std
 #include <memory>

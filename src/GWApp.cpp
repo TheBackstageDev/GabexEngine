@@ -1,11 +1,11 @@
 #include "GWApp.hpp"
-#include "./ECSSystems/GWCamera.hpp"
-#include "./ECSSystems/keyboard_movement_controller.hpp"
 #include "GWBuffer.hpp"
-#include "./ECSSystems/GWFrameInfo.hpp"
+#include "./EC/GWFrameInfo.hpp"
+#include "./EC/GWCamera.hpp"
+#include "./EC/keyboard_movement_controller.hpp"
 
-#include "./ECSSystems/RenderSystem.hpp"
-#include "./ECSSystems/PointLightSystem.hpp"
+#include "./systems/RenderSystem.hpp"
+#include "./systems/PointLightSystem.hpp"
 
 #include <glm/gtc/constants.hpp>
 #include <glm/glm.hpp>
@@ -125,6 +125,7 @@ namespace GWIN
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
+                ubo.inverseView = camera.getInverseView();
                 pointLightSystem.update(frameInfo, ubo);
                 globalUboBuffer.writeToIndex(&ubo, frameIndex);
                 globalUboBuffer.flushIndex(frameIndex);

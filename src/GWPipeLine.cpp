@@ -1,6 +1,6 @@
 #include "GWPipeLine.hpp"
 
-#include "./ECSSystems/GWModel.hpp"
+#include "./EC/GWModel.hpp"
 
 // std
 #include <cassert>
