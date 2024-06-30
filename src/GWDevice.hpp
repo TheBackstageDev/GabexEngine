@@ -39,6 +39,8 @@ namespace GWIN
 
         VkCommandPool getCommandPool() { return commandPool; }
         VkDevice device() { return device_; }
+        VkInstance getInstance() { return instance; }
+        VkPhysicalDevice phyDevice() { return physicalDevice; }
         VkSurfaceKHR surface() { return surface_; }
         VkQueue graphicsQueue() { return graphicsQueue_; }
         VkQueue presentQueue() { return presentQueue_; }

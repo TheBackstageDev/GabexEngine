@@ -24,6 +24,8 @@ namespace GWIN
         RenderSystem &operator=(const RenderSystem &) = delete;
 
         void renderGameObjects(FrameInfo& frameInfo);
+
+        VkPipeline getPipeline() const { return Pipeline->pipeline(); };
     private:
         void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
         void createPipeline(VkRenderPass renderPass, bool isWireFrame);

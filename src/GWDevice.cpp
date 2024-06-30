@@ -6,6 +6,8 @@
 #include <set>
 #include <unordered_set>
 
+//#define NDEBUG
+
 #ifndef NDEBUG
 bool enableValidationLayers = true;
 #else

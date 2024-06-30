@@ -111,7 +111,7 @@ bool GWDescriptorPool::allocateDescriptor(
   allocInfo.descriptorSetCount = 1;
  
   // Might want to create a "DescriptorPoolManager" class that handles this case, and builds
-  // a new pool whenever an old pool fills up. But this is beyond our current scope
+  // a new pool whenever an old pool fills up.
   if (vkAllocateDescriptorSets(device.device(), &allocInfo, &descriptor) != VK_SUCCESS) {
     return false;
   }

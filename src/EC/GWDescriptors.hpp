@@ -76,6 +76,7 @@ class GWDescriptorPool {
   void freeDescriptors(std::vector<VkDescriptorSet> &descriptors) const;
  
   void resetPool();
+  VkDescriptorPool getDescriptorPool() {return descriptorPool;}
  
  private:
   GWinDevice &device;

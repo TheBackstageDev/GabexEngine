@@ -15,56 +15,55 @@ namespace GWIN
         freeCommandBuffers();
     }
     
-        void GWRenderer::createCommandBuffers()
+    void GWRenderer::createCommandBuffers()
+    {
+        commandBuffers.resize(GWinSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = GDevice.getCommandPool();
+        allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+
+        if (vkAllocateCommandBuffers(GDevice.device(), &allocInfo, commandBuffers.data()) !=
+            VK_SUCCESS)
         {
-            commandBuffers.resize(GWinSwapChain::MAX_FRAMES_IN_FLIGHT);
+            throw std::runtime_error("failed to allocate command buffers!");
+        }
+    }
 
-            VkCommandBufferAllocateInfo allocInfo{};
-            allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-            allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-            allocInfo.commandPool = GDevice.getCommandPool();
-            allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+    void GWRenderer::recreateSwapChain()
+    {
+        auto extent = window.getExtent();
 
-            if (vkAllocateCommandBuffers(GDevice.device(), &allocInfo, commandBuffers.data()) !=
-                VK_SUCCESS)
-            {
-                throw std::runtime_error("failed to allocate command buffers!");
-            }
-
+        while(extent.height == 0 || extent.width == 0)
+        {
+            extent = window.getExtent();
+            glfwWaitEvents();
         }
 
-        void GWRenderer::recreateSwapChain()
+        vkDeviceWaitIdle(GDevice.device());
+        if(swapChain == nullptr)
         {
-            auto extent = window.getExtent();
-
-            while(extent.height == 0 || extent.width == 0)
+            swapChain = std::make_unique<GWinSwapChain>(GDevice, extent);
+        } else {
+            std::shared_ptr<GWinSwapChain> oldSwapChain = std::move(swapChain);
+            swapChain = std::make_unique<GWinSwapChain>(GDevice, extent, oldSwapChain);
+    
+            if(!oldSwapChain->compareSwapChainFormats(*swapChain.get()))
             {
-                extent = window.getExtent();
-                glfwWaitEvents();
+                throw std::runtime_error("Swap chain image(or depth) format has changed!");
             }
 
-            vkDeviceWaitIdle(GDevice.device());
-            if(swapChain == nullptr)
+            if(swapChain->imageCount() != commandBuffers.size())
             {
-                swapChain = std::make_unique<GWinSwapChain>(GDevice, extent);
-            } else {
-                std::shared_ptr<GWinSwapChain> oldSwapChain = std::move(swapChain);
-                swapChain = std::make_unique<GWinSwapChain>(GDevice, extent, oldSwapChain);
-
-                if(!oldSwapChain->compareSwapChainFormats(*swapChain.get()))
-                {
-                    throw std::runtime_error("Swap chain image(or depth) format has changed!");
-                }
-
-                if(swapChain->imageCount() != commandBuffers.size())
-                {
-                    freeCommandBuffers();
-                    createCommandBuffers();
-                }
+                freeCommandBuffers();
+                createCommandBuffers();
             }
-
-            window.frameBufferResizedFlagReset();
         }
+
+        window.frameBufferResizedFlagReset();
+    }
 
         void GWRenderer::freeCommandBuffers()
         {
@@ -174,4 +173,39 @@ namespace GWIN
 
             vkCmdEndRenderPass(commandBuffer);
         }
+
+    VkCommandBuffer GWRenderer::beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool)
+    {
+        VkCommandBufferAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = commandPool;
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo = {};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+        return commandBuffer;
     }
+
+    void GWRenderer::endSingleTimeCommands(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkCommandBuffer commandBuffer)
+    {
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(queue);
+
+        vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+    }
+}

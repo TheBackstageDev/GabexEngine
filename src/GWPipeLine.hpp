@@ -42,6 +42,7 @@ namespace GWIN
         void bind(VkCommandBuffer commandBuffer);
 
         static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
+        VkPipeline pipeline() const { return graphicsPipeline; }
 
     private:
         static std::vector<char> readFile(const std::string &filepath);

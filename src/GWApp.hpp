@@ -1,12 +1,6 @@
 #pragma once
 
-#include "./EC/GWRenderer.hpp"
-#include "./EC/GWModelLoader.hpp"
-#include "./EC/GWDescriptors.hpp"
-
-// std
-#include <memory>
-#include <vector>
+#include "./systems/MasterRenderSystem.hpp"
 
 namespace GWIN
 {
@@ -16,7 +10,7 @@ namespace GWIN
         static constexpr int WIDTH = 800;
         static constexpr int HEIGHT = 800;
 
-        GWapp();
+        GWapp() {};
 
         GWapp(const GWapp &) = delete;
         GWapp &operator=(const GWapp &) = delete;
@@ -24,13 +18,8 @@ namespace GWIN
         void run();
 
     private:
-        void loadGameObjects();
-
         GWindow GWindow{WIDTH, HEIGHT, "Gabex Engine"};
         GWinDevice GDevice{GWindow};
-        GWRenderer GRenderer{GWindow, GDevice};
-
-        std::unique_ptr<GWDescriptorPool> globalPool{};
-        GWGameObject::map gameObjects;
+        MasterRenderSystem renderSystem{GWindow, GDevice};
     };
 }

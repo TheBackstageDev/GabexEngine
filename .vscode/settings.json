@@ -3,8 +3,9 @@
     "${workspaceFolder}/src",
     "${VULKAN_SDK}/Include",
     "${workspaceFolder}/includes",
-    "C:/Program Files/Assimp/include"
+    "C:/Program Files/Assimp/include",
   ],
+
   "files.associations": {
     ".fantomasignore": "ignore",
     "xstring": "cpp",
@@ -92,5 +93,5 @@
     "gwbuffer.hpp": "c",
     "gwdevice.hpp": "c",
     "codecvt": "cpp"
-  }
+  },
 }
