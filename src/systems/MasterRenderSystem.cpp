@@ -31,15 +31,11 @@ namespace GWIN
         renderer = std::make_unique<GWRenderer>(window, device);
         loadGameObjects();
         initialize();
-        initializeGui();
+        //initializeGui();
     }
 
-    void MasterRenderSystem::initializeGui()
+    /*void MasterRenderSystem::initializeGui()
     {
-        auto imguipool = GWDescriptorPool::Builder(device)
-        .addPoolSize()
-        .build;
-
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
@@ -59,7 +55,7 @@ namespace GWIN
         init_info.UseDynamicRendering = true;
         init_info.CheckVkResultFn = check_vk_result;
         ImGui_ImplVulkan_Init(&init_info);
-    }
+    }*/
 
     void MasterRenderSystem::initialize()
     {
@@ -129,16 +125,6 @@ namespace GWIN
 
             if (auto commandBuffer = renderer->startFrame())
             {
-                //IMGUI Frame
-                ImGui_ImplVulkan_NewFrame();
-                ImGui_ImplGlfw_NewFrame();
-                ImGui::NewFrame();
-        
-                ImGui::Render();
-
-                //IMGUI Commands
-                ImGui::ShowDemoWindow();
-
                 int frameIndex = renderer->getFrameIndex();
                 
                 // update

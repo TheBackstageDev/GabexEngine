@@ -56,8 +56,8 @@ namespace GWIN
 
         Pipeline = std::make_unique<GPipeLine>(
             GDevice,
-            "C:/Users/viega/Desktop/CoisaDoGabriel/GabexEngine/src/shaders/point_light.vert.spv",
-            "C:/Users/viega/Desktop/CoisaDoGabriel/GabexEngine/src/shaders/point_light.frag.spv",
+            "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/point_lightvert.spv",
+            "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/point_lightfrag.spv",
             pipelineConfig);
     }
 
