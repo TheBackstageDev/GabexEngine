@@ -10,60 +10,30 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/glm.hpp>
 
-#include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_glfw.h>
-#include <imgui/backends/imgui_impl_vulkan.h>
-
 namespace GWIN
 {
-    static void check_vk_result(VkResult err)
-    {
-        if (err == 0)
-            return;
-        fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-        if (err < 0)
-            abort();
-    }
-
     MasterRenderSystem::MasterRenderSystem(GWindow& window, GWinDevice& device)
         : window(window), device(device)
     {
         renderer = std::make_unique<GWRenderer>(window, device);
         loadGameObjects();
         initialize();
-        //initializeGui();
+
+        //Initializes GUI
+        interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat());
     }
-
-    /*void MasterRenderSystem::initializeGui()
-    {
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-
-        // Setup Dear ImGui context
-        ImGui::StyleColorsDark();
-
-        ImGui_ImplGlfw_InitForVulkan(window.getWindow(), true);
-        ImGui_ImplVulkan_InitInfo init_info = {};
-        init_info.Instance = device.getInstance();
-        init_info.PhysicalDevice = device.phyDevice();
-        init_info.Device = device.device();
-        init_info.Queue = device.graphicsQueue();
-        init_info.DescriptorPool = &imguipool;
-        init_info.RenderPass = renderer->getRenderPass();
-        init_info.MinImageCount = GWinSwapChain::MAX_FRAMES_IN_FLIGHT;
-        init_info.ImageCount = renderer->getImageCount();
-        init_info.UseDynamicRendering = true;
-        init_info.CheckVkResultFn = check_vk_result;
-        ImGui_ImplVulkan_Init(&init_info);
-    }*/
 
     void MasterRenderSystem::initialize()
     {
         globalPool = GWDescriptorPool::Builder(device)
-                    .setMaxSets(GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                    .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                    .build();
-                         
+                         .setMaxSets(GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
+                         .build();
+
+        auto globalSetLayout = GWDescriptorSetLayout::Builder(device)
+                                   .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+                                   .build();
+
         auto minOffsetAlignment = std::lcm(
             device.properties.limits.minUniformBufferOffsetAlignment,
             device.properties.limits.nonCoherentAtomSize);
@@ -78,10 +48,6 @@ namespace GWIN
         );
 
         globalUboBuffer->map();
-
-        auto globalSetLayout = GWDescriptorSetLayout::Builder(device)
-                                .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-                                .build();
         
         globalDescriptorSets.resize(GWinSwapChain::MAX_FRAMES_IN_FLIGHT);
 
@@ -153,6 +119,7 @@ namespace GWIN
                 }
 
                 // render
+                interfaceSystem->newFrame();
                 renderer->startSwapChainRenderPass(commandBuffer);
 
                 if (frameInfo.isWireFrame)
@@ -165,6 +132,7 @@ namespace GWIN
                 }
 
                 pointLightSystem->render(frameInfo);
+                interfaceSystem->render(commandBuffer);
 
                 renderer->endSwapChainRenderPass(commandBuffer);
                 renderer->endFrame();
@@ -176,9 +144,8 @@ namespace GWIN
 
     void MasterRenderSystem::loadGameObjects()
     {
-        GWModelLoader modelLoader{device};
         std::shared_ptr<GWModel> Model;
-        modelLoader.importFile("C:/Users/viega/Desktop/CoisaDoGabriel/GabexEngine/src/models/vase.obj", Model);
+        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/vase.obj", Model, false);
 
         auto model = GWGameObject::createGameObject();
         model.model = Model;
@@ -186,30 +153,22 @@ namespace GWIN
         model.transform.rotation.z = .5f * glm::two_pi<float>();
         model.transform.scale = 1.f;
 
-        auto model2 = GWGameObject::createGameObject();
-        model2.model = Model;
-        model2.transform.translation = {-1.f, .5f, 0.f};
-        model2.transform.rotation.z = .5f * glm::two_pi<float>();
-        model2.transform.scale = 1.f;
-
-        modelLoader.importFile("C:/Users/viega/Desktop/CoisaDoGabriel/GabexEngine/src/models/quad.obj", Model);
+        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/quad.obj", Model, false);
         auto quad = GWGameObject::createGameObject();
         quad.model = Model;
         quad.transform.translation = {0.f, .5f, 0.f};
         quad.transform.scale = 3.f;
 
         gameObjects.emplace(model.getId(), std::move(model));
-        gameObjects.emplace(model2.getId(), std::move(model2));
         gameObjects.emplace(quad.getId(), std::move(quad));
 
-        
         std::vector<glm::vec3> lightColors{
             {1.f, .1f, .1f},
             {.1f, .1f, 1.f},
             {.1f, 1.f, .1f},
             {1.f, 1.f, .1f},
             {.1f, 1.f, 1.f},
-            {1.f, 1.f, 1.f}  //
+            {1.f, 1.f, 1.f}
         };
 
         for (int i = 0; i < lightColors.size(); i++) {
@@ -220,6 +179,6 @@ namespace GWIN
                 {0.f, -1.f, 0.f});
             pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
             gameObjects.emplace(pointLight.getId(), std::move(pointLight));
-        }
+        } 
     }
 }

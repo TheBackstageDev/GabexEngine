@@ -4,7 +4,7 @@
 
 namespace GWIN
 {
-    bool GWModelLoader::importFile(const std::string& pfile, std::shared_ptr<GWModel>& model)
+    bool GWModelLoader::importFile(const std::string& pfile, std::shared_ptr<GWModel>& model, bool isMultipleModels)
     {
         const aiScene *scene = importer.ReadFile(pfile,
         aiProcess_CalcTangentSpace |
@@ -13,13 +13,20 @@ namespace GWIN
 
         if (nullptr == scene)
         {
+            std::cout << "Scene is nullptr";
             std::runtime_error(importer.GetErrorString());
             return false;
         }
 
 
         std::vector<std::shared_ptr<GWModel>> object = processScene(scene);
-        model = object[0];
+
+        if (isMultipleModels)
+        {
+            //To Do
+        } else {
+            model = object[0];
+        }
 
         return true;
     }

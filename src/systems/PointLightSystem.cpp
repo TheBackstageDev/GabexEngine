@@ -6,8 +6,8 @@ namespace GWIN
 {
     struct pointLightPushConstant
     {
-        glm::vec4 position{};
-        glm::vec4 color{};
+        glm::vec4 position{1.f};
+        glm::vec4 color{1.f};
         float radius;
     };
 
@@ -56,8 +56,8 @@ namespace GWIN
 
         Pipeline = std::make_unique<GPipeLine>(
             GDevice,
-            "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/point_lightvert.spv",
-            "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/point_lightfrag.spv",
+            "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/point_light.vert.spv",
+            "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/point_light.frag.spv",
             pipelineConfig);
     }
 
@@ -106,7 +106,7 @@ namespace GWIN
             push.position = glm::vec4(obj.transform.translation, 1.f);
             push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
             push.radius = obj.transform.scale;
-
+            
             vkCmdPushConstants
             (
                 frameInfo.commandBuffer,
@@ -116,7 +116,7 @@ namespace GWIN
                 sizeof(pointLightPushConstant),
                 &push
             );
-
+            
             vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
         }
     }

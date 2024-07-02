@@ -184,6 +184,11 @@ namespace GWIN
         VkPhysicalDeviceFeatures deviceFeatures = {};
         deviceFeatures.samplerAnisotropy = VK_TRUE;
         deviceFeatures.fillModeNonSolid = VK_TRUE;
+        deviceFeatures.robustBufferAccess = VK_TRUE;
+
+        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures = {};
+        dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+        dynamicRenderingFeatures.dynamicRendering = VK_TRUE;
 
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -194,9 +199,8 @@ namespace GWIN
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+        createInfo.pNext = &dynamicRenderingFeatures;
 
-        // might not really be necessary anymore because device specific validation layers
-        // have been deprecated
         if (enableValidationLayers)
         {
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -251,7 +255,7 @@ namespace GWIN
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
         return indices.isComplete() && extensionsSupported && swapChainAdequate &&
-               supportedFeatures.samplerAnisotropy;
+               supportedFeatures.samplerAnisotropy && supportedFeatures.robustBufferAccess;
     }
 
     void GWinDevice::populateDebugMessengerCreateInfo(
@@ -333,19 +337,19 @@ namespace GWIN
         std::vector<VkExtensionProperties> extensions(extensionCount);
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
-        // std::cout << "available extensions:" << std::endl;
+        std::cout << "available extensions:" << std::endl;
         std::unordered_set<std::string> available;
         for (const auto &extension : extensions)
         {
-            // std::cout << "\t" << extension.extensionName << std::endl;
+            std::cout << "\t" << extension.extensionName << std::endl;
             available.insert(extension.extensionName);
         }
 
-        // std::cout << "required extensions:" << std::endl;
+        std::cout << "required extensions:" << std::endl;
         auto requiredExtensions = getRequiredExtensions();
         for (const auto &required : requiredExtensions)
         {
-            // std::cout << "\t" << required << std::endl;
+            std::cout << "\t" << required << std::endl;
             if (available.find(required) == available.end())
             {
                 throw std::runtime_error("Missing required glfw extension");
@@ -616,4 +620,4 @@ namespace GWIN
         }
     }
 
-} // namespace lve
+} // namespace GWIN

@@ -4,7 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${default}",
-                "${workspaceFolder}/libs/imgui"
+                "${VULKAN_SDK}/Include",
+                "C:/VulkanSDK/1.3.283.0/Include/imgui"
             ],
             "defines": [
                 "_DEBUG",

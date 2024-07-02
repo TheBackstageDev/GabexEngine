@@ -9,7 +9,8 @@ namespace GWIN
         glm::mat4 modelMatrix{1.f};
     };
 
-    RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, VkDescriptorSetLayout globalSetLayout ) : GDevice(device)
+    RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, VkDescriptorSetLayout globalSetLayout)
+        : GDevice(device)
     {
         createPipelineLayout(globalSetLayout);
         createPipeline(renderPass, isWireFrame);
@@ -17,13 +18,17 @@ namespace GWIN
 
     RenderSystem::~RenderSystem()
     {
-        vkDestroyPipelineLayout(GDevice.device(), pipelineLayout, nullptr);
+        if (pipelineLayout != VK_NULL_HANDLE)
+        {
+            vkDestroyPipelineLayout(GDevice.device(), pipelineLayout, nullptr);
+        }
     }
 
     void RenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout)
     {
         VkPushConstantRange pushConstant{};
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstant.offset = 0;
         pushConstant.size = sizeof(SpushConstant);
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
@@ -60,11 +65,17 @@ namespace GWIN
             "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/shader.vert.spv",
             "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/shader.frag.spv",
             pipelineConfig);
+
+        if (!Pipeline)
+        {
+            throw std::runtime_error("Failed to create graphics pipeline!");
+        }
     }
 
-    void RenderSystem::renderGameObjects(FrameInfo& frameInfo)
+    void RenderSystem::renderGameObjects(FrameInfo &frameInfo)
     {
-        // render
+        assert(Pipeline && "Pipeline must be created before calling renderGameObjects");
+
         Pipeline->bind(frameInfo.commandBuffer);
 
         vkCmdBindDescriptorSets(
@@ -74,13 +85,13 @@ namespace GWIN
             0, 1,
             &frameInfo.globalDescriptorSet,
             0,
-            nullptr
-        );
+            nullptr);
 
         for (auto &kv : frameInfo.gameObjects)
         {
-            auto& obj = kv.second;
-            if (obj.model == nullptr) continue;
+            auto &obj = kv.second;
+            if (obj.model == nullptr)
+                continue;
 
             SpushConstant push{};
             push.modelMatrix = obj.transform.mat4();
@@ -92,6 +103,7 @@ namespace GWIN
                 0,
                 sizeof(SpushConstant),
                 &push);
+
             obj.model->bind(frameInfo.commandBuffer);
             obj.model->draw(frameInfo.commandBuffer);
         }

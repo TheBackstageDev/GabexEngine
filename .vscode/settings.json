@@ -2,7 +2,6 @@
   "C_Cpp.default.includePath": [
     "${workspaceFolder}/src",
     "${VULKAN_SDK}/Include",
-    "${workspaceFolder}/includes",
     "C:/Program Files/Assimp/include",
   ],
 

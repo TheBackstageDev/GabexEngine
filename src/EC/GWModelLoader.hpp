@@ -18,7 +18,8 @@ namespace GWIN
     {
     public:
         GWModelLoader(GWinDevice& device) : device(device) {};
-        bool importFile(const std::string& pfile, std::shared_ptr<GWModel>& model);
+        bool importFile(const std::string &pfile, std::shared_ptr<GWModel> &model, bool isMultipleModels);
+
     private:
         Assimp::Importer importer;
         GWinDevice& device;

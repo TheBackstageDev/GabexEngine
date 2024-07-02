@@ -9,8 +9,7 @@ SET ASSIMP_INCLUDE=C:\Program Files\Assimp\include
 SET ASSIMP_LIB=C:\Program Files\Assimp\lib\x64
 SET IMGUI_INCLUDE=C:\VulkanSDK\1.3.283.0\include\imgui
 
-
-SET includes=/I"%VULKAN_SDK%\Include" /I"%GLFW_INCLUDE%" /I"%ASSIMP_INCLUDE%" /I"%IMGUI_INCLUDE%"
+SET includes=/I"%VULKAN_SDK%\Include" /I"%GLFW_INCLUDE%" /I"%ASSIMP_INCLUDE%" /I"%IMGUI_INCLUDE%" /I"%IMGUI_INCLUDE%\backends"
 SET links=/link /LIBPATH:"%VULKAN_SDK%\Lib" /LIBPATH:"%GLFW_LIB%" /LIBPATH:"%ASSIMP_LIB%" vulkan-1.lib libglfw3dll.a assimp-vc143-mt.lib
 SET defines=/DDEBUG
 
@@ -23,6 +22,11 @@ for /R src %%f in (*.cpp) do (
     )
 )
 
+REM Compile ImGui source files
+for %%f in (imgui.cpp imgui_draw.cpp imgui_widgets.cpp imgui_tables.cpp imgui_demo.cpp backends/imgui_impl_vulkan.cpp backends/imgui_impl_glfw.cpp) do (
+    cl /std:c++17 /c /EHsc %includes% %defines% "%IMGUI_INCLUDE%\%%f"
+)
+
 REM Compile main.cpp last
 cl /std:c++17 /c /EHsc %includes% %defines% src\main.cpp
 
@@ -32,7 +36,7 @@ cl /std:c++17 /EHsc %includes% %defines% *.obj /Fe:main.exe %links%
 REM Cleanup intermediate object files
 del *.obj
 
-cd C:/Users/viega/Desktop/CoisaDoGabriel/GabexEngine/src/shaders
+cd C:\Users\cleve\OneDrive\Documents\GitHub\GabexEngine\src\shaders
 
 C:\VulkanSDK\1.3.283.0\Bin\glslc.exe shader.vert -o shader.vert.spv
 C:\VulkanSDK\1.3.283.0\Bin\glslc.exe shader.frag -o shader.frag.spv
@@ -41,4 +45,4 @@ C:\VulkanSDK\1.3.283.0\Bin\glslc.exe point_light.frag -o point_light.frag.spv
 
 echo "Build complete."
 
-C:\Users\viega\Desktop\CoisaDoGabriel\GabexEngine\main.exe
+C:\Users\cleve\OneDrive\Documents\GitHub\GabexEngine\main.exe

@@ -38,13 +38,12 @@ namespace GWIN
             return currentFrameIndex;
         }
 
+        VkFormat getSwapChainImageFormat() { return swapChain->getSwapChainImageFormat(); };
+
         VkCommandBuffer startFrame();
         void endFrame();
         void startSwapChainRenderPass(VkCommandBuffer commandBuffer);
         void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
-
-        VkCommandBuffer beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
-        void endSingleTimeCommands(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkCommandBuffer commandBuffer);
 
     private:
         void createCommandBuffers();

@@ -5,8 +5,10 @@
 #include "../EC/GWDescriptors.hpp"
 #include "../EC/GWFrameInfo.hpp"
 #include "../EC/keyboard_movement_controller.hpp"
+#include "../EC/GWModelLoader.hpp"
 #include "RenderSystem.hpp"
 #include "PointLightSystem.hpp"
+#include "InterfaceSystem.hpp"
 
 #include <memory>
 #include <vector>
@@ -39,9 +41,12 @@ namespace GWIN
         std::unique_ptr<GWDescriptorPool> globalPool{};
 
         //Render Systems
-        std::unique_ptr<RenderSystem> renderSystem{};
-        std::unique_ptr<RenderSystem> wireframeRenderSystem{};
-        std::unique_ptr<PointLightSystem> pointLightSystem{};
+        std::unique_ptr<RenderSystem> renderSystem;
+        std::unique_ptr<RenderSystem> wireframeRenderSystem;
+        std::unique_ptr<PointLightSystem> pointLightSystem;
+        std::unique_ptr<GWInterface> interfaceSystem;
+
+        GWModelLoader modelLoader{device};
         
         GWGameObject::map gameObjects;
         GWCamera camera{};

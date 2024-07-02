@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <iostream>
 
 namespace GWIN
 {
@@ -85,7 +86,6 @@ namespace GWIN
         VkBuffer buffers[] = {vertexBuffer->getBuffer()};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
-
         if (hasIndexBuffers)
         {
             vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);

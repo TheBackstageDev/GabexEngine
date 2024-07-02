@@ -6,7 +6,6 @@
 #include "../EC/GWFrameInfo.hpp"
 #include "../EC/GWGameObject.hpp"
 #include "../EC/GWCamera.hpp"
-
 // std
 #include <memory>
 #include <vector>
