@@ -10,6 +10,8 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/glm.hpp>
 
+#include <cassert>
+
 namespace GWIN
 {
     MasterRenderSystem::MasterRenderSystem(GWindow& window, GWinDevice& device)
@@ -21,6 +23,9 @@ namespace GWIN
 
         //Initializes GUI
         interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat());
+        interfaceSystem->setLoadGameObjectCallback([this](GameObjectInfo& objectInfo) {
+            loadGameObject(objectInfo);
+        });
     }
 
     void MasterRenderSystem::initialize()
@@ -119,7 +124,7 @@ namespace GWIN
                 }
 
                 // render
-                interfaceSystem->newFrame();
+                interfaceSystem->newFrame(frameInfo);
                 renderer->startSwapChainRenderPass(commandBuffer);
 
                 if (frameInfo.isWireFrame)
@@ -142,6 +147,19 @@ namespace GWIN
         }
     }
 
+    void MasterRenderSystem::loadGameObject(GameObjectInfo& objectInfo)
+    {
+        std::shared_ptr<GWModel> model;
+        modelLoader.importFile(objectInfo.filePath, model, false);
+
+        auto obj = GWGameObject::createGameObject();
+        obj.model = model;
+        obj.transform.translation = objectInfo.position;
+        obj.transform.scale = objectInfo.scale;
+
+        gameObjects.emplace(obj.getId(), std::move(obj));
+    }
+
     void MasterRenderSystem::loadGameObjects()
     {
         std::shared_ptr<GWModel> Model;
@@ -149,7 +167,7 @@ namespace GWIN
 
         auto model = GWGameObject::createGameObject();
         model.model = Model;
-        model.transform.translation = {0.f, .5f, 0.f};
+        model.transform.translation = {0.f, .5f, 1.f};
         model.transform.rotation.z = .5f * glm::two_pi<float>();
         model.transform.scale = 1.f;
 

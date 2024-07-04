@@ -34,4 +34,11 @@ namespace GWIN
         GWGameObject::map &gameObjects;
         bool isWireFrame;
     };
+
+    struct GameObjectInfo
+    {
+        std::string filePath;
+        float scale{1.f};
+        glm::vec3 position{0.f, .5f, 0.f}; 
+    };
 }

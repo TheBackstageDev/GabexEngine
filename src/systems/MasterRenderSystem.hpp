@@ -27,6 +27,7 @@ namespace GWIN
         MasterRenderSystem& operator=(const MasterRenderSystem&) = delete;
 
         void run();
+        void loadGameObject(GameObjectInfo& objectInfo);
 
     private:
         void initialize();  
