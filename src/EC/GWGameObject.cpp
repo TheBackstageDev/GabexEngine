@@ -34,7 +34,7 @@ namespace GWIN
 
     GWGameObject GWGameObject::createPointLight(float intensity, float radius, glm::vec3 color)
     {
-        GWGameObject gameObject = GWGameObject::createGameObject();
+        GWGameObject gameObject = GWGameObject::createGameObject("PointLight");
         gameObject.color = color;
         gameObject.transform.scale = radius;
         gameObject.pointLight = std::make_unique<PointlightComponent>();

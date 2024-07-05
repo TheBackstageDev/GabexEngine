@@ -161,7 +161,8 @@ namespace GWIN
             ImGui::EndMainMenuBar();
         }
 
-        //Object List
+        //Object List and Properties
+        objectList.Draw(frameInfo);
 
         //Temporary Object Loader
         if (showCreateObjectWindow)
@@ -175,7 +176,7 @@ namespace GWIN
                 {
                     if (loadGameObjectCallback)
                     {
-                        GameObjectInfo objectInfo{filePathBuffer, Objscale, {Objposition[0], Objposition[1] * -1, Objposition[2]}};
+                        GameObjectInfo objectInfo{"DefaultName", filePathBuffer, Objscale, {Objposition[0], Objposition[1] * -1, Objposition[2]}};
                         loadGameObjectCallback(objectInfo);
                     }
                 }

@@ -80,7 +80,7 @@ namespace GWIN
 
     void MasterRenderSystem::run()
     {
-        auto viewerObject = GWGameObject::createGameObject();
+        auto viewerObject = GWGameObject::createGameObject("Viewer Object");
         viewerObject.transform.translation.z = -2.5;
         
         currentTime = std::chrono::high_resolution_clock::now();
@@ -152,7 +152,7 @@ namespace GWIN
         std::shared_ptr<GWModel> model;
         modelLoader.importFile(objectInfo.filePath, model, false);
 
-        auto obj = GWGameObject::createGameObject();
+        auto obj = GWGameObject::createGameObject(objectInfo.objName);
         obj.model = model;
         obj.transform.translation = objectInfo.position;
         obj.transform.scale = objectInfo.scale;
@@ -165,14 +165,14 @@ namespace GWIN
         std::shared_ptr<GWModel> Model;
         modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/vase.obj", Model, false);
 
-        auto model = GWGameObject::createGameObject();
+        auto model = GWGameObject::createGameObject("vase");
         model.model = Model;
         model.transform.translation = {0.f, .5f, 1.f};
         model.transform.rotation.z = .5f * glm::two_pi<float>();
         model.transform.scale = 1.f;
 
         modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/quad.obj", Model, false);
-        auto quad = GWGameObject::createGameObject();
+        auto quad = GWGameObject::createGameObject("quad");
         quad.model = Model;
         quad.transform.translation = {0.f, .5f, 0.f};
         quad.transform.scale = 3.f;

@@ -4,6 +4,7 @@
             "name": "Win32",
             "includePath": [
                 "${default}",
+                "src/EC",
                 "${VULKAN_SDK}/Include",
                 "C:/VulkanSDK/1.3.283.0/Include/imgui"
             ],

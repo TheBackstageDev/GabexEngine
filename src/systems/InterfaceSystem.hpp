@@ -14,6 +14,7 @@
 
 // pre-made interfaces
 #include "./interface/Console.hpp"
+#include "./interface/ObjectList.hpp"
 
 // for fonts
 #include <imgui/misc/freetype/imgui_freetype.h>
@@ -40,8 +41,10 @@ namespace GWIN
         void initializeGUI(VkFormat imageFormat);
         void showConsole();
 
+        GWObjectList objectList{};
         GWConsole console{};
         bool show_console{false};
+
         bool showCreateObjectWindow{false};
 
         std::unique_ptr<GWDescriptorPool> guipool;

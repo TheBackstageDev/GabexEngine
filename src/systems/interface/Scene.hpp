@@ -1,7 +1,7 @@
 #pragma once
 
 #include <imgui/imgui.h>
-#include <EC/GWGameObject.hpp>
+#include "GWGameObject.hpp"
 
 namespace GWIN
 {

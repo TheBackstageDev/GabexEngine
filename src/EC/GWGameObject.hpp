@@ -34,10 +34,10 @@ namespace GWIN
         using id_t = unsigned int;
         using map = std::unordered_map<id_t, GWGameObject>;
 
-        static GWGameObject createGameObject()
+        static GWGameObject createGameObject(const std::string name)
         {
             static id_t currentID = 0;
-            return GWGameObject(currentID++);
+            return GWGameObject(currentID++, name);
         }
 
         static GWGameObject createPointLight(float intensity, float radius, glm::vec3 color);
@@ -47,7 +47,9 @@ namespace GWIN
         GWGameObject(GWGameObject &&) = default;
         GWGameObject &operator=(GWGameObject &&) = default;
 
-        id_t getId() { return id; }
+        id_t getId() const { return id; }
+        std::string getName() const { return Objname; };
+        void setName(std::string& newName) { Objname = newName; };
 
         glm::vec3 color{};
         TransformComponent transform{};
@@ -57,11 +59,12 @@ namespace GWIN
         std::unique_ptr<PointlightComponent> pointLight = nullptr;
 
     private:
-        GWGameObject(id_t ID)
+        GWGameObject(id_t ID, const std::string name) : Objname(name)
         {
             id = ID;
         }
 
+        std::string Objname;
         id_t id;
     };
 }
