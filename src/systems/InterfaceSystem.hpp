@@ -32,6 +32,8 @@ namespace GWIN
 
         void setLoadGameObjectCallback(std::function<void(GameObjectInfo& objectInfo)> callback);
 
+        GWConsole getConsole() const { return console; }
+
     private:
         GWindow& window;
         GWinDevice& device;
@@ -39,11 +41,9 @@ namespace GWIN
         std::function<void(GameObjectInfo &objectInfo)> loadGameObjectCallback;
 
         void initializeGUI(VkFormat imageFormat);
-        void showConsole();
 
         GWObjectList objectList{};
         GWConsole console{};
-        bool show_console{false};
 
         bool showCreateObjectWindow{false};
 

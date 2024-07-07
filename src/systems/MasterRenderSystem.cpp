@@ -82,6 +82,7 @@ namespace GWIN
     {
         auto viewerObject = GWGameObject::createGameObject("Viewer Object");
         viewerObject.transform.translation.z = -2.5;
+        gameObjects.emplace(viewerObject.getId(), std::move(viewerObject));
         
         currentTime = std::chrono::high_resolution_clock::now();
 
@@ -99,17 +100,15 @@ namespace GWIN
                 int frameIndex = renderer->getFrameIndex();
                 
                 // update
-                FrameInfo frameInfo
-                {
+                FrameInfo frameInfo{
                     frameIndex,
                     deltaTime,
                     commandBuffer,
                     camera,
                     globalDescriptorSets[frameIndex],
                     gameObjects,
-                    false
-                };
-                
+                    false};
+
                 GlobalUbo ubo{};
                 ubo.projection = frameInfo.camera.getProjection();
                 ubo.view = frameInfo.camera.getView();

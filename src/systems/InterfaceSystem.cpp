@@ -19,6 +19,10 @@ namespace GWIN
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
+        ImGuiIO &io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
         ImGui::StyleColorsDark();
 
         guipool = GWDescriptorPool::Builder(device)
@@ -140,11 +144,6 @@ namespace GWIN
                 if (ImGui::MenuItem("Fullscreen", "F11"))
                 {
                 }
-
-                if (ImGui::MenuItem("Console", "F9"))
-                {
-                    showConsole();
-                }
                 ImGui::EndMenu();
             }
 
@@ -163,6 +162,9 @@ namespace GWIN
 
         //Object List and Properties
         objectList.Draw(frameInfo);
+
+        //Draw's Console
+        console.draw(frameInfo);
 
         //Temporary Object Loader
         if (showCreateObjectWindow)
@@ -183,20 +185,11 @@ namespace GWIN
                 ImGui::End();
             }
         }
-
-        if (show_console)
-        {
-            //console.draw(&show_console);
-        }
-    }
-
-    void GWInterface::showConsole()
-    {
-        show_console = !show_console;
     }
 
     void GWInterface::render(VkCommandBuffer commandBuffer)
     {
+        ImGui::EndFrame();
         ImGui::Render();
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
     }

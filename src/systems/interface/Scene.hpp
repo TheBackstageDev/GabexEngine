@@ -13,9 +13,6 @@ namespace GWIN
 
         void renderScene(VkImageView& imageView);
         void addGameObject();
-
-        GWGameObject::map getGameObjects() const { return gameObjects; }
     private:
-        GWGameObject::map gameObjects;
     };
 }

@@ -15,8 +15,16 @@ namespace GWIN
     private:
         int selectedItem{-1}; //-1: none selected;
         bool transformOpen{true};
+        bool isEditingName{false};
 
-        void inputRotation(glm::vec3 &rotationBuffer, GWGameObject &selectedObject);
-        void inputPosition(glm::vec3 &positionBuffer, GWGameObject &selectedObject);
+        //Value Buffers
+        char nameBuffer[1000]{""};
+        glm::vec3 positionBuffer{0.0f, 0.0f, 0.0f};
+        glm::vec3 rotationBuffer{0.0f, 0.0f, 0.0f};
+        float scaleBuffer = 1.f;
+
+        void inputRotation(GWGameObject &selectedObject);
+        void inputPosition(GWGameObject &selectedObject);
+        void tranformGui(GWGameObject &selectedObject);
     };
 }
