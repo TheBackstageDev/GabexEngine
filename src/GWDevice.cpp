@@ -1,5 +1,8 @@
 #include "GWDevice.hpp"
 
+#define VMA_IMPLEMENTATION
+#include "vma/vk_mem_alloc.h"
+
 // std headers
 #include <cstring>
 #include <iostream>
@@ -71,10 +74,13 @@ namespace GWIN
         pickPhysicalDevice();
         createLogicalDevice();
         createCommandPool();
+        createAllocator();
     }
 
     GWinDevice::~GWinDevice()
     {
+        vmaDestroyAllocator(allocator_);
+
         vkDestroyCommandPool(device_, commandPool, nullptr);
         vkDestroyDevice(device_, nullptr);
 
@@ -484,9 +490,9 @@ namespace GWIN
     void GWinDevice::createBuffer(
         VkDeviceSize size,
         VkBufferUsageFlags usage,
-        VkMemoryPropertyFlags properties,
+        VmaMemoryUsage memoryUsage,
         VkBuffer &buffer,
-        VkDeviceMemory &bufferMemory)
+        VmaAllocation &bufferAllocation)
     {
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -494,25 +500,13 @@ namespace GWIN
         bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (vkCreateBuffer(device_, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+        VmaAllocationCreateInfo allocInfo{};
+        allocInfo.usage = memoryUsage;
+
+        if (vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &buffer, &bufferAllocation, nullptr) != VK_SUCCESS)
         {
-            throw std::runtime_error("failed to create vertex buffer!");
+            throw std::runtime_error("failed to create buffer!");
         }
-
-        VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(device_, buffer, &memRequirements);
-
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
-
-        if (vkAllocateMemory(device_, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to allocate vertex buffer memory!");
-        }
-
-        vkBindBufferMemory(device_, buffer, bufferMemory, 0);
     }
 
     VkCommandBuffer GWinDevice::beginSingleTimeCommands()
@@ -592,32 +586,34 @@ namespace GWIN
 
     void GWinDevice::createImageWithInfo(
         const VkImageCreateInfo &imageInfo,
-        VkMemoryPropertyFlags properties,
+        VmaMemoryUsage memoryUsage,
         VkImage &image,
-        VkDeviceMemory &imageMemory)
+        VmaAllocation &imageAllocation)
     {
-        if (vkCreateImage(device_, &imageInfo, nullptr, &image) != VK_SUCCESS)
+        VmaAllocationCreateInfo allocInfo{};
+        allocInfo.usage = memoryUsage;
+
+        if (vmaCreateImage(allocator_, &imageInfo, &allocInfo, &image, &imageAllocation, nullptr) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create image!");
         }
-
-        VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(device_, image, &memRequirements);
-
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
-
-        if (vkAllocateMemory(device_, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to allocate image memory!");
-        }
-
-        if (vkBindImageMemory(device_, image, imageMemory, 0) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to bind image memory!");
-        }
     }
+
+    //VMA
+
+    void GWinDevice::createAllocator()
+    {
+        VmaAllocatorCreateInfo allocatorInfo{};
+        allocatorInfo.device = device_;
+        allocatorInfo.physicalDevice = physicalDevice;
+        allocatorInfo.instance = instance;
+
+        vmaCreateAllocator(&allocatorInfo, &allocator_);
+    }
+
+    VkDeviceMemory GWinDevice::getBufferMemory(VmaAllocation buffer)
+    {
+        return buffer->GetMemory();
+    };
 
 } // namespace GWIN

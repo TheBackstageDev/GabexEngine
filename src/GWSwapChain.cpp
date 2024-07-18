@@ -54,7 +54,7 @@ namespace GWIN
         {
             vkDestroyImageView(device.device(), depthImageViews[i], nullptr);
             vkDestroyImage(device.device(), depthImages[i], nullptr);
-            vkFreeMemory(device.device(), depthImageMemorys[i], nullptr);
+            vmaFreeMemory(device.getAllocator(), depthImageAllocations[i]);
         }
 
         for (auto framebuffer : swapChainFramebuffers)
@@ -329,7 +329,7 @@ namespace GWIN
         VkExtent2D swapChainExtent = getSwapChainExtent();
 
         depthImages.resize(imageCount());
-        depthImageMemorys.resize(imageCount());
+        depthImageAllocations.resize(imageCount());
         depthImageViews.resize(imageCount());
 
         for (int i = 0; i < depthImages.size(); i++)
@@ -352,9 +352,9 @@ namespace GWIN
 
             device.createImageWithInfo(
                 imageInfo,
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                VMA_MEMORY_USAGE_GPU_ONLY,
                 depthImages[i],
-                depthImageMemorys[i]);
+                depthImageAllocations[i]);
 
             VkImageViewCreateInfo viewInfo{};
             viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

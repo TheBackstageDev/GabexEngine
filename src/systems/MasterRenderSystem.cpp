@@ -43,14 +43,13 @@ namespace GWIN
             device.properties.limits.minUniformBufferOffsetAlignment,
             device.properties.limits.nonCoherentAtomSize);
 
-        globalUboBuffer = std::make_unique<GWBuffer>(  
-            device, 
-            sizeof(GlobalUbo), 
-            GWinSwapChain::MAX_FRAMES_IN_FLIGHT, 
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-            minOffsetAlignment
-        );
+        globalUboBuffer = std::make_unique<GWBuffer>(
+            device,
+            sizeof(GlobalUbo),
+            GWinSwapChain::MAX_FRAMES_IN_FLIGHT,
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VMA_MEMORY_USAGE_CPU_TO_GPU,
+            minOffsetAlignment);
 
         globalUboBuffer->map();
         

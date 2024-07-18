@@ -1,8 +1,8 @@
 #pragma once
 
 #include "GWindow.hpp"
+#include "vma/vk_mem_alloc.h"
 
-// std lib headers
 #include <string>
 #include <vector>
 
@@ -55,20 +55,27 @@ namespace GWIN
         void createBuffer(
             VkDeviceSize size,
             VkBufferUsageFlags usage,
-            VkMemoryPropertyFlags properties,
+            VmaMemoryUsage memoryUsage,
             VkBuffer &buffer,
-            VkDeviceMemory &bufferMemory);
+            VmaAllocation &bufferAllocation);
+
         VkCommandBuffer beginSingleTimeCommands();
         void endSingleTimeCommands(VkCommandBuffer commandBuffer);
         void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
         void copyBufferToImage(
             VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
+        VkDeviceMemory getBufferMemory(VmaAllocation buffer);
 
         void createImageWithInfo(
             const VkImageCreateInfo &imageInfo,
-            VkMemoryPropertyFlags properties,
+            VmaMemoryUsage memoryUsage,
             VkImage &image,
-            VkDeviceMemory &imageMemory);
+            VmaAllocation &imageAllocation);
+
+        VmaAllocator getAllocator()
+        {
+            return allocator_;
+        };
 
         VkPhysicalDeviceProperties properties;
 
@@ -79,6 +86,9 @@ namespace GWIN
         void pickPhysicalDevice();
         void createLogicalDevice();
         void createCommandPool();
+
+        //VMA
+        void createAllocator();
 
         // helper functions
         bool isDeviceSuitable(VkPhysicalDevice device);
@@ -96,6 +106,7 @@ namespace GWIN
         GWindow &window;
         VkCommandPool commandPool;
 
+        VmaAllocator allocator_;
         VkDevice device_;
         VkSurfaceKHR surface_;
         VkQueue graphicsQueue_;
