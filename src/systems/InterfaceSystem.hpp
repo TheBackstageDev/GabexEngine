@@ -16,9 +16,6 @@
 #include "./interface/Console.hpp"
 #include "./interface/ObjectList.hpp"
 
-// for fonts
-#include <imgui/misc/freetype/imgui_freetype.h>
-
 namespace GWIN
 {
     class GWInterface

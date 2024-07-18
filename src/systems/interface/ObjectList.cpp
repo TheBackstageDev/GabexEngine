@@ -122,7 +122,7 @@ namespace GWIN
                     rotationBuffer = kv.second.transform.rotation;
                     scaleBuffer = kv.second.transform.scale;
                     selectedItem = kv.second.getId(); //Sets to its Index
-                    strncpy(nameBuffer, kv.second.getName().c_str(), sizeof(nameBuffer) - 1);
+                    strncpy_s(nameBuffer, kv.second.getName().c_str(), sizeof(nameBuffer) - 1);
                     nameBuffer[sizeof(nameBuffer) - 1] = '\0'; 
                     isEditingName = false;
                 }
@@ -153,7 +153,8 @@ namespace GWIN
                 }
                 else
                 {
-                    if (ImGui::InputText("Name: ", nameBuffer, sizeof(nameBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
+                    ImGui::Text("Name: ");
+                    if (ImGui::InputText("##Name", nameBuffer, sizeof(nameBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
                     {
                         selectedObject.setName(std::string(nameBuffer));
                         isEditingName = false;
@@ -164,9 +165,10 @@ namespace GWIN
             } else {
                 ImGui::Text("Select a Object");
             }
+
+            ImGui::EndChild();
         }
 
-        ImGui::EndChild();
         ImGui::End();
     }
 }

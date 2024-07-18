@@ -2,7 +2,7 @@
   "C_Cpp.default.includePath": [
     "${workspaceFolder}/src",
     "${VULKAN_SDK}/Include",
-    "C:/Program Files/Assimp/include",
+    "${workspaceFolder}/include",
   ],
 
   "files.associations": {
