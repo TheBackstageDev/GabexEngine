@@ -100,5 +100,12 @@ class GWDescriptorWriter {
   GWDescriptorPool &pool;
   std::vector<VkWriteDescriptorSet> writes;
 };
+
+class GWPoolHandler
+{
+  public:
+
+  private:
+};
  
 }  // namespace GWIN

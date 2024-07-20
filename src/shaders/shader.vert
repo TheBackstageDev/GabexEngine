@@ -8,6 +8,8 @@ layout(location = 3) in vec2 uv;
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec3 fragPosWorld;
 layout(location = 2) out vec3 fragNormalWorld;
+layout(location = 3) out vec2 fragUv;
+
 
 struct PointLight {
   vec4 position; // ignore W
@@ -23,6 +25,8 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   int numLights;
 } ubo;
 
+layout(set = 0, binding = 1) uniform sampler2D texSampler;
+
 layout(push_constant) uniform Push {
     mat4 modelMatrix;
 } push;
@@ -34,4 +38,5 @@ void main() {
     fragNormalWorld = normalize(mat3(push.modelMatrix) * normal);
     fragPosWorld = positionWorld.xyz;
     fragColor = color;
+    fragUv = uv;
 }

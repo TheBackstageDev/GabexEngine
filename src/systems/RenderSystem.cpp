@@ -1,6 +1,7 @@
 #include "RenderSystem.hpp"
 
 #include <glm/gtc/constants.hpp>
+#include <iostream>
 
 namespace GWIN
 {

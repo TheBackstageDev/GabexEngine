@@ -6,7 +6,7 @@
 #include <numeric>
 #include <iostream>
 #include <chrono>
-
+#include <iostream>
 #include <glm/gtc/constants.hpp>
 #include <glm/glm.hpp>
 
@@ -33,10 +33,12 @@ namespace GWIN
         globalPool = GWDescriptorPool::Builder(device)
                          .setMaxSets(GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
                          .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
+                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
                          .build();
 
         auto globalSetLayout = GWDescriptorSetLayout::Builder(device)
                                    .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+                                   .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
                                    .build();
 
         auto minOffsetAlignment = std::lcm(
@@ -55,11 +57,20 @@ namespace GWIN
         
         globalDescriptorSets.resize(GWinSwapChain::MAX_FRAMES_IN_FLIGHT);
 
+        const std::string pathToTexture = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/texture.jpg";
+        std::unique_ptr<GWTexture> texture = std::make_unique<GWTexture>(pathToTexture, imageLoader, device);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageView = texture->getImageView();
+        imageInfo.sampler = texture->getSampler();
+        imageInfo.imageLayout = texture->getimageLayout();
+
         for (int i = 0; i < globalDescriptorSets.size(); ++i)
         {
             auto bufferInfo = globalUboBuffer->descriptorInfo();
             GWDescriptorWriter(*globalSetLayout, *globalPool)
                 .writeBuffer(0, &bufferInfo)
+                .writeImage(1, &imageInfo)
                 .build(globalDescriptorSets[i]);
         }
 
@@ -160,7 +171,8 @@ namespace GWIN
 
     void MasterRenderSystem::loadGameObjects()
     {
-        std::shared_ptr<GWModel> Model;
+        std::shared_ptr<GWModel>
+            Model;
         modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/vase.obj", Model, false);
 
         auto model = GWGameObject::createGameObject("vase");

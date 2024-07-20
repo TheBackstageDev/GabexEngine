@@ -10,6 +10,8 @@
 #include "PointLightSystem.hpp"
 #include "InterfaceSystem.hpp"
 
+#include "GWTexture.hpp"
+
 #include <memory>
 #include <vector>
 #include <stdexcept>
@@ -37,9 +39,8 @@ namespace GWIN
         
         GWindow& window;
         GWinDevice& device;
+
         std::unique_ptr<GWRenderer> renderer;
-        
-        std::unique_ptr<GWDescriptorPool> globalPool{};
 
         //Render Systems
         std::unique_ptr<RenderSystem> renderSystem;
@@ -48,11 +49,14 @@ namespace GWIN
         std::unique_ptr<GWInterface> interfaceSystem;
 
         GWModelLoader modelLoader{device};
+        GWImageLoader imageLoader{device};
         
         GWGameObject::map gameObjects;
         GWCamera camera{};
         keyboardMovementController cameraController{};
+        
         std::vector<VkDescriptorSet> globalDescriptorSets;
+        std::unique_ptr<GWDescriptorPool> globalPool{};
         std::unique_ptr<GWBuffer> globalUboBuffer;
 
         std::chrono::time_point<std::chrono::high_resolution_clock> currentTime;

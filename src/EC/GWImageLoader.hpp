@@ -4,20 +4,42 @@
 
 #include <string>
 
+#include "GWFrameInfo.hpp" //this just to have device and others
+#include "vma/vk_mem_alloc.h"
+
 namespace GWIN
 {
     struct Image
     {
-        unsigned short height, width, channels;
+        VkFormat format{VK_FORMAT_R8G8B8A8_SRGB};
+        VkExtent2D size;
+        VmaAllocation allocation;
+        VkImage image;
+        VkImageView imageView;
+        VkImageLayout layout{VK_IMAGE_LAYOUT_UNDEFINED};
     };
 
     class GWImageLoader
     {
     public:
-        GWImageLoader();
+        GWImageLoader(GWinDevice &device);
         ~GWImageLoader();
 
+        Image loadImage(const std::string &filepath);
 
     private:
+        GWinDevice& device;
+
+        void createImage(
+            VkExtent2D imageProps,
+            VkDeviceSize imageSize,
+            VkFormat format,
+            VkImageUsageFlags usage,
+            VmaMemoryUsage memoryUsage,
+            VkImage &image,
+            VmaAllocation &allocation);
+
+        VkImageView createImageView(VkImage image, VkFormat format);
+        void transitionImageLayout(Image &image, VkImageLayout newLayout);
     };
 }
