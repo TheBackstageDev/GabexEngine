@@ -57,10 +57,10 @@ namespace GWIN
         
         globalDescriptorSets.resize(GWinSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-        const std::string pathToTexture = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/texture.jpg";
+        const std::string pathToTexture = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/viking_room.png";
         std::unique_ptr<GWTexture> texture = std::make_unique<GWTexture>(pathToTexture, imageLoader, device);
 
-        VkDescriptorImageInfo imageInfo{};
+        VkDescriptorImageInfo imageInfo{}; 
         imageInfo.imageView = texture->getImageView();
         imageInfo.sampler = texture->getSampler();
         imageInfo.imageLayout = texture->getimageLayout();
@@ -173,22 +173,15 @@ namespace GWIN
     {
         std::shared_ptr<GWModel>
             Model;
-        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/vase.obj", Model, false);
+        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/viking_room.obj", Model, false);
 
-        auto model = GWGameObject::createGameObject("vase");
+        auto model = GWGameObject::createGameObject("Viking Room");
         model.model = Model;
         model.transform.translation = {0.f, .5f, 1.f};
-        model.transform.rotation.z = .5f * glm::two_pi<float>();
+        model.transform.rotation.x = .25f * glm::two_pi<float>();
         model.transform.scale = 1.f;
 
-        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/quad.obj", Model, false);
-        auto quad = GWGameObject::createGameObject("quad");
-        quad.model = Model;
-        quad.transform.translation = {0.f, .5f, 0.f};
-        quad.transform.scale = 3.f;
-
         gameObjects.emplace(model.getId(), std::move(model));
-        gameObjects.emplace(quad.getId(), std::move(quad));
 
         std::vector<glm::vec3> lightColors{
             {1.f, .1f, .1f},

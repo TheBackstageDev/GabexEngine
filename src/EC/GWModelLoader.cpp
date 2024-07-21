@@ -13,8 +13,7 @@ namespace GWIN
 
         if (nullptr == scene)
         {
-            std::cout << "Scene is nullptr";
-            std::runtime_error(importer.GetErrorString());
+            std::cout << importer.GetErrorString();
             return false;
         }
 
@@ -57,7 +56,7 @@ namespace GWIN
             if (mesh->mTextureCoords[0]) 
             {
                 vertexUv.x = mesh->mTextureCoords[0][i].x;
-                vertexUv.y = mesh->mTextureCoords[0][i].y;
+                vertexUv.y = 1 - mesh->mTextureCoords[0][i].y;
             }
 
             GWModel::Vertex vertex;

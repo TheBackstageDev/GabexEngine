@@ -119,7 +119,7 @@ namespace GWIN
                 if (ImGui::Selectable(objId.c_str(), selectedItem == kv.second.getId()))
                 {
                     positionBuffer = kv.second.transform.translation;
-                    rotationBuffer = kv.second.transform.rotation;
+                    rotationBuffer = glm::degrees(kv.second.transform.rotation);
                     scaleBuffer = kv.second.transform.scale;
                     selectedItem = kv.second.getId(); //Sets to its Index
                     strncpy_s(nameBuffer, kv.second.getName().c_str(), sizeof(nameBuffer) - 1);

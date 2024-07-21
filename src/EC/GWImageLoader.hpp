@@ -13,6 +13,7 @@ namespace GWIN
     {
         VkFormat format{VK_FORMAT_R8G8B8A8_SRGB};
         VkExtent2D size;
+        uint32_t mipLevels;
         VmaAllocation allocation;
         VkImage image;
         VkImageView imageView;
@@ -39,7 +40,8 @@ namespace GWIN
             VkImage &image,
             VmaAllocation &allocation);
 
-        VkImageView createImageView(VkImage image, VkFormat format);
+        VkImageView createImageView(Image& image);
         void transitionImageLayout(Image &image, VkImageLayout newLayout);
+        void generateMipMaps(Image& image);
     };
 }

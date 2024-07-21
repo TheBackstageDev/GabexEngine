@@ -7,8 +7,8 @@ namespace GWIN
     class GWapp
     {
     public:
-        static constexpr int WIDTH = 800;
-        static constexpr int HEIGHT = 800;
+        static constexpr int WIDTH = 1500;
+        static constexpr int HEIGHT = 1000;
 
         GWapp() {};
 
