@@ -121,4 +121,10 @@ namespace GWIN
 
         return attributeDescriptions;
     }
+
+    void GWModel::setTexture(VkDescriptorSet textureSet) 
+    { 
+        hasTexture = true;
+        texture = textureSet; 
+    }
 }

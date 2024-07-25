@@ -38,9 +38,12 @@ namespace GWIN
         GWModel(const GWModel &) = delete;
         GWModel &operator=(const GWModel &) = delete;
 
-
         void bind(VkCommandBuffer commandBuffer);
         void draw(VkCommandBuffer commandBuffer);
+
+        void setTexture(VkDescriptorSet textureSet);
+        VkDescriptorSet getTexture() { return texture; } 
+        bool hasTextureSet() { return hasTexture; }
 
     private:
         void createVertexBuffers(const std::vector<Vertex> &vertices);
@@ -54,6 +57,9 @@ namespace GWIN
         std::unique_ptr<GWBuffer> indexBuffer;
         uint32_t indexCount;
 
+        VkDescriptorSet texture;
+
+        bool hasTexture{false};
         bool hasIndexBuffers{false};
     };
 }

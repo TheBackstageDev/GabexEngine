@@ -9,8 +9,9 @@
 #include "RenderSystem.hpp"
 #include "PointLightSystem.hpp"
 #include "InterfaceSystem.hpp"
-
 #include "GWTexture.hpp"
+
+#include "GWOffscreenRenderer.hpp"
 
 #include <memory>
 #include <vector>
@@ -41,6 +42,7 @@ namespace GWIN
         GWinDevice& device;
 
         std::unique_ptr<GWRenderer> renderer;
+        std::unique_ptr<GWOffscreenRenderer> offscreenRenderer;
 
         //Render Systems
         std::unique_ptr<RenderSystem> renderSystem;
@@ -58,6 +60,8 @@ namespace GWIN
         std::vector<VkDescriptorSet> globalDescriptorSets;
         std::unique_ptr<GWDescriptorPool> globalPool{};
         std::unique_ptr<GWBuffer> globalUboBuffer;
+
+        VkDescriptorSet offscreenImageDescriptor = VK_NULL_HANDLE;
 
         std::chrono::time_point<std::chrono::high_resolution_clock> currentTime;
     };

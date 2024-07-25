@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <numeric>
 
 namespace GWIN
 {
@@ -11,12 +12,18 @@ namespace GWIN
         textureImage = imageLoader.loadImage(pathToTexture);
 
         createSampler();
+        createDescriptorSet();
     }
 
     GWTexture::~GWTexture() 
     {
         vkDestroySampler(device.device(), sampler, nullptr);
         vmaDestroyImage(device.getAllocator(), textureImage.image, textureImage.allocation);
+    }
+
+    void GWTexture::createDescriptorSet()
+    {
+
     }
 
     void GWTexture::createSampler()
@@ -35,9 +42,9 @@ namespace GWIN
         samplerInfo.compareEnable = VK_FALSE;
         samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        samplerInfo.mipLodBias = 0.0f;
-        samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = 0.0f;
+        samplerInfo.mipLodBias = 0.0f; // Optional
+        samplerInfo.minLod = 0.0f; // Optional
+        samplerInfo.maxLod = static_cast<uint32_t>(textureImage.mipLevels);
 
         if (vkCreateSampler(device.device(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
         {

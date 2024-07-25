@@ -9,7 +9,7 @@
 #include <set>
 #include <unordered_set>
 
-#define NDEBUG
+//#define NDEBUG
 
 #ifndef NDEBUG
 bool enableValidationLayers = true;
@@ -27,10 +27,10 @@ namespace GWIN
         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
         void *pUserData)
     {
-        if (messageSeverity > VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-        {
+       // if (messageSeverity > VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+       // {
             std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-        }
+       // }
         
         return VK_FALSE;
     }
@@ -107,7 +107,7 @@ namespace GWIN
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "Gabex Engine App";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
+        appInfo.pEngineName = "Gabex Engine";
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
@@ -159,6 +159,7 @@ namespace GWIN
             if (isDeviceSuitable(device))
             {
                 physicalDevice = device;
+                msaaSamples = getMaxUsableSampleCount() > VK_SAMPLE_COUNT_4_BIT ? VK_SAMPLE_COUNT_4_BIT : VK_SAMPLE_COUNT_1_BIT;
                 break;
             }
         }
@@ -170,6 +171,7 @@ namespace GWIN
 
         vkGetPhysicalDeviceProperties(physicalDevice, &properties);
         std::cout << "physical device: " << properties.deviceName << std::endl;
+        std::cout << "max samples: " << getMaxSamples() << std::endl;
     }
 
     void GWinDevice::createLogicalDevice()
@@ -472,6 +474,40 @@ namespace GWIN
             }
         }
         throw std::runtime_error("failed to find supported format!");
+    }
+
+    VkSampleCountFlagBits GWinDevice::getMaxUsableSampleCount()
+    {
+        VkPhysicalDeviceProperties physicalDeviceProperties;
+        vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+
+        VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+        if (counts & VK_SAMPLE_COUNT_64_BIT)
+        {
+            return VK_SAMPLE_COUNT_64_BIT;
+        }
+        if (counts & VK_SAMPLE_COUNT_32_BIT)
+        {
+            return VK_SAMPLE_COUNT_32_BIT;
+        }
+        if (counts & VK_SAMPLE_COUNT_16_BIT)
+        {
+            return VK_SAMPLE_COUNT_16_BIT;
+        }
+        if (counts & VK_SAMPLE_COUNT_8_BIT)
+        {
+            return VK_SAMPLE_COUNT_8_BIT;
+        }
+        if (counts & VK_SAMPLE_COUNT_4_BIT)
+        {
+            return VK_SAMPLE_COUNT_4_BIT;
+        }
+        if (counts & VK_SAMPLE_COUNT_2_BIT)
+        {
+            return VK_SAMPLE_COUNT_2_BIT;
+        }
+
+        return VK_SAMPLE_COUNT_1_BIT;
     }
 
     uint32_t GWinDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)

@@ -40,7 +40,7 @@ namespace GWIN
             VkImage &image,
             VmaAllocation &allocation);
 
-        VkImageView createImageView(Image& image);
+        void createImageView(Image& image);
         void transitionImageLayout(Image &image, VkImageLayout newLayout);
         void generateMipMaps(Image& image);
     };

@@ -45,10 +45,10 @@ namespace GWIN
         vkDeviceWaitIdle(GDevice.device());
         if(swapChain == nullptr)
         {
-            swapChain = std::make_unique<GWinSwapChain>(GDevice, extent);
+            swapChain = std::make_shared<GWinSwapChain>(GDevice, extent);
         } else {
             std::shared_ptr<GWinSwapChain> oldSwapChain = std::move(swapChain);
-            swapChain = std::make_unique<GWinSwapChain>(GDevice, extent, oldSwapChain);
+            swapChain = std::make_shared<GWinSwapChain>(GDevice, extent, oldSwapChain);
     
             if(!oldSwapChain->compareSwapChainFormats(*swapChain.get()))
             {

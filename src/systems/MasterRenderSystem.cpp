@@ -18,6 +18,8 @@ namespace GWIN
         : window(window), device(device)
     {
         renderer = std::make_unique<GWRenderer>(window, device);
+        offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount());
+        //offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device);
         loadGameObjects();
         initialize();
 
@@ -57,22 +59,22 @@ namespace GWIN
         
         globalDescriptorSets.resize(GWinSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-        const std::string pathToTexture = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/viking_room.png";
+        /* const std::string pathToTexture = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/viking_room.png";
         std::unique_ptr<GWTexture> texture = std::make_unique<GWTexture>(pathToTexture, imageLoader, device);
 
         VkDescriptorImageInfo imageInfo{}; 
         imageInfo.imageView = texture->getImageView();
         imageInfo.sampler = texture->getSampler();
-        imageInfo.imageLayout = texture->getimageLayout();
+        imageInfo.imageLayout = texture->getimageLayout();  */
 
         for (int i = 0; i < globalDescriptorSets.size(); ++i)
         {
             auto bufferInfo = globalUboBuffer->descriptorInfo();
             GWDescriptorWriter(*globalSetLayout, *globalPool)
                 .writeBuffer(0, &bufferInfo)
-                .writeImage(1, &imageInfo)
+                //.writeImage(1, &imageInfo)
                 .build(globalDescriptorSets[i]);
-        }
+        } 
 
         renderSystem = std::make_unique<RenderSystem>(device, renderer->getRenderPass(), false, globalSetLayout->getDescriptorSetLayout());
         wireframeRenderSystem = std::make_unique<RenderSystem>(device, renderer->getRenderPass(), true, globalSetLayout->getDescriptorSetLayout());
@@ -90,6 +92,10 @@ namespace GWIN
 
     void MasterRenderSystem::run()
     {
+
+        const std::string pathToTexture = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/viking_room.png";
+        std::unique_ptr<GWTexture> texture = std::make_unique<GWTexture>(pathToTexture, imageLoader, device); 
+
         auto viewerObject = GWGameObject::createGameObject("Viewer Object");
         viewerObject.transform.translation.z = -2.5;
         gameObjects.emplace(viewerObject.getId(), std::move(viewerObject));
@@ -108,7 +114,7 @@ namespace GWIN
             if (auto commandBuffer = renderer->startFrame())
             {
                 int frameIndex = renderer->getFrameIndex();
-                
+
                 // update
                 FrameInfo frameInfo{
                     frameIndex,
@@ -132,9 +138,7 @@ namespace GWIN
                     frameInfo.isWireFrame = true;
                 }
 
-                // render
-                interfaceSystem->newFrame(frameInfo);
-                renderer->startSwapChainRenderPass(commandBuffer);
+                offscreenRenderer->startOffscreenRenderPass(commandBuffer);
 
                 if (frameInfo.isWireFrame)
                 {
@@ -146,10 +150,37 @@ namespace GWIN
                 }
 
                 pointLightSystem->render(frameInfo);
-                interfaceSystem->render(commandBuffer);
 
+               // offscreenRenderer->createNextImage();
+                offscreenRenderer->endOffscreenRenderPass(commandBuffer);
+
+                offscreenRenderer->createNextImage();
+                offscreenImageDescriptor = ImGui_ImplVulkan_AddTexture(
+                    offscreenRenderer->getImageSampler(),
+                    offscreenRenderer->getCurrentImageView(),
+                    VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL);
+
+                // render
+                interfaceSystem->newFrame(frameInfo);
+
+               // std::cout << imageToDraw << " Generated Image \n";
+                renderer->startSwapChainRenderPass(commandBuffer);
+                if (ImGui::Begin("Viewport", nullptr))
+                {
+                    ImGui::Text("pointer = %p", offscreenImageDescriptor);
+                    ImGui::Text("size = %d x %d", 500, 500);
+                    if (offscreenImageDescriptor)
+                    {
+                        ImGui::Image((ImTextureID)offscreenImageDescriptor, ImVec2(500, 500));
+                    }
+                    ImGui::End();  
+                } 
+
+                interfaceSystem->render(commandBuffer);
                 renderer->endSwapChainRenderPass(commandBuffer);
                 renderer->endFrame();
+
+                ImGui_ImplVulkan_RemoveTexture(offscreenImageDescriptor);
 
                 frameInfo.isWireFrame = false;
             }

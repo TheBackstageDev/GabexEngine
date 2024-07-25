@@ -58,7 +58,7 @@ namespace GWIN
 
         transitionImageLayout(newImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        newImage.imageView = createImageView(newImage);
+        createImageView(newImage);
 
         vmaDestroyBuffer(device.getAllocator(), stagingBuffer, stagingBufferAllocation);
 
@@ -93,7 +93,7 @@ namespace GWIN
         device.createImageWithInfo(imageInfo, memoryUsage, image, allocation);
     }
 
-    VkImageView GWImageLoader::createImageView(Image& image)
+    void GWImageLoader::createImageView(Image& image)
     {
         VkImageViewCreateInfo viewInfo{};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -106,13 +106,10 @@ namespace GWIN
         viewInfo.subresourceRange.baseArrayLayer = 0;
         viewInfo.subresourceRange.layerCount = 1;
 
-        VkImageView imageView;
-        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
+        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &image.imageView) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create texture image view!");
         }
-
-        return imageView;
     }
 
     void GWImageLoader::transitionImageLayout(Image &image, VkImageLayout newLayout)

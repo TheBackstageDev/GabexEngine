@@ -94,6 +94,18 @@ namespace GWIN
             if (obj.model == nullptr)
                 continue;
 
+            if (obj.model->hasTextureSet()) {
+                auto texture = obj.model->getTexture();
+                vkCmdBindDescriptorSets(
+                    frameInfo.commandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout,
+                    1, 1,
+                    &frameInfo.globalDescriptorSet,
+                    0,
+                    nullptr);
+            }
+
             SpushConstant push{};
             push.modelMatrix = obj.transform.mat4();
 

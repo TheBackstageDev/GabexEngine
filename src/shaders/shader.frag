@@ -54,5 +54,5 @@ void main() {
   }
 
   vec4 sampledColor = texture(texSampler, fragUv);
-  outColor = vec4((diffuseLight + specularLight) * fragColor * sampledColor.rgb, 1.0); 
+  outColor = vec4((diffuseLight + specularLight) * fragColor, 1.0); 
 }

@@ -7,7 +7,6 @@
 #include "GWGameObject.hpp"
 #include "GWModel.hpp"
 
-#include <optional>
 #include <string>
 #include <vector>
 #include <cassert>

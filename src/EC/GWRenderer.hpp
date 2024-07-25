@@ -39,6 +39,9 @@ namespace GWIN
         }
 
         VkFormat getSwapChainImageFormat() { return swapChain->getSwapChainImageFormat(); };
+        VkFormat getSwapChainDepthFormat() { return swapChain->getSwapChainDepthFormat(); }
+        std::shared_ptr<GWinSwapChain> getSwapChain() const { return swapChain; }
+        VkImageView getCurrentImageView() const { return swapChain->getImageView(currentImageIndex); }
 
         VkCommandBuffer startFrame();
         void endFrame();
@@ -52,7 +55,7 @@ namespace GWIN
         void recreateSwapChain();
 
         std::vector<VkCommandBuffer> commandBuffers;
-        std::unique_ptr<GWinSwapChain> swapChain;
+        std::shared_ptr<GWinSwapChain> swapChain;
         GWindow& window;
         GWinDevice &GDevice;
         

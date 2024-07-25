@@ -4,6 +4,7 @@
     "${VULKAN_SDK}/Include",
     "${workspaceFolder}/include",
   ],
+  
 
   "files.associations": {
     ".fantomasignore": "ignore",
