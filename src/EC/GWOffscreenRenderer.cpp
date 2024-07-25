@@ -118,6 +118,24 @@ namespace GWIN
             throw std::runtime_error("Failed to create offscreen image view!");
         }
 
+        std::array<VkImageView, 2> attachments = {
+            imageViews[imageIndex],
+            depthImageViews[imageIndex]};
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = renderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = window.getExtent().width;
+        framebufferInfo.height = window.getExtent().height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device.device(), &framebufferInfo, nullptr, &frameBuffers[imageIndex]) != VK_SUCCESS)
+        {
+            throw std::runtime_error("Failed to create offscreen framebuffer!");
+        }
+
         if (imageIndex >= images.size() - 1)
         {
             imageIndex = 0;

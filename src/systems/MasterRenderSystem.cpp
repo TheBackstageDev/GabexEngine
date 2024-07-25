@@ -167,11 +167,10 @@ namespace GWIN
                 renderer->startSwapChainRenderPass(commandBuffer);
                 if (ImGui::Begin("Viewport", nullptr))
                 {
-                    ImGui::Text("pointer = %p", offscreenImageDescriptor);
-                    ImGui::Text("size = %d x %d", 500, 500);
                     if (offscreenImageDescriptor)
                     {
-                        ImGui::Image((ImTextureID)offscreenImageDescriptor, ImVec2(500, 500));
+                        ImVec2 windowSize = ImGui::GetWindowSize();
+                        ImGui::Image((ImTextureID)offscreenImageDescriptor, ImVec2(windowSize.x * 1.6, windowSize.y));
                     }
                     ImGui::End();  
                 } 
@@ -181,6 +180,7 @@ namespace GWIN
                 renderer->endFrame();
 
                 ImGui_ImplVulkan_RemoveTexture(offscreenImageDescriptor);
+                offscreenImageDescriptor = VK_NULL_HANDLE;
 
                 frameInfo.isWireFrame = false;
             }
