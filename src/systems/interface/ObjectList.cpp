@@ -100,7 +100,6 @@ namespace GWIN
     {
         auto io = ImGui::GetIO();
 
-        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x / 6, io.DisplaySize.y - 20.f));
         ImGui::SetNextWindowPos(ImVec2(0.0f, 20.0f));
         ImGui::Begin("Instance", nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
         ImGui::DockSpace(ImGui::GetID("Instance"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);

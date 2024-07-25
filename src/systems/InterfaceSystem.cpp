@@ -73,6 +73,30 @@ namespace GWIN
     float Objscale = 1,f;
     float Objposition[3] = {0.f, 0.f, 0.f};
 
+    void GWInterface::drawFileDialog()
+    {
+        if (ImGui::Button("Choose File"))
+        {
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".obj", config);
+        }
+
+        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+        {
+            if (ImGuiFileDialog::Instance()->IsOk())
+            {
+                std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+                strncpy_s(filePathBuffer, filePathName.c_str(), sizeof(filePathBuffer) - 1);
+                filePathBuffer[sizeof(filePathBuffer) - 1] = '\0';
+            }
+
+            ImGuiFileDialog::Instance()->Close();
+        }
+
+        ImGui::Text("Selected file: %s", filePathBuffer);
+    }
+
     void GWInterface::newFrame(FrameInfo &frameInfo)
     {
         ImGui_ImplVulkan_NewFrame();
@@ -171,7 +195,7 @@ namespace GWIN
         {
             if (ImGui::Begin("Create New Object", &showCreateObjectWindow, ImGuiWindowFlags_AlwaysAutoResize))
             {
-                ImGui::InputText("File Path", filePathBuffer, IM_ARRAYSIZE(filePathBuffer));
+                drawFileDialog();
                 ImGui::SliderFloat("Scale", &Objscale, 0.1f, 10.f);
                 ImGui::InputFloat3("Position", Objposition);
                 if (ImGui::Button("Load Object"))

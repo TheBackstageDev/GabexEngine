@@ -165,7 +165,7 @@ namespace GWIN
 
                // std::cout << imageToDraw << " Generated Image \n";
                 renderer->startSwapChainRenderPass(commandBuffer);
-                if (ImGui::Begin("Viewport", nullptr))
+                if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoNavFocus))
                 {
                     if (offscreenImageDescriptor)
                     {

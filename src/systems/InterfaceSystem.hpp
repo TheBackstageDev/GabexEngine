@@ -11,6 +11,7 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 
 #include <functional>
+#include "imguifiledialog/ImGuiFileDialog.h"
 
 // pre-made interfaces
 #include "./interface/Console.hpp"
@@ -41,6 +42,7 @@ namespace GWIN
 
         GWObjectList objectList{};
         GWConsole console{};
+        void drawFileDialog();
 
         bool showCreateObjectWindow{false};
 
