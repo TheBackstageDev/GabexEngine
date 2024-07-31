@@ -39,28 +39,28 @@ namespace GWIN
         newImage.allocation = allocation;
         newImage.image = image;
 
-        VkBuffer stagingBuffer;
-        VmaAllocation stagingBufferAllocation;
-        device.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer, stagingBufferAllocation);
+        GWBuffer stagingBuffer{
+            device,
+            imageSize,
+            1,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VMA_MEMORY_USAGE_CPU_ONLY};
 
-        void *data;
-        vmaMapMemory(device.getAllocator(), stagingBufferAllocation, &data);
-        memcpy(data, pixels, static_cast<size_t>(imageSize));
-        vmaUnmapMemory(device.getAllocator(), stagingBufferAllocation);
+        stagingBuffer.map();
+        stagingBuffer.writeToBuffer(pixels, imageSize);
+        stagingBuffer.unmap();
 
         stbi_image_free(pixels);
 
         transitionImageLayout(newImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-        device.copyBufferToImage(stagingBuffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1);
+        device.copyBufferToImage(stagingBuffer.getBuffer(), image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1);
 
         generateMipMaps(newImage);
 
         transitionImageLayout(newImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         createImageView(newImage);
-
-        vmaDestroyBuffer(device.getAllocator(), stagingBuffer, stagingBufferAllocation);
 
         return newImage;
     }

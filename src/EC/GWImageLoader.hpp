@@ -28,6 +28,8 @@ namespace GWIN
 
         Image loadImage(const std::string &filepath);
 
+        void transitionImageLayout(Image &image, VkImageLayout newLayout);
+
     private:
         GWinDevice& device;
 
@@ -41,7 +43,6 @@ namespace GWIN
             VmaAllocation &allocation);
 
         void createImageView(Image& image);
-        void transitionImageLayout(Image &image, VkImageLayout newLayout);
         void generateMipMaps(Image& image);
     };
 }

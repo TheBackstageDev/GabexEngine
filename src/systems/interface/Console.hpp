@@ -40,9 +40,12 @@ namespace GWIN
         std::vector<LogEntry> History;
         std::vector<std::string> Commands;
 
+        GWGameObject *findObjectByName(std::string &name, FrameInfo &frameInfo);
+
+        void cmdPrint(const std::string &command, FrameInfo &frameInfo);
         void clearLog();
-        void checkCommands(const std::string& command);
-        void consoleMainMenu();
+        void checkCommands(const std::string& command, FrameInfo& frameInfo);
+        void consoleMainMenu(FrameInfo &frameInfo);
         //Flags
         bool autoScroll{true};
         bool logOnExit{true};

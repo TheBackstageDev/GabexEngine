@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <iostream>
 #include <algorithm> //For transform
+#include <sstream>
 
 namespace GWIN
 {
@@ -13,8 +14,6 @@ namespace GWIN
         Commands.push_back(std::move("clear"));
         Commands.push_back(std::move("print"));
         Commands.push_back(std::move("register"));
-
-        checkCommands("help");
     };
 
     GWConsole::~GWConsole()
@@ -46,7 +45,64 @@ namespace GWIN
         History.push_back({passedTime, LogType::WARNING, warning});
     }
 
-    void GWConsole::checkCommands(const std::string &command)
+    GWGameObject* GWConsole::findObjectByName(std::string &name, FrameInfo& frameInfo)
+    {
+        for (auto &kv : frameInfo.gameObjects)
+        {
+            auto& obj = kv.second;
+            if (obj.getName() == name)
+            {
+                return &obj;
+            }
+        }
+
+        return nullptr;
+    }
+
+    void GWConsole::cmdPrint(const std::string &command, FrameInfo &frameInfo)
+    {
+        std::istringstream iss(command);
+        std::string cmd, objectName, property;
+
+        iss >> cmd;
+
+        char quoteChar = '\0';
+        if (iss.peek() == '"' || iss.peek() == '\'')
+        {
+            quoteChar = iss.get(); 
+            std::getline(iss, objectName, quoteChar); 
+        }
+        else
+        {
+            iss >> objectName; 
+        }
+
+        iss >> property;
+
+        GWGameObject *obj = findObjectByName(objectName, frameInfo);
+
+        if (obj == nullptr)
+        {
+            addError("Object with name " + objectName + " not found.");
+            return;
+        }
+
+        if (property == "textureSet")
+        {
+            std::stringstream ss;
+             ss << "Object: " << objectName << ", TextureSet: " << obj->textureDescriptorSet;
+            addLog(ss.str());
+        }
+        else
+        {
+            std::stringstream ss;
+            ss << "Object: " << objectName << ", TextureSet: " << obj->textureDescriptorSet;
+            addLog(ss.str());
+            addWarning("Unknown print command or object type.");
+        }
+    }
+
+    void GWConsole::checkCommands(const std::string &command, FrameInfo& frameInfo)
     {
         std::string lowerCommand = command;
         std::transform(lowerCommand.begin(), lowerCommand.end(), lowerCommand.begin(), ::tolower);
@@ -60,13 +116,18 @@ namespace GWIN
             addLog("Commands:");
             addLog("help -// Show's all commands.");
             addLog("clear -// Clears the history (will also clear logs until this point on the registered File.)");
-            addLog("print -// Print's the rest of the input into the screen (will add capability to print function returns)");
+            addLog("print -// Print's the rest of the input into the screen, cmd \" help print\" to see all.");
             addLog("register -// Register's all logs into a .txt File.");
         }
         else if (lowerCommand.substr(0, 5) == "print")
         {
-            std::string message = command.substr(6); // Get the message after "print "
-            addLog(message);
+            cmdPrint(command, frameInfo);
+        }
+        else if (lowerCommand == "help print")
+        {
+            addLog("Commands:");
+            addLog("<text> -// print's out the text you sent.");
+            addLog("<objectName> <property> -// Print's out a property of the object.");
         }
         else if (lowerCommand == "register")
         {
@@ -133,7 +194,7 @@ namespace GWIN
         logFile.close();
     }
 
-    void GWConsole::consoleMainMenu()
+    void GWConsole::consoleMainMenu(FrameInfo& frameInfo)
     {
         if (ImGui::BeginMenuBar())
         {
@@ -159,7 +220,7 @@ namespace GWIN
             {
                 if (ImGui::MenuItem("Show Help", "Ctrl+H"))
                 {
-                    checkCommands("help");
+                    checkCommands("help", frameInfo);
                 }
                 ImGui::EndMenu();
             }
@@ -175,7 +236,7 @@ namespace GWIN
         {
             ImGui::SameLine();
 
-            consoleMainMenu();
+            consoleMainMenu(frameInfo);
             ;
             ImGui::Separator();
 
@@ -216,7 +277,7 @@ namespace GWIN
                 if (!input.empty())
                 {
                     addLog("> " + input);
-                    checkCommands(input);
+                    checkCommands(input, frameInfo);
                     input.clear();
                     memset(inputBuffer, 0, sizeof(inputBuffer));
                 }

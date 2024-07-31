@@ -41,5 +41,6 @@ namespace GWIN
         std::string filePath;
         float scale{1.f};
         glm::vec3 position{0.f, .5f, 0.f}; 
+        VkDescriptorSet texture = VK_NULL_HANDLE;
     };
 }

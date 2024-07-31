@@ -1,7 +1,6 @@
 #include "MasterRenderSystem.hpp"
 
 #include "../GWBuffer.hpp"
-#include "../EC/GWModelLoader.hpp"
 
 #include <numeric>
 #include <iostream>
@@ -19,15 +18,33 @@ namespace GWIN
     {
         renderer = std::make_unique<GWRenderer>(window, device);
         offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount());
-        //offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device);
-        loadGameObjects();
+
         initialize();
+        loadGameObjects();
 
         //Initializes GUI
-        interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat());
+        interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat(), textureHandler);
         interfaceSystem->setLoadGameObjectCallback([this](GameObjectInfo& objectInfo) {
             loadGameObject(objectInfo);
         });
+
+        interfaceSystem->setCreateTextureCallback([this](VkDescriptorSet& set, Texture& texture) {
+            createSet(set, texture);
+        });
+    }
+
+    void MasterRenderSystem::createSet(VkDescriptorSet &set, Texture &texture)
+    {
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = texture.textureImage.layout;
+        imageInfo.imageView = texture.textureImage.imageView;
+        imageInfo.sampler = texture.textureSampler;
+
+        auto bufferInfo = globalUboBuffer->descriptorInfo();
+
+        GWDescriptorWriter(*textureSetLayout, *texturePool)
+            .writeImage(0, &imageInfo)
+            .build(set);
     }
 
     void MasterRenderSystem::initialize()
@@ -35,13 +52,22 @@ namespace GWIN
         globalPool = GWDescriptorPool::Builder(device)
                          .setMaxSets(GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
                          .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                         .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
                          .build();
 
         auto globalSetLayout = GWDescriptorSetLayout::Builder(device)
                                    .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
-                                   .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
                                    .build();
+
+        texturePool = GWDescriptorPool::Builder(device)
+                          .setMaxSets(1000)
+                          .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
+                          .build();
+
+        textureSetLayout = GWDescriptorSetLayout::Builder(device)
+                               .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+                               .build();
+
+        std::vector<VkDescriptorSetLayout> setLayouts = {globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
 
         auto minOffsetAlignment = std::lcm(
             device.properties.limits.minUniformBufferOffsetAlignment,
@@ -59,26 +85,19 @@ namespace GWIN
         
         globalDescriptorSets.resize(GWinSwapChain::MAX_FRAMES_IN_FLIGHT);
 
-        /* const std::string pathToTexture = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/viking_room.png";
-        std::unique_ptr<GWTexture> texture = std::make_unique<GWTexture>(pathToTexture, imageLoader, device);
-
-        VkDescriptorImageInfo imageInfo{}; 
-        imageInfo.imageView = texture->getImageView();
-        imageInfo.sampler = texture->getSampler();
-        imageInfo.imageLayout = texture->getimageLayout();  */
+        textureHandler = std::make_unique<GWTextureHandler>(imageLoader, device);
 
         for (int i = 0; i < globalDescriptorSets.size(); ++i)
         {
             auto bufferInfo = globalUboBuffer->descriptorInfo();
             GWDescriptorWriter(*globalSetLayout, *globalPool)
                 .writeBuffer(0, &bufferInfo)
-                //.writeImage(1, &imageInfo)
                 .build(globalDescriptorSets[i]);
-        } 
+        }
 
-        renderSystem = std::make_unique<RenderSystem>(device, renderer->getRenderPass(), false, globalSetLayout->getDescriptorSetLayout());
-        wireframeRenderSystem = std::make_unique<RenderSystem>(device, renderer->getRenderPass(), true, globalSetLayout->getDescriptorSetLayout());
-        pointLightSystem = std::make_unique<PointLightSystem>(device, renderer->getRenderPass(), globalSetLayout->getDescriptorSetLayout());
+        renderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), false, setLayouts);
+        wireframeRenderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), true, setLayouts);
+        pointLightSystem = std::make_unique<PointLightSystem>(device, offscreenRenderer->getRenderPass(), globalSetLayout->getDescriptorSetLayout());
     }
 
     void MasterRenderSystem::updateCamera(GWGameObject& viewerObject, float deltaTime)
@@ -92,10 +111,6 @@ namespace GWIN
 
     void MasterRenderSystem::run()
     {
-
-        const std::string pathToTexture = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/viking_room.png";
-        std::unique_ptr<GWTexture> texture = std::make_unique<GWTexture>(pathToTexture, imageLoader, device); 
-
         auto viewerObject = GWGameObject::createGameObject("Viewer Object");
         viewerObject.transform.translation.z = -2.5;
         gameObjects.emplace(viewerObject.getId(), std::move(viewerObject));
@@ -151,7 +166,6 @@ namespace GWIN
 
                 pointLightSystem->render(frameInfo);
 
-               // offscreenRenderer->createNextImage();
                 offscreenRenderer->endOffscreenRenderPass(commandBuffer);
 
                 offscreenRenderer->createNextImage();
@@ -163,15 +177,28 @@ namespace GWIN
                 // render
                 interfaceSystem->newFrame(frameInfo);
 
-               // std::cout << imageToDraw << " Generated Image \n";
                 renderer->startSwapChainRenderPass(commandBuffer);
                 if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoNavFocus))
                 {
                     if (offscreenImageDescriptor)
                     {
-                        ImVec2 windowSize = ImGui::GetWindowSize();
-                        ImGui::Image((ImTextureID)offscreenImageDescriptor, ImVec2(windowSize.x * 1.6, windowSize.y));
+                        float aspectRatio = renderer->getAspectRatio();
+                        ImVec2 windowSize = ImGui::GetContentRegionAvail();
+                        float windowAspectRatio = windowSize.x / windowSize.y;
+
+                        ImVec2 imageSize;
+                        if (windowAspectRatio > aspectRatio)
+                        {
+                            imageSize = ImVec2(windowSize.y * aspectRatio, windowSize.y);
+                        }
+                        else
+                        {
+                            imageSize = ImVec2(windowSize.x, windowSize.x / aspectRatio);
+                        }
+
+                        ImGui::Image((ImTextureID)offscreenImageDescriptor, imageSize);
                     }
+                    
                     ImGui::End();  
                 } 
 
@@ -194,6 +221,7 @@ namespace GWIN
 
         auto obj = GWGameObject::createGameObject(objectInfo.objName);
         obj.model = model;
+        obj.textureDescriptorSet = objectInfo.texture;
         obj.transform.translation = objectInfo.position;
         obj.transform.scale = objectInfo.scale;
 
@@ -211,6 +239,11 @@ namespace GWIN
         model.transform.translation = {0.f, .5f, 1.f};
         model.transform.rotation.x = .25f * glm::two_pi<float>();
         model.transform.scale = 1.f;
+
+        std::string pathToTexture = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/viking_room.png";
+        Texture texture = textureHandler->createTexture(pathToTexture);
+
+        createSet(model.textureDescriptorSet, texture);
 
         gameObjects.emplace(model.getId(), std::move(model));
 

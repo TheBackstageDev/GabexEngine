@@ -16,7 +16,7 @@ namespace GWIN
     class RenderSystem
     {
     public:
-        RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, VkDescriptorSetLayout globalSetLayout);
+        RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, std::vector<VkDescriptorSetLayout> setLayouts);
         ~RenderSystem();
 
         RenderSystem(const RenderSystem &) = delete;
@@ -26,7 +26,7 @@ namespace GWIN
 
         VkPipeline getPipeline() const { return Pipeline->pipeline(); };
     private:
-        void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
+        void createPipelineLayout(std::vector<VkDescriptorSetLayout> setLayouts);
         void createPipeline(VkRenderPass renderPass, bool isWireFrame);
 
         VkPipelineLayout pipelineLayout;

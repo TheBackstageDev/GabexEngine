@@ -2,7 +2,7 @@
 
 namespace GWIN
 {
-    GWInterface::GWInterface(GWindow &window, GWinDevice &device, VkFormat imageFormat) : window(window), device(device)
+    GWInterface::GWInterface(GWindow &window, GWinDevice &device, VkFormat imageFormat, std::unique_ptr<GWTextureHandler>& textureHandler) : window(window), device(device), textureHandler(textureHandler)
     {
         initializeGUI(imageFormat);
     }
@@ -68,10 +68,17 @@ namespace GWIN
         loadGameObjectCallback = callback;
     }
 
+    void GWInterface::setCreateTextureCallback(std::function<void(VkDescriptorSet& set, Texture& texture)> callback)
+    {
+        createTextureCallback = callback;
+    }
+
     //Temporary to load Object
     char filePathBuffer[256];
+    char texturePathBuffer[256];
     float Objscale = 1,f;
     float Objposition[3] = {0.f, 0.f, 0.f};
+    VkDescriptorSet texture = VK_NULL_HANDLE;
 
     void GWInterface::drawFileDialog()
     {
@@ -79,7 +86,7 @@ namespace GWIN
         {
             IGFD::FileDialogConfig config;
             config.path = ".";
-            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".obj", config);
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".obj,.png,.jpg", config);
         }
 
         if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
@@ -87,14 +94,26 @@ namespace GWIN
             if (ImGuiFileDialog::Instance()->IsOk())
             {
                 std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-                strncpy_s(filePathBuffer, filePathName.c_str(), sizeof(filePathBuffer) - 1);
-                filePathBuffer[sizeof(filePathBuffer) - 1] = '\0';
+                if (ImGuiFileDialog::Instance()->GetCurrentFilter() == ".obj")
+                {
+                    strncpy_s(filePathBuffer, filePathName.c_str(), sizeof(filePathBuffer) - 1);
+                    filePathBuffer[sizeof(filePathBuffer) - 1] = '\0';
+                } else {
+                    strncpy_s(texturePathBuffer, filePathName.c_str(), sizeof(texturePathBuffer) - 1);
+                    texturePathBuffer[sizeof(texturePathBuffer) - 1] = '\0';
+                }
             }
 
             ImGuiFileDialog::Instance()->Close();
         }
 
         ImGui::Text("Selected file: %s", filePathBuffer);
+        ImGui::Text("Selected Texture file: %s", texturePathBuffer);
+    }
+
+    void GWInterface::drawImGuizmo(FrameInfo &frameInfo)
+    {
+       
     }
 
     void GWInterface::newFrame(FrameInfo &frameInfo)
@@ -102,7 +121,7 @@ namespace GWIN
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        //ImGui::ShowDemoWindow(); // Show's demo window
+        //ImGui::ShowDemoWindow();
 
         //Top Menu
         if (ImGui::BeginMainMenuBar())
@@ -184,11 +203,19 @@ namespace GWIN
             ImGui::EndMainMenuBar();
         }
 
+        ImGui::SetNextWindowPos(ImVec2(0.0f, 20.0f));
+        ImGui::Begin("Window", nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+        ImGui::DockSpace(ImGui::GetID("Window"), ImVec2(ImGui::GetWindowSize()));
+        ImGui::End();
+
         //Object List and Properties
         objectList.Draw(frameInfo);
 
         //Draw's Console
         console.draw(frameInfo);
+
+        //Draw's ImGuizmo Actions
+        drawImGuizmo(frameInfo);
 
         //Temporary Object Loader
         if (showCreateObjectWindow)
@@ -202,8 +229,13 @@ namespace GWIN
                 {
                     if (loadGameObjectCallback)
                     {
-                        GameObjectInfo objectInfo{"DefaultName", filePathBuffer, Objscale, {Objposition[0], Objposition[1] * -1, Objposition[2]}};
+                        Texture createTexture = textureHandler->createTexture(std::string(texturePathBuffer));
+                        createTextureCallback(texture, createTexture);
+
+                        GameObjectInfo objectInfo{"DefaultName", filePathBuffer, Objscale, {Objposition[0], Objposition[1] * -1, Objposition[2]}, texture};
                         loadGameObjectCallback(objectInfo);
+
+                        texture = VK_NULL_HANDLE;
                     }
                 }
                 ImGui::End();

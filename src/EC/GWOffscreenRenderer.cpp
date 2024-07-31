@@ -5,9 +5,9 @@
 
 namespace GWIN
 {
-    GWOffscreenRenderer::GWOffscreenRenderer(GWindow& window, GWinDevice& device, VkFormat depthFormat, float imageCount) : window(window), device(device)
+    GWOffscreenRenderer::GWOffscreenRenderer(GWindow& window, GWinDevice& device, VkFormat depthFormat, float imageCount) : window(window), device(device), depthFormat(depthFormat)
     {
-        init(depthFormat, imageCount);
+        init(imageCount);
     }
 
     GWOffscreenRenderer::~GWOffscreenRenderer()
@@ -34,13 +34,13 @@ namespace GWIN
         vkDestroyRenderPass(device.device(), renderPass, nullptr);
     }
 
-    void GWOffscreenRenderer::init(VkFormat depthFormat, float imageCount)
+    void GWOffscreenRenderer::init(float imageCount)
     {
         createImageSampler();
         createImages(imageCount);
         createImageViews();
-        createRenderPass(depthFormat);
-        createDepthResources(depthFormat);
+        createRenderPass();
+        createDepthResources();
         createFramebuffers();
     }
 
@@ -72,6 +72,12 @@ namespace GWIN
 
     void GWOffscreenRenderer::createNextImage()
     {
+        if (frameBuffers[imageIndex] != VK_NULL_HANDLE)
+        {
+            vkDestroyFramebuffer(device.device(), frameBuffers[imageIndex], nullptr);
+            frameBuffers[imageIndex] = VK_NULL_HANDLE;
+        }
+
         if (imageViews[imageIndex] != VK_NULL_HANDLE)
         {
             vkDestroyImageView(device.device(), imageViews[imageIndex], nullptr);
@@ -227,10 +233,8 @@ namespace GWIN
         }
     }
 
-    void GWOffscreenRenderer::createDepthResources(VkFormat depthFormat)
+    void GWOffscreenRenderer::createDepthResources()
     {
-        VkExtent2D extent = window.getExtent();
-
         depthImages.resize(imageViews.size());
         depthImagesAllocation.resize(imageViews.size());
         depthImageViews.resize(imageViews.size());
@@ -240,8 +244,8 @@ namespace GWIN
             VkImageCreateInfo imageInfo{};
             imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             imageInfo.imageType = VK_IMAGE_TYPE_2D;
-            imageInfo.extent.width = extent.width;
-            imageInfo.extent.height = extent.height;
+            imageInfo.extent.width = window.getExtent().width;
+            imageInfo.extent.height = window.getExtent().height;
             imageInfo.extent.depth = 1;
             imageInfo.mipLevels = 1;
             imageInfo.arrayLayers = 1;
@@ -272,7 +276,7 @@ namespace GWIN
         }
     }
 
-    void GWOffscreenRenderer::createRenderPass(VkFormat depthFormat)
+    void GWOffscreenRenderer::createRenderPass()
     {
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = VK_FORMAT_R8G8B8A8_SRGB;
@@ -343,8 +347,8 @@ namespace GWIN
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(window.getExtent().width);
-        viewport.height = static_cast<float>(window.getExtent().height);
+        viewport.width = static_cast<float>(renderPassInfo.renderArea.extent.width);
+        viewport.height = static_cast<float>(renderPassInfo.renderArea.extent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         VkRect2D scissor{{0, 0}, window.getExtent()};

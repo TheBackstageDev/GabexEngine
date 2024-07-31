@@ -9,7 +9,7 @@
 #include "RenderSystem.hpp"
 #include "PointLightSystem.hpp"
 #include "InterfaceSystem.hpp"
-#include "GWTexture.hpp"
+#include "GWTextureHandler.hpp"
 
 #include "GWOffscreenRenderer.hpp"
 
@@ -34,10 +34,11 @@ namespace GWIN
 
     private:
         void initialize();  
-        void initializeGui();
         void updateCamera(GWGameObject& viewerObject, float deltaTime);
         void loadGameObjects();
-        
+
+        void MasterRenderSystem::createSet(VkDescriptorSet &set, Texture &texture);
+
         GWindow& window;
         GWinDevice& device;
 
@@ -50,16 +51,19 @@ namespace GWIN
         std::unique_ptr<PointLightSystem> pointLightSystem;
         std::unique_ptr<GWInterface> interfaceSystem;
 
+        std::unique_ptr<GWBuffer> globalUboBuffer;
+        std::vector<VkDescriptorSet> globalDescriptorSets;
+        std::unique_ptr<GWDescriptorPool> globalPool{};
+        std::unique_ptr<GWDescriptorPool> texturePool{};
+        std::unique_ptr<GWDescriptorSetLayout> textureSetLayout;
+
         GWModelLoader modelLoader{device};
         GWImageLoader imageLoader{device};
+        std::unique_ptr<GWTextureHandler> textureHandler;
         
         GWGameObject::map gameObjects;
         GWCamera camera{};
         keyboardMovementController cameraController{};
-        
-        std::vector<VkDescriptorSet> globalDescriptorSets;
-        std::unique_ptr<GWDescriptorPool> globalPool{};
-        std::unique_ptr<GWBuffer> globalUboBuffer;
 
         VkDescriptorSet offscreenImageDescriptor = VK_NULL_HANDLE;
 

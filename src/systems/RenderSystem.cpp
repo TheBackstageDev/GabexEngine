@@ -10,10 +10,10 @@ namespace GWIN
         glm::mat4 modelMatrix{1.f};
     };
 
-    RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, VkDescriptorSetLayout globalSetLayout)
+    RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, std::vector<VkDescriptorSetLayout> setLayouts)
         : GDevice(device)
     {
-        createPipelineLayout(globalSetLayout);
+        createPipelineLayout(setLayouts);
         createPipeline(renderPass, isWireFrame);
     }
 
@@ -25,19 +25,17 @@ namespace GWIN
         }
     }
 
-    void RenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout)
+    void RenderSystem::createPipelineLayout(std::vector<VkDescriptorSetLayout> setLayouts)
     {
         VkPushConstantRange pushConstant{};
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstant.offset = 0;
         pushConstant.size = sizeof(SpushConstant);
 
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
-
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
-        pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
+        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
+        pipelineLayoutInfo.pSetLayouts = setLayouts.data();
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushConstant;
 
@@ -94,14 +92,14 @@ namespace GWIN
             if (obj.model == nullptr)
                 continue;
 
-            if (obj.model->hasTextureSet()) {
-                auto texture = obj.model->getTexture();
+            if (obj.textureDescriptorSet != VK_NULL_HANDLE)
+            {
                 vkCmdBindDescriptorSets(
                     frameInfo.commandBuffer,
                     VK_PIPELINE_BIND_POINT_GRAPHICS,
                     pipelineLayout,
                     1, 1,
-                    &frameInfo.globalDescriptorSet,
+                    &obj.textureDescriptorSet,
                     0,
                     nullptr);
             }

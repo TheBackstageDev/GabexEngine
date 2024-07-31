@@ -21,6 +21,7 @@ namespace GWIN
             glm::vec3 color;
             glm::vec3 normal;
             glm::vec2 uv;
+            glm::vec3 tangent;
 
             static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
             static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
@@ -41,10 +42,6 @@ namespace GWIN
         void bind(VkCommandBuffer commandBuffer);
         void draw(VkCommandBuffer commandBuffer);
 
-        void setTexture(VkDescriptorSet textureSet);
-        VkDescriptorSet getTexture() { return texture; } 
-        bool hasTextureSet() { return hasTexture; }
-
     private:
         void createVertexBuffers(const std::vector<Vertex> &vertices);
         void createIndexBuffers(const std::vector<uint32_t> &indices);
@@ -57,9 +54,6 @@ namespace GWIN
         std::unique_ptr<GWBuffer> indexBuffer;
         uint32_t indexCount;
 
-        VkDescriptorSet texture;
-
-        bool hasTexture{false};
         bool hasIndexBuffers{false};
     };
 }

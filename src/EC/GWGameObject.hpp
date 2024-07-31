@@ -55,6 +55,8 @@ namespace GWIN
         TransformComponent transform{};
 
         //opitional components
+        VkDescriptorSet textureDescriptorSet = VK_NULL_HANDLE;
+
         std::shared_ptr<GWModel> model{};
         std::unique_ptr<PointlightComponent> pointLight = nullptr;
 

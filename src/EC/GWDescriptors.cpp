@@ -3,6 +3,7 @@
 // std
 #include <cassert>
 #include <stdexcept>
+#include <iostream>
  
 namespace GWIN {
  
@@ -181,6 +182,7 @@ bool GWDescriptorWriter::build(VkDescriptorSet &set) {
   bool success = pool.allocateDescriptor(setLayout.getDescriptorSetLayout(), set);
   if (!success) {
     return false;
+    std::cout << "failed";
   }
   overwrite(set);
   return true;

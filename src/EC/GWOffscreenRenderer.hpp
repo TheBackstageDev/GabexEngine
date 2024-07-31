@@ -31,14 +31,14 @@ namespace GWIN
         GWindow &window;
         GWinDevice &device;
 
-        void init(VkFormat depthFormat, float imageCount);
+        void init(float imageCount);
         void createImageSampler();
 
         void createImages(float imageCount);
         void createImageViews();
-        void createDepthResources(VkFormat depthFormat);
+        void createDepthResources();
 
-        void createRenderPass(VkFormat depthFormat);
+        void createRenderPass();
         void createFramebuffers();
 
         std::vector<VkImage> images;
@@ -50,10 +50,12 @@ namespace GWIN
         std::vector<VkImageView> depthImageViews;
 
         std::vector<VkFramebuffer> frameBuffers;
+
+        VkFormat& depthFormat;
         
         VkSampler imageSampler;
         VkRenderPass renderPass;
 
-        float imageIndex{0};
+        uint32_t imageIndex{0};
     };
 }

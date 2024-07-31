@@ -53,6 +53,7 @@ namespace GWIN
         for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
         {
             glm::vec2 vertexUv = { 0.0f, 0.0f };
+            glm::vec3 vertexTangent = {0.0f, 0.0f, 0.0f};
             if (mesh->mTextureCoords[0]) 
             {
                 vertexUv.x = mesh->mTextureCoords[0][i].x;
@@ -73,7 +74,12 @@ namespace GWIN
                 glm::vec3 vertexNormal = {mesh->mNormals[i].x, -mesh->mNormals[i].y, mesh->mNormals[i].z};
                 vertex.normal = vertexNormal;
             }
+            if (mesh->HasTangentsAndBitangents())
+            {
+                vertexTangent = {mesh->mTangents[i].x, -mesh->mTangents->y, mesh->mTangents->z};
+            }
             vertex.uv = vertexUv;
+            vertex.tangent = vertexTangent;
 
             vertices[i] = vertex;
         }

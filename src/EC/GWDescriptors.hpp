@@ -106,6 +106,7 @@ class GWPoolHandler
   public:
 
   private:
+    VkDescriptorPool createNewPool();
 };
  
 }  // namespace GWIN

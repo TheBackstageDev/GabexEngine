@@ -12,6 +12,8 @@ namespace GWIN
     {
     public:
         void Draw(FrameInfo& frameInfo);
+
+        int32_t getSelectedObject() { return selectedItem; }
     private:
         int selectedItem{-1}; //-1: none selected;
         bool transformOpen{true};

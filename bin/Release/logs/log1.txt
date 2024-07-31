@@ -1,0 +1,5 @@
+0.00s Commands:
+0.00s help -// Show's all commands.
+0.00s clear -// Clears the history (will also clear logs until this point on the registered File.)
+0.00s print -// Print's the rest of the input into the screen (will add capability to print function returns)
+0.00s register -// Register's all logs into a .txt File.
