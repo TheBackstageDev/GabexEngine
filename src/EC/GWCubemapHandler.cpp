@@ -38,7 +38,7 @@ namespace GWIN
         VkDeviceSize imageSize;
         std::vector<stbi_uc *> pixels(6);
 
-        std::vector<std::string>& faces = cubeMap.info.getFaces();
+        auto& faces = cubeMap.info.getFaces();
 
         for (uint32_t i = 0; i < faces.size(); ++i)
         {
@@ -90,6 +90,8 @@ namespace GWIN
         transitionImageLayout(cubeMap, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         device.copyBufferToImage(stagingBuffer.getBuffer(), cubeMap.Cubeimage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 6);
         transitionImageLayout(cubeMap, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        createImageView(cubeMap);
     }
 
     void GWCubemapHandler::createSampler(VkSampler& sampler)

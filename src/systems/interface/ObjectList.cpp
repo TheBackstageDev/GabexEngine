@@ -9,30 +9,30 @@ namespace GWIN
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
         ImGui::Button("X");
         ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(50);
+        ImGui::SameLine(0, 0); 
+        ImGui::SetNextItemWidth(80);
         if (ImGui::DragFloat("##PosX", &positionBuffer.x, 0.1f, -FLT_MAX, FLT_MAX, "%.1f"))
         {
             selectedObject.transform.translation.x = positionBuffer.x;
         }
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, 0); 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 0.0f, 1.0f));
         ImGui::Button("Y");
         ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(50);
+        ImGui::SameLine(0, 0);
+        ImGui::SetNextItemWidth(80);
         if (ImGui::DragFloat("##PosY", &positionBuffer.y, 0.1f, -FLT_MAX, FLT_MAX, "%.1f"))
         {
-            selectedObject.transform.translation.y = positionBuffer.y * -1;
+            selectedObject.transform.translation.y = positionBuffer.y;
         }
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, 0); 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
         ImGui::Button("Z");
         ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(50);
+        ImGui::SameLine(0, 0);
+        ImGui::SetNextItemWidth(80);
         if (ImGui::DragFloat("##PosZ", &positionBuffer.z, 0.1f, -FLT_MAX, FLT_MAX, "%.1f"))
         {
             selectedObject.transform.translation.z = positionBuffer.z;
@@ -46,42 +46,39 @@ namespace GWIN
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
         ImGui::Button("X");
         ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(50);
+        ImGui::SameLine(0, 0); 
+        ImGui::SetNextItemWidth(80);
         if (ImGui::DragFloat("##RotX", &rotationBuffer.x, .2f, -360.0f, 360.0f, "%.1f°"))
         {
             selectedObject.transform.rotation.x = glm::radians(rotationBuffer.x);
         }
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, 0); 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 0.0f, 1.0f));
         ImGui::Button("Y");
         ImGui::PopStyleColor();
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(50);
+        ImGui::SameLine(0, 0); 
+        ImGui::SetNextItemWidth(80);
         if (ImGui::DragFloat("##RotY", &rotationBuffer.y, .2f, -360.0f, 360.0f, "%.1f°"))
         {
             selectedObject.transform.rotation.y = glm::radians(rotationBuffer.y);
         }
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, 0); 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
         ImGui::Button("Z");
         ImGui::PopStyleColor();
-        ImGui::SameLine();
-
-        ImGui::SetNextItemWidth(50);
+        ImGui::SameLine(0, 0); 
+        ImGui::SetNextItemWidth(80);
         if (ImGui::DragFloat("##RotZ", &rotationBuffer.z, .2f, -360.0f, 360.0f, "%.1f°"))
         {
             selectedObject.transform.rotation.z = glm::radians(rotationBuffer.z);
         }
     }
 
-    void GWObjectList::tranformGui(GWGameObject &selectedObject)
+    void GWObjectList::transformGui(GWGameObject &selectedObject)
     {
-        ImGui::SetNextWindowDockID(ImGui::GetID("Inspector"), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowContentSize(ImVec2(80, 100));
-        if (ImGui::Begin("Transform", &transformOpen))
+        if (ImGui::CollapsingHeader("Transform", nullptr))
         {
             inputPosition(selectedObject);
             inputRotation(selectedObject);
@@ -93,23 +90,16 @@ namespace GWIN
             {
                 selectedObject.transform.scale = scaleBuffer;
             }
-        } ImGui::End();
+        }
     }
 
     void GWObjectList::Draw(FrameInfo &frameInfo)
     {
         auto io = ImGui::GetIO();
 
-        ImGui::SetNextWindowPos(ImVec2(0.0f, 20.0f));
-        ImGui::Begin("Instance", nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-        ImGui::DockSpace(ImGui::GetID("Instance"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
-        ImGui::End();
-
         ImGui::SetNextWindowDockID(ImGui::GetID("Instance"), ImGuiCond_FirstUseEver);
-        if (ImGui::Begin("ObjectList", nullptr, ImGuiWindowFlags_NoResize))
+        if (ImGui::Begin("Scene Hierarchy##", nullptr, ImGuiWindowFlags_NoResize))
         {
-            ImGui::SetWindowPos(ImVec2(0, 20));
-            ImGui::SetWindowSize(ImVec2(io.DisplaySize.x / 7, io.DisplaySize.y / 2));
             ImGui::BeginChild("ScrollingRegion##1", ImVec2(0, 0), true);
 
             for (auto &kv : frameInfo.gameObjects)
@@ -152,7 +142,6 @@ namespace GWIN
                 }
                 else
                 {
-                    ImGui::Text("Name: ");
                     if (ImGui::InputText("##Name", nameBuffer, sizeof(nameBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
                     {
                         selectedObject.setName(std::string(nameBuffer));
@@ -160,14 +149,13 @@ namespace GWIN
                     }
                 }
 
-                tranformGui(selectedObject);
+                transformGui(selectedObject);
             } else {
                 ImGui::Text("Select a Object");
             }
 
             ImGui::EndChild();
         }
-
         ImGui::End();
     }
 }

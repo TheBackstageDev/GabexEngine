@@ -13,7 +13,7 @@ namespace GWIN
     public:
         void Draw(FrameInfo& frameInfo);
 
-        int32_t getSelectedObject() { return selectedItem; }
+        uint32_t getSelectedObject() { return selectedItem; }
     private:
         int selectedItem{-1}; //-1: none selected;
         bool transformOpen{true};
@@ -27,6 +27,6 @@ namespace GWIN
 
         void inputRotation(GWGameObject &selectedObject);
         void inputPosition(GWGameObject &selectedObject);
-        void tranformGui(GWGameObject &selectedObject);
+        void transformGui(GWGameObject &selectedObject);
     };
 }

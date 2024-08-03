@@ -19,6 +19,8 @@ namespace GWIN
         renderer = std::make_unique<GWRenderer>(window, device);
         offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount());
 
+        cubemapHandler = std::make_unique<GWCubemapHandler>(device);
+
         initialize();
         loadGameObjects();
 
@@ -98,6 +100,7 @@ namespace GWIN
         renderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), false, setLayouts);
         wireframeRenderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), true, setLayouts);
         pointLightSystem = std::make_unique<PointLightSystem>(device, offscreenRenderer->getRenderPass(), globalSetLayout->getDescriptorSetLayout());
+        //skyboxSystem = std::make_unique<SkyboxSystem>(device, offscreenRenderer->getRenderPass(), setLayouts);
     }
 
     void MasterRenderSystem::updateCamera(GWGameObject& viewerObject, float deltaTime)
@@ -138,7 +141,7 @@ namespace GWIN
                     camera,
                     globalDescriptorSets[frameIndex],
                     gameObjects,
-                    false};
+                    VK_NULL_HANDLE, false};
 
                 GlobalUbo ubo{};
                 ubo.projection = frameInfo.camera.getProjection();
@@ -174,33 +177,12 @@ namespace GWIN
                     offscreenRenderer->getCurrentImageView(),
                     VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL);
 
+                frameInfo.currentFrameSet = offscreenImageDescriptor;
+
                 // render
                 interfaceSystem->newFrame(frameInfo);
 
                 renderer->startSwapChainRenderPass(commandBuffer);
-                if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoNavFocus))
-                {
-                    if (offscreenImageDescriptor)
-                    {
-                        float aspectRatio = renderer->getAspectRatio();
-                        ImVec2 windowSize = ImGui::GetContentRegionAvail();
-                        float windowAspectRatio = windowSize.x / windowSize.y;
-
-                        ImVec2 imageSize;
-                        if (windowAspectRatio > aspectRatio)
-                        {
-                            imageSize = ImVec2(windowSize.y * aspectRatio, windowSize.y);
-                        }
-                        else
-                        {
-                            imageSize = ImVec2(windowSize.x, windowSize.x / aspectRatio);
-                        }
-
-                        ImGui::Image((ImTextureID)offscreenImageDescriptor, imageSize);
-                    }
-                    
-                    ImGui::End();  
-                } 
 
                 interfaceSystem->render(commandBuffer);
                 renderer->endSwapChainRenderPass(commandBuffer);
@@ -232,6 +214,19 @@ namespace GWIN
     {
         std::shared_ptr<GWModel>
             Model;
+
+        CubeMapInfo info{};
+        info.negX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negx.jpg";
+        info.negY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negy.jpg";
+        info.negZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negz.jpg";
+        info.posX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/posx.jpg";
+        info.posY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/posy.jpg";
+        info.posZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/posz.jpg";
+
+        auto skybox = GWGameObject::createGameObject("Skybox");
+
+        gameObjects.emplace(skybox.getId(), std::move(skybox));
+
         modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/viking_room.obj", Model, false);
 
         auto model = GWGameObject::createGameObject("Viking Room");
@@ -244,26 +239,11 @@ namespace GWIN
         Texture texture = textureHandler->createTexture(pathToTexture);
 
         createSet(model.textureDescriptorSet, texture);
-
         gameObjects.emplace(model.getId(), std::move(model));
 
         std::vector<glm::vec3> lightColors{
-            {1.f, .1f, .1f},
-            {.1f, .1f, 1.f},
-            {.1f, 1.f, .1f},
-            {1.f, 1.f, .1f},
-            {.1f, 1.f, 1.f},
             {1.f, 1.f, 1.f}
         };
 
-        for (int i = 0; i < lightColors.size(); i++) {
-            auto pointLight = GWGameObject::createPointLight(1.f, 0.05f, lightColors[i]);
-            auto rotateLight = glm::rotate(
-                glm::mat4(1.f),
-                (i * glm::two_pi<float>()) / lightColors.size(),
-                {0.f, -1.f, 0.f});
-            pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
-            gameObjects.emplace(pointLight.getId(), std::move(pointLight));
-        } 
     }
 }

@@ -19,6 +19,8 @@
 #define USE_THUMBNAILS
 #include "imguifiledialog/ImGuiFileDialog.h"
 
+#include <imguizmo/ImGuizmo.h>
+
 // pre-made interfaces
 #include "./interface/Console.hpp"
 #include "./interface/ObjectList.hpp"
@@ -49,7 +51,7 @@ namespace GWIN
         std::unique_ptr<GWTextureHandler>& textureHandler;
 
         void initializeGUI(VkFormat imageFormat);
-        void drawImGuizmo(FrameInfo &frameInfo);
+        void drawImGuizmo(FrameInfo &frameInfo, ImDrawList* drawList);
 
         GWObjectList objectList{};
         GWConsole console{};

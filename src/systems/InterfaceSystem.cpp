@@ -23,6 +23,8 @@ namespace GWIN
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
+        ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
+
         ImGui::StyleColorsDark();
 
         guipool = GWDescriptorPool::Builder(device)
@@ -111,9 +113,56 @@ namespace GWIN
         ImGui::Text("Selected Texture file: %s", texturePathBuffer);
     }
 
-    void GWInterface::drawImGuizmo(FrameInfo &frameInfo)
+    void GWInterface::drawImGuizmo(FrameInfo &frameInfo, ImDrawList* drawList)
     {
-       
+        ImGuizmo::BeginFrame();
+
+        static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
+        if (ImGui::IsKeyPressed(ImGuiKey_T))
+            mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+        if (ImGui::IsKeyPressed(ImGuiKey_R))
+            mCurrentGizmoOperation = ImGuizmo::ROTATE;
+        if (ImGui::IsKeyPressed(ImGuiKey_S))
+            mCurrentGizmoOperation = ImGuizmo::SCALE;
+
+        ImGuizmo::SetOrthographic(false);
+        ImGuizmo::SetDrawlist(drawList);
+
+        uint32_t selectedObject = objectList.getSelectedObject();
+        if (selectedObject != -1)
+        {
+            GWGameObject &gameObject = frameInfo.gameObjects.at(selectedObject);
+
+            glm::mat4 transformMatrix = gameObject.transform.mat4();
+
+            glm::mat4 view = frameInfo.camera.getView();
+            glm::mat4 projection = frameInfo.camera.getProjection();
+
+            projection[1][1] *= -1;
+
+            ImGuizmo::AllowAxisFlip(true);
+            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
+                                 mCurrentGizmoOperation, ImGuizmo::MODE::WORLD,
+                                 glm::value_ptr(transformMatrix));
+
+            if (ImGuizmo::IsUsing())
+            {
+                glm::vec3 translation, rotation, scale;
+                ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix),
+                                                      glm::value_ptr(translation),
+                                                      glm::value_ptr(rotation),
+                                                      glm::value_ptr(scale));
+
+                gameObject.transform.translation = translation;
+                gameObject.transform.rotation = glm::radians(rotation);
+                if (mCurrentGizmoOperation == ImGuizmo::SCALE)
+                {
+                    float uniformScale = (scale.x + scale.y + scale.z) / 3.0f;
+                    gameObject.transform.scale = uniformScale;
+                    scale = glm::vec3(uniformScale);
+                }
+            }
+        }
     }
 
     void GWInterface::newFrame(FrameInfo &frameInfo)
@@ -203,19 +252,34 @@ namespace GWIN
             ImGui::EndMainMenuBar();
         }
 
-        ImGui::SetNextWindowPos(ImVec2(0.0f, 20.0f));
-        ImGui::Begin("Window", nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-        ImGui::DockSpace(ImGui::GetID("Window"), ImVec2(ImGui::GetWindowSize()));
-        ImGui::End();
-
         //Object List and Properties
         objectList.Draw(frameInfo);
 
         //Draw's Console
         console.draw(frameInfo);
 
+        ImDrawList* drawList;
+        ImGui::SetNextWindowDockID(ImGui::GetID("##Viewport"));
+        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMouseInputs))
+        {
+            drawList = ImGui::GetWindowDrawList();
+            ImVec2 windowSize = ImGui::GetContentRegionAvail();
+            if (frameInfo.currentFrameSet)
+            {
+                float windowAspectRatio = windowSize.x / windowSize.y;
+
+                ImGui::Image((ImTextureID)frameInfo.currentFrameSet, windowSize);
+            }
+
+            ImVec2 windowPos = ImGui::GetWindowPos();
+
+            ImGuizmo::SetRect(windowPos.x, windowPos.y, windowSize.x, windowSize.y);
+
+            ImGui::End();
+        }
+
         //Draw's ImGuizmo Actions
-        drawImGuizmo(frameInfo);
+        drawImGuizmo(frameInfo, drawList);
 
         //Temporary Object Loader
         if (showCreateObjectWindow)

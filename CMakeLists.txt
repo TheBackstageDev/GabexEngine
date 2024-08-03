@@ -30,7 +30,7 @@ link_directories(
 
 file(GLOB_RECURSE SOURCES
     "${CMAKE_SOURCE_DIR}/src/*.cpp"
-    "${CMAKE_SOURCE_DIR}/include/imguifiledialog/*.cpp"
+    "${CMAKE_SOURCE_DIR}/include/imguifiledialog/ImGuiFileDialog.cpp"
 )
 
 list(REMOVE_ITEM SOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
@@ -43,6 +43,7 @@ set(IMGUI_SOURCES
     "${CMAKE_SOURCE_DIR}/include/imgui/imgui_demo.cpp"
     "${CMAKE_SOURCE_DIR}/include/imgui/backends/imgui_impl_vulkan.cpp"
     "${CMAKE_SOURCE_DIR}/include/imgui/backends/imgui_impl_glfw.cpp"
+    "${CMAKE_SOURCE_DIR}/include/imguizmo/ImGuizmo.cpp"
 )
 
 # Add executable

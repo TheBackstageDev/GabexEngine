@@ -10,6 +10,7 @@
 #include "PointLightSystem.hpp"
 #include "InterfaceSystem.hpp"
 #include "GWTextureHandler.hpp"
+#include "SkyboxSystem.hpp"
 
 #include "GWOffscreenRenderer.hpp"
 
@@ -49,6 +50,7 @@ namespace GWIN
         std::unique_ptr<RenderSystem> renderSystem;
         std::unique_ptr<RenderSystem> wireframeRenderSystem;
         std::unique_ptr<PointLightSystem> pointLightSystem;
+        std::unique_ptr<SkyboxSystem> skyboxSystem;
         std::unique_ptr<GWInterface> interfaceSystem;
 
         std::unique_ptr<GWBuffer> globalUboBuffer;
@@ -60,7 +62,8 @@ namespace GWIN
         GWModelLoader modelLoader{device};
         GWImageLoader imageLoader{device};
         std::unique_ptr<GWTextureHandler> textureHandler;
-        
+        std::unique_ptr<GWCubemapHandler> cubemapHandler;
+
         GWGameObject::map gameObjects;
         GWCamera camera{};
         keyboardMovementController cameraController{};

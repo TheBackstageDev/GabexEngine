@@ -32,6 +32,7 @@ namespace GWIN
         GWCamera& camera;
         VkDescriptorSet globalDescriptorSet;
         GWGameObject::map &gameObjects;
+        VkDescriptorSet currentFrameSet;
         bool isWireFrame;
     };
 

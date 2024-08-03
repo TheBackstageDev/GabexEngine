@@ -1,19 +1,23 @@
 #pragma once
 
 #include "GWImageLoader.hpp" 
+#include <array>
 
 namespace GWIN
 {
     struct CubeMapInfo //Path to each of the cube map's faces
     {
         std::string posX;
-        std::string posY; //Bottom
+        std::string posY; //Top
         std::string posZ;
         std::string negX;
-        std::string negY; //Top
+        std::string negY; //Bottom
         std::string negZ; 
 
-        std::vector<std::string>& getFaces() { return {posX, posY, posZ, negX, negY, negZ}; }
+        std::array<std::string, 6> getFaces()
+        {
+            return {posX, posY, posZ, negX, negY, negZ};
+        }
     };
 
     struct CubeMap
