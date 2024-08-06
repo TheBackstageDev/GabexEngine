@@ -86,20 +86,6 @@ namespace GWIN
             addError("Object with name " + objectName + " not found.");
             return;
         }
-
-        if (property == "textureSet")
-        {
-            std::stringstream ss;
-             ss << "Object: " << objectName << ", TextureSet: " << obj->textureDescriptorSet;
-            addLog(ss.str());
-        }
-        else
-        {
-            std::stringstream ss;
-            ss << "Object: " << objectName << ", TextureSet: " << obj->textureDescriptorSet;
-            addLog(ss.str());
-            addWarning("Unknown print command or object type.");
-        }
     }
 
     void GWConsole::checkCommands(const std::string &command, FrameInfo& frameInfo)

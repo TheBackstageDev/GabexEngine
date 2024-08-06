@@ -76,7 +76,7 @@ namespace GWIN
         }
     }
 
-    void GWObjectList::transformGui(GWGameObject &selectedObject)
+    void GWObjectList::inspectorGuis(GWGameObject &selectedObject)
     {
         if (ImGui::CollapsingHeader("Transform", nullptr))
         {
@@ -91,6 +91,36 @@ namespace GWIN
                 selectedObject.transform.scale = scaleBuffer;
             }
         }
+
+        if (ImGui::CollapsingHeader("Material", nullptr))
+        {
+            //Temporary
+            static const char *materials[] = {"Material1", "Material2", "Material3"};
+            static int selectedMaterial = 0;
+
+            ImGui::Text("Material");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(150);
+            if (ImGui::BeginCombo("##MaterialCombo", materials[selectedMaterial]))
+            {
+                for (int i = 0; i < IM_ARRAYSIZE(materials); i++)
+                {
+                    bool isSelected = (selectedMaterial == i);
+                    if (ImGui::Selectable(materials[i], isSelected))
+                    {
+                        selectedMaterial = i;
+                    }
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+        }
+    }
+
+    void GWObjectList::addComponent(FrameInfo& frameInfo)
+    {
+
     }
 
     void GWObjectList::Draw(FrameInfo &frameInfo)
@@ -98,18 +128,23 @@ namespace GWIN
         auto io = ImGui::GetIO();
 
         ImGui::SetNextWindowDockID(ImGui::GetID("Instance"), ImGuiCond_FirstUseEver);
-        if (ImGui::Begin("Scene Hierarchy##", nullptr, ImGuiWindowFlags_NoResize))
+        ImGui::SetNextWindowPos(ImVec2(0, 20));
+        if (ImGui::Begin("Scene Hierarchy##", nullptr))
         {
             ImGui::BeginChild("ScrollingRegion##1", ImVec2(0, 0), true);
 
             for (auto &kv : frameInfo.gameObjects)
             {
-                std::string objId = kv.second.getName() + "##" + (char)kv.first;
-                if (ImGui::Selectable(objId.c_str(), selectedItem == kv.second.getId()))
+                std::string objId = kv.first + " " + kv.second.getName() + "##" + (char)kv.first;
+                if (kv.first == selectedItem)
                 {
                     positionBuffer = kv.second.transform.translation;
                     rotationBuffer = glm::degrees(kv.second.transform.rotation);
                     scaleBuffer = kv.second.transform.scale;
+                }
+
+                if (ImGui::Selectable(objId.c_str(), selectedItem == kv.second.getId()))
+                {
                     selectedItem = kv.second.getId(); //Sets to its Index
                     strncpy_s(nameBuffer, kv.second.getName().c_str(), sizeof(nameBuffer) - 1);
                     nameBuffer[sizeof(nameBuffer) - 1] = '\0'; 
@@ -118,7 +153,6 @@ namespace GWIN
             }
 
             ImGui::EndChild();
-
             ImGui::End();
         }
 
@@ -149,10 +183,12 @@ namespace GWIN
                     }
                 }
 
-                transformGui(selectedObject);
+                inspectorGuis(selectedObject);
             } else {
                 ImGui::Text("Select a Object");
             }
+
+            //addComponent(frameInfo);
 
             ImGui::EndChild();
         }

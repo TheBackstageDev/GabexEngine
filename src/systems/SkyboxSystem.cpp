@@ -2,6 +2,9 @@
 
 #include <stdexcept>
 #include <cassert>
+#include "iostream"
+
+#include <filesystem>
 
 namespace GWIN
 {
@@ -51,6 +54,19 @@ namespace GWIN
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
         pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
+        pipelineConfig.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        pipelineConfig.depthStencilInfo.depthTestEnable = VK_TRUE;
+        pipelineConfig.depthStencilInfo.depthWriteEnable = VK_FALSE;
+        pipelineConfig.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+        pipelineConfig.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
+        pipelineConfig.depthStencilInfo.stencilTestEnable = VK_FALSE;
+        pipelineConfig.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        pipelineConfig.rasterizationInfo.depthClampEnable = VK_FALSE;
+        pipelineConfig.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
+        pipelineConfig.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
+        pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+        pipelineConfig.rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        pipelineConfig.rasterizationInfo.depthBiasEnable = VK_FALSE;
 
         pipeline = std::make_unique<GPipeLine>(
             device,
@@ -68,6 +84,43 @@ namespace GWIN
     {
         assert(pipeline && "Pipeline must be created before calling render");
 
+        if (currentSkybox == VK_NULL_HANDLE)
+            return;
+
+        auto& skybox = frameInfo.gameObjects.at(0);
+
         pipeline->bind(frameInfo.commandBuffer);
+
+        vkCmdBindDescriptorSets(
+            frameInfo.commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout,
+            0, 1,
+            &frameInfo.globalDescriptorSet,
+            0,
+            nullptr);
+
+        vkCmdBindDescriptorSets(
+            frameInfo.commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout,
+            1, 1,
+            &currentSkybox,
+            0,
+            nullptr);
+
+        SpushConstant push{};
+        push.modelMatrix = skybox.transform.mat4();
+
+        vkCmdPushConstants(
+            frameInfo.commandBuffer,
+            pipelineLayout,
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            0,
+            sizeof(SpushConstant),
+            &push);
+
+        skybox.model->bind(frameInfo.commandBuffer);
+        skybox.model->draw(frameInfo.commandBuffer);
     }
 }

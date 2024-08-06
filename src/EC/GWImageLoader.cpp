@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 namespace GWIN
 {
@@ -14,18 +15,19 @@ namespace GWIN
 
     GWImageLoader::~GWImageLoader() {}
 
-    Image GWImageLoader::loadImage(const std::string &filepath)
+    Image GWImageLoader::loadImage(const std::string &filepath, bool isMipMapped)
     {
         int texWidth, texHeight, texChannels;
+        Image newImage{};
         stbi_uc *pixels = stbi_load(filepath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         if (!pixels)
         {
-            throw std::runtime_error("failed to load texture image!");
+            std::cout << "Failed to load Image!";
+            return newImage;
         }
 
         VkDeviceSize imageSize = texWidth * texHeight * 4;
 
-        Image newImage{};
         newImage.size = {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)};
         newImage.format = VK_FORMAT_R8G8B8A8_SRGB;
         newImage.layout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -34,7 +36,7 @@ namespace GWIN
         VkImage image;
         VmaAllocation allocation;
 
-        createImage(newImage.size, imageSize, newImage.format, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VMA_MEMORY_USAGE_GPU_ONLY, image, allocation);
+        createImage(newImage.size, imageSize, newImage.format, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VMA_MEMORY_USAGE_GPU_ONLY, image, allocation, newImage.mipLevels);
 
         newImage.allocation = allocation;
         newImage.image = image;
@@ -56,7 +58,8 @@ namespace GWIN
 
         device.copyBufferToImage(stagingBuffer.getBuffer(), image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1);
 
-        generateMipMaps(newImage);
+        if (isMipMapped)
+            generateMipMaps(newImage);
 
         transitionImageLayout(newImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
@@ -72,7 +75,8 @@ namespace GWIN
         VkImageUsageFlags usage,
         VmaMemoryUsage memoryUsage,
         VkImage &image,
-        VmaAllocation &allocation)
+        VmaAllocation &allocation,
+        uint32_t mipLevels)
     {
         VkImageCreateInfo imageInfo{};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -80,7 +84,7 @@ namespace GWIN
         imageInfo.extent.width = static_cast<uint32_t>(imageProps.width);
         imageInfo.extent.height = static_cast<uint32_t>(imageProps.height);
         imageInfo.extent.depth = 1;
-        imageInfo.mipLevels = 1;
+        imageInfo.mipLevels = mipLevels;
         imageInfo.arrayLayers = 1;
         imageInfo.format = format;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;

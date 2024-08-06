@@ -89,7 +89,7 @@ namespace GWIN
         for (auto &kv : frameInfo.gameObjects)
         {
             auto &obj = kv.second;
-            if (obj.model == nullptr)
+            if (obj.model == nullptr || obj.getName() == "Skybox")
                 continue;
 
             if (obj.textureDescriptorSet != VK_NULL_HANDLE)

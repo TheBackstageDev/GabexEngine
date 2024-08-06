@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stb/std_image.hpp"
+#include "stb/stb_image_write.h"
 
 #include <string>
 
@@ -26,7 +27,7 @@ namespace GWIN
         GWImageLoader(GWinDevice &device);
         ~GWImageLoader();
 
-        Image loadImage(const std::string &filepath);
+        Image loadImage(const std::string &filepath, bool isMipMapped);
 
         void transitionImageLayout(Image &image, VkImageLayout newLayout);
 
@@ -40,7 +41,8 @@ namespace GWIN
             VkImageUsageFlags usage,
             VmaMemoryUsage memoryUsage,
             VkImage &image,
-            VmaAllocation &allocation);
+            VmaAllocation &allocation,
+            uint32_t mipLevels);
 
         void createImageView(Image& image);
         void generateMipMaps(Image& image);

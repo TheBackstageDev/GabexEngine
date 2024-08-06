@@ -24,6 +24,7 @@
 // pre-made interfaces
 #include "./interface/Console.hpp"
 #include "./interface/ObjectList.hpp"
+#include "./interface/Assets.hpp"
 
 namespace GWIN
 {
@@ -41,6 +42,8 @@ namespace GWIN
 
         GWConsole getConsole() const { return console; }
 
+        glm::vec4 getLightDirection() { return {DirectionalLightingDirection[0], DirectionalLightingDirection[1] * -1, DirectionalLightingDirection[2], DirectionalLightingIntensity}; }
+
     private:
         GWindow& window;
         GWinDevice& device;
@@ -52,12 +55,22 @@ namespace GWIN
 
         void initializeGUI(VkFormat imageFormat);
         void drawImGuizmo(FrameInfo &frameInfo, ImDrawList* drawList);
+        void drawSceneSettings();
 
         GWObjectList objectList{};
         GWConsole console{};
+        std::unique_ptr<AssetsWindow> assets;
         void drawFileDialog();
 
         bool showCreateObjectWindow{false};
+        ImGuizmo::OPERATION mCurrentGizmoOperation{ImGuizmo::TRANSLATE};
+
+        //values
+        float DirectionalLightingDirection[3] = {0.f, 45.f, 0.f};
+        float DirectionalLightingIntensity = 1.f;
+
+        //Flags
+        bool showShadows{true};
 
         std::unique_ptr<GWDescriptorPool> guipool;
     };

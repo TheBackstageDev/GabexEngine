@@ -100,7 +100,7 @@ namespace GWIN
         renderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), false, setLayouts);
         wireframeRenderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), true, setLayouts);
         pointLightSystem = std::make_unique<PointLightSystem>(device, offscreenRenderer->getRenderPass(), globalSetLayout->getDescriptorSetLayout());
-        //skyboxSystem = std::make_unique<SkyboxSystem>(device, offscreenRenderer->getRenderPass(), setLayouts);
+        skyboxSystem = std::make_unique<SkyboxSystem>(device, offscreenRenderer->getRenderPass(), setLayouts);
     }
 
     void MasterRenderSystem::updateCamera(GWGameObject& viewerObject, float deltaTime)
@@ -147,6 +147,7 @@ namespace GWIN
                 ubo.projection = frameInfo.camera.getProjection();
                 ubo.view = frameInfo.camera.getView();
                 ubo.inverseView = camera.getInverseView();
+                ubo.sunLight = interfaceSystem->getLightDirection();
                 pointLightSystem->update(frameInfo, ubo);
                 globalUboBuffer->writeToIndex(&ubo, frameIndex);
                 globalUboBuffer->flushIndex(frameIndex);
@@ -157,6 +158,8 @@ namespace GWIN
                 }
 
                 offscreenRenderer->startOffscreenRenderPass(commandBuffer);
+
+                skyboxSystem->render(frameInfo);
 
                 if (frameInfo.isWireFrame)
                 {
@@ -183,6 +186,12 @@ namespace GWIN
                 interfaceSystem->newFrame(frameInfo);
 
                 renderer->startSwapChainRenderPass(commandBuffer);
+
+                /* if (ImGui::Begin("Image", nullptr))
+                {
+                    ImGui::Image((ImTextureID)skyboxSet, ImVec2(500,500));
+                    ImGui::End();
+                } */
 
                 interfaceSystem->render(commandBuffer);
                 renderer->endSwapChainRenderPass(commandBuffer);
@@ -217,15 +226,27 @@ namespace GWIN
 
         CubeMapInfo info{};
         info.negX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negx.jpg";
-        info.negY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negy.jpg";
-        info.negZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negz.jpg";
         info.posX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/posx.jpg";
-        info.posY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/posy.jpg";
+        info.negY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negy.jpg";
+        info.posY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/posy.jpg"; 
+        info.negZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negz.jpg";
         info.posZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/posz.jpg";
+        VkDescriptorSet skyboxSet;
+        CubeMap cubeMap = cubemapHandler->createCubeMap(info);
+        Texture texture2{};
+        texture2.textureImage = cubeMap.Cubeimage;
+        textureHandler->createSampler(0, texture2.textureSampler);
 
-        auto skybox = GWGameObject::createGameObject("Skybox");
+        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/cube.obj", Model, false);
 
-        gameObjects.emplace(skybox.getId(), std::move(skybox));
+        GWGameObject skyboxObject = GWGameObject::createGameObject("Skybox");
+        skyboxObject.model = Model;
+        skyboxObject.transform.scale = 85.f;
+
+        gameObjects.emplace(skyboxObject.getId(), std::move(skyboxObject));
+
+        createSet(skyboxSet, texture2);
+        skyboxSystem->setSkybox(skyboxSet);
 
         modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/viking_room.obj", Model, false);
 
@@ -244,6 +265,5 @@ namespace GWIN
         std::vector<glm::vec3> lightColors{
             {1.f, 1.f, 1.f}
         };
-
     }
 }

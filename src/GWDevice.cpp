@@ -27,7 +27,7 @@ namespace GWIN
         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
         void *pUserData)
     {
-       if (messageSeverity > VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+       if (messageSeverity > VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
        {
             std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
        }

@@ -17,6 +17,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 projection;
   mat4 view;
   mat4 invView;
+  vec4 sunLight;
   vec4 ambientLightColor; // w is intensity
   PointLight pointLights[10];
   int numLights;
@@ -36,6 +37,9 @@ void main() {
 
   vec3 cameraPosWorld = ubo.invView[3].xyz;
   vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
+
+  float cosAngSunIncidence = max(dot(surfaceNormal, normalize(ubo.sunLight.xyz)), 0);
+  diffuseLight += cosAngSunIncidence * ubo.sunLight.w;
 
   for (int i = 0; i < ubo.numLights; i++) {
     PointLight light = ubo.pointLights[i];

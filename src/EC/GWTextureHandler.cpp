@@ -29,7 +29,7 @@ namespace GWIN
         ++lastTextureId;
         texture.id = lastTextureId;
         
-        texture.textureImage = imageLoader.loadImage(pathToTexture);
+        texture.textureImage = imageLoader.loadImage(pathToTexture, true);
         
         createSampler(texture.textureImage.mipLevels, texture.textureSampler);
 

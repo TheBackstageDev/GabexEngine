@@ -28,6 +28,9 @@ namespace GWIN
         Texture createTexture(std::string &pathToTexture);
         void changeImageLayout(Texture& texture, VkImageLayout newLayout);
 
+        GWImageLoader getImageLoader() { return imageLoader; }
+        void createSampler(uint32_t mipLevels, VkSampler &sampler);
+
     private:
         GWinDevice& device;
         GWImageLoader& imageLoader;
@@ -36,7 +39,6 @@ namespace GWIN
 
         uint32_t lastTextureId{0};
 
-        void createSampler(uint32_t mipLevels, VkSampler& sampler);
         void createDescriptorSet(Texture &texture);
     };
 } // namespace GWIN

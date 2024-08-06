@@ -5,6 +5,7 @@ namespace GWIN
     GWInterface::GWInterface(GWindow &window, GWinDevice &device, VkFormat imageFormat, std::unique_ptr<GWTextureHandler>& textureHandler) : window(window), device(device), textureHandler(textureHandler)
     {
         initializeGUI(imageFormat);
+        //assets = std::make_unique<AssetsWindow>(textureHandler->getImageLoader());
     }
 
     GWInterface::~GWInterface()
@@ -117,14 +118,6 @@ namespace GWIN
     {
         ImGuizmo::BeginFrame();
 
-        static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
-        if (ImGui::IsKeyPressed(ImGuiKey_T))
-            mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-        if (ImGui::IsKeyPressed(ImGuiKey_R))
-            mCurrentGizmoOperation = ImGuizmo::ROTATE;
-        if (ImGui::IsKeyPressed(ImGuiKey_S))
-            mCurrentGizmoOperation = ImGuizmo::SCALE;
-
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::SetDrawlist(drawList);
 
@@ -163,6 +156,18 @@ namespace GWIN
                 }
             }
         }
+    }
+
+    void GWInterface::drawSceneSettings()
+    {
+        if (ImGui::Begin("Scene Settings", nullptr))
+        {
+            ImGui::DragFloat3("LightDirection", DirectionalLightingDirection, 1.f, -360.f, 360.f);
+            ImGui::DragFloat("LightIntensity", &DirectionalLightingIntensity, .1f, 0.f, 10.f);
+            ImGui::Checkbox("Render Shadows", &showShadows);
+        }
+
+        ImGui::End();
     }
 
     void GWInterface::newFrame(FrameInfo &frameInfo)
@@ -252,16 +257,39 @@ namespace GWIN
             ImGui::EndMainMenuBar();
         }
 
+        if (ImGui::Begin("Instance", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar))
+        {
+            ImGui::SetWindowSize(ImGui::GetContentRegionAvail());
+
+            ImGui::DockSpace(ImGui::GetID("InstanceSpace"), ImGui::GetWindowSize());
+            ImGui::End();
+        }
+
         //Object List and Properties
         objectList.Draw(frameInfo);
-
-        //Draw's Console
         console.draw(frameInfo);
+        //assets->draw();
 
         ImDrawList* drawList;
         ImGui::SetNextWindowDockID(ImGui::GetID("##Viewport"));
-        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMouseInputs))
+        ImGui::SetNextWindowPos(ImVec2((ImGui::GetWindowSize().x + 50) / 2, 20));
+        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove))
         {
+            if (ImGui::Button("Translate"))
+            {
+                mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Rotate"))
+            {
+                mCurrentGizmoOperation = ImGuizmo::ROTATE;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Scale"))
+            {
+                mCurrentGizmoOperation = ImGuizmo::SCALE;
+            }
+            
             drawList = ImGui::GetWindowDrawList();
             ImVec2 windowSize = ImGui::GetContentRegionAvail();
             if (frameInfo.currentFrameSet)
@@ -278,7 +306,7 @@ namespace GWIN
             ImGui::End();
         }
 
-        //Draw's ImGuizmo Actions
+        drawSceneSettings();
         drawImGuizmo(frameInfo, drawList);
 
         //Temporary Object Loader

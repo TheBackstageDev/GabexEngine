@@ -17,12 +17,16 @@ namespace GWIN
 
         void render(FrameInfo &frameInfo);
 
+        void setSkybox(VkDescriptorSet& skybox) { currentSkybox = skybox; }
+
     private:
         void createPipelineLayout(std::vector<VkDescriptorSetLayout> setLayouts);
         void createPipeline(VkRenderPass renderPass);
 
         VkPipelineLayout pipelineLayout;
         std::unique_ptr<GPipeLine> pipeline;
+
+        VkDescriptorSet currentSkybox = VK_NULL_HANDLE;
 
         GWinDevice& device;
     };

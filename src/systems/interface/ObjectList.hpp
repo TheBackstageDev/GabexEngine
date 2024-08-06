@@ -27,6 +27,7 @@ namespace GWIN
 
         void inputRotation(GWGameObject &selectedObject);
         void inputPosition(GWGameObject &selectedObject);
-        void transformGui(GWGameObject &selectedObject);
+        void inspectorGuis(GWGameObject &selectedObject);
+        void addComponent(FrameInfo& frameInfo);
     };
 }

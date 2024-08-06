@@ -16,7 +16,7 @@ namespace GWIN
 
         std::array<std::string, 6> getFaces()
         {
-            return {posX, posY, posZ, negX, negY, negZ};
+            return {posX, negX, posY, negY, posZ, negZ};
         }
     };
 
