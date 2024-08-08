@@ -133,6 +133,8 @@ namespace GWIN
             {
                 int frameIndex = renderer->getFrameIndex();
 
+                bool isWireFrame = false;
+
                 // update
                 FrameInfo frameInfo{
                     frameIndex,
@@ -141,7 +143,7 @@ namespace GWIN
                     camera,
                     globalDescriptorSets[frameIndex],
                     gameObjects,
-                    VK_NULL_HANDLE, false};
+                    VK_NULL_HANDLE};
 
                 GlobalUbo ubo{};
                 ubo.projection = frameInfo.camera.getProjection();
@@ -154,14 +156,14 @@ namespace GWIN
 
                 if (glfwGetKey(window.getWindow(), cameraController.keys.activateWireframe))
                 {
-                    frameInfo.isWireFrame = true;
+                    isWireFrame = true;
                 }
 
                 offscreenRenderer->startOffscreenRenderPass(commandBuffer);
 
                 skyboxSystem->render(frameInfo);
 
-                if (frameInfo.isWireFrame)
+                if (isWireFrame)
                 {
                     wireframeRenderSystem->renderGameObjects(frameInfo);
                 }
@@ -200,7 +202,7 @@ namespace GWIN
                 ImGui_ImplVulkan_RemoveTexture(offscreenImageDescriptor);
                 offscreenImageDescriptor = VK_NULL_HANDLE;
 
-                frameInfo.isWireFrame = false;
+                isWireFrame = false;
             }
         }
     }
@@ -241,29 +243,39 @@ namespace GWIN
 
         GWGameObject skyboxObject = GWGameObject::createGameObject("Skybox");
         skyboxObject.model = Model;
-        skyboxObject.transform.scale = 85.f;
+        skyboxObject.transform.scale = 5.f;
 
         gameObjects.emplace(skyboxObject.getId(), std::move(skyboxObject));
 
         createSet(skyboxSet, texture2);
         skyboxSystem->setSkybox(skyboxSet);
 
-        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/viking_room.obj", Model, false);
+        Texture no_texture = textureHandler->createTexture(std::string("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/no_texture.png"));
 
-        auto model = GWGameObject::createGameObject("Viking Room");
-        model.model = Model;
-        model.transform.translation = {0.f, .5f, 1.f};
-        model.transform.rotation.x = .25f * glm::two_pi<float>();
-        model.transform.scale = 1.f;
+        VkDescriptorSet no_texture_set;
 
-        std::string pathToTexture = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/viking_room.png";
-        Texture texture = textureHandler->createTexture(pathToTexture);
+        createSet(no_texture_set, no_texture);
 
-        createSet(model.textureDescriptorSet, texture);
-        gameObjects.emplace(model.getId(), std::move(model));
+        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/sphere.obj", Model, false);
 
-        std::vector<glm::vec3> lightColors{
-            {1.f, 1.f, 1.f}
-        };
+        int index = 0;
+        for (uint32_t x = 0; x < 5; x++)
+        {
+            for (uint32_t z = 0; z < 5; z++)
+            {
+                index++;
+                auto sphere = GWGameObject::createGameObject("Sphere " + std::to_string(index));
+                sphere.model = Model;
+                sphere.textureDescriptorSet = no_texture_set;
+                sphere.transform.translation.x = x * 1.25;
+                sphere.transform.translation.z = z * 1.25;
+                sphere.transform.scale = .5f;
+
+                gameObjects.emplace(sphere.getId(), std::move(sphere));
+            }
+        }
+
+        auto light = GWGameObject::createLight(1.0f, .05f, {1.0f, 1.0f, 1.0f});
+        gameObjects.emplace(light.getId(), std::move(light));
     }
 }

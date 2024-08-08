@@ -17,7 +17,7 @@ layout(location = 4) in vec3 tangent;
 
 layout (location = 0) out vec2 fragOffset;
 
-struct PointLight {
+struct Light {
   vec4 position; // ignore W
   vec4 color; // W is itensity
 };
@@ -28,7 +28,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 inverseView;
   vec4 sunLight;
   vec4 ambientLightColor; // w is intensity
-  PointLight pointLights[10];
+  Light lights[10];
   int numLights;
 } ubo;
 

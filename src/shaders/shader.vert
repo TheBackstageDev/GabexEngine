@@ -12,7 +12,7 @@ layout(location = 2) out vec3 fragNormalWorld;
 layout(location = 3) out vec2 fragUv;
 layout(location = 4) out vec3 fragTangent;
 
-struct PointLight {
+struct Light {
   vec4 position; // ignore W
   vec4 color; // W is itensity
 };
@@ -23,7 +23,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 inverseView;
   vec4 sunLight;
   vec4 ambientLightColor; // w is intensity
-  PointLight pointLights[10];
+  Light lights[10];
   int numLights;
 } ubo;
 

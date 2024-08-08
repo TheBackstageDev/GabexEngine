@@ -64,16 +64,6 @@ target_link_libraries(GabexEngine PUBLIC ${LIBS})
 
 target_compile_definitions(GabexEngine PUBLIC DEBUG)
 
-add_custom_command(
-    TARGET GabexEngine
-    POST_BUILD
-    COMMAND "C:/VulkanSDK/1.3.283.0/Bin/glslc.exe" "${CMAKE_SOURCE_DIR}/src/shaders/shader.vert" -o "${CMAKE_SOURCE_DIR}/src/shaders/shader.vert.spv"
-    COMMAND "C:/VulkanSDK/1.3.283.0/Bin/glslc.exe" "${CMAKE_SOURCE_DIR}/src/shaders/shader.frag" -o "${CMAKE_SOURCE_DIR}/src/shaders/shader.frag.spv"
-    COMMAND "C:/VulkanSDK/1.3.283.0/Bin/glslc.exe" "${CMAKE_SOURCE_DIR}/src/shaders/point_light.vert" -o "${CMAKE_SOURCE_DIR}/src/shaders/point_light.vert.spv"
-    COMMAND "C:/VulkanSDK/1.3.283.0/Bin/glslc.exe" "${CMAKE_SOURCE_DIR}/src/shaders/point_light.frag" -o "${CMAKE_SOURCE_DIR}/src/shaders/point_light.frag.spv"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GLFW_LIBRARY_DIR}/glfw3.dll" "$<TARGET_FILE_DIR:GabexEngine>"
-)
-
 # Set output directory
 set_target_properties(GabexEngine PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"

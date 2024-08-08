@@ -8,7 +8,7 @@ namespace GWIN
 {
     #define MAX_LIGHTS 10
 
-    struct Pointlight
+    struct Light
     {
         glm::vec4 Position; //ignore W
         glm::vec4 Color; //W is intensity
@@ -21,7 +21,7 @@ namespace GWIN
         glm::mat4 inverseView{1.f};
         glm::vec4 sunLight{0.f, glm::radians(45.f), 0.f, .5f};  // w is intensity
         glm::vec4 ambientLightColor{1.f, 1.f, 1.f, 0.5f}; //w is intensity
-        Pointlight pointLights[MAX_LIGHTS];
+        Light lights[MAX_LIGHTS];
         int numLights;
     };
 
@@ -34,7 +34,6 @@ namespace GWIN
         VkDescriptorSet globalDescriptorSet;
         GWGameObject::map &gameObjects;
         VkDescriptorSet currentFrameSet;
-        bool isWireFrame;
     };
 
     struct GameObjectInfo

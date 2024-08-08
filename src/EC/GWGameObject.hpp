@@ -23,7 +23,7 @@ namespace GWIN
         glm::mat4 mat4();
     };
 
-    struct PointlightComponent
+    struct LightComponent
     {
         float lightIntensity = 1.f;
     };
@@ -40,7 +40,7 @@ namespace GWIN
             return GWGameObject(currentID++, name);
         }
 
-        static GWGameObject createPointLight(float intensity, float radius, glm::vec3 color);
+        static GWGameObject createLight(float intensity, float radius, glm::vec3 color);
 
         GWGameObject(const GWGameObject &) = delete;
         GWGameObject &operator=(const GWGameObject &) = delete;
@@ -58,7 +58,7 @@ namespace GWIN
         VkDescriptorSet textureDescriptorSet = VK_NULL_HANDLE;
 
         std::shared_ptr<GWModel> model{};
-        std::unique_ptr<PointlightComponent> pointLight = nullptr;
+        std::unique_ptr<LightComponent> light = nullptr;
 
     private:
         GWGameObject(id_t ID, const std::string name) : Objname(name)

@@ -65,13 +65,13 @@ namespace GWIN
         int lightIndex = 0;
         for (auto& kv : frameInfo.gameObjects) {
             auto& obj = kv.second;
-            if (obj.pointLight == nullptr) continue;
+            if (obj.light == nullptr) continue;
 
             assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified");
             
             // copy light to ubo
-            ubo.pointLights[lightIndex].Position = glm::vec4(obj.transform.translation, 1.f);
-            ubo.pointLights[lightIndex].Color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+            ubo.lights[lightIndex].Position = glm::vec4(obj.transform.translation, 1.f);
+            ubo.lights[lightIndex].Color = glm::vec4(obj.color, obj.light->lightIntensity);
 
             lightIndex += 1;
         }
@@ -96,11 +96,11 @@ namespace GWIN
         for(auto& kv : frameInfo.gameObjects)
         {
             auto& obj = kv.second;
-            if(obj.pointLight == nullptr) continue;
+            if(obj.light == nullptr) continue;
 
             pointLightPushConstant push{};
             push.position = glm::vec4(obj.transform.translation, 1.f);
-            push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+            push.color = glm::vec4(obj.color, obj.light->lightIntensity);
             push.radius = obj.transform.scale;
             
             vkCmdPushConstants

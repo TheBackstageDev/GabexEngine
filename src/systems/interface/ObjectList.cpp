@@ -135,7 +135,7 @@ namespace GWIN
 
             for (auto &kv : frameInfo.gameObjects)
             {
-                std::string objId = kv.first + " " + kv.second.getName() + "##" + (char)kv.first;
+                std::string objId = kv.second.getName() + "##" + (char)kv.first;
                 if (kv.first == selectedItem)
                 {
                     positionBuffer = kv.second.transform.translation;

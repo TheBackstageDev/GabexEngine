@@ -31,6 +31,8 @@ layout(push_constant) uniform Push {
 
 void main()
 {
-  fragUvw = vec3(position.x, position.y * -1, position.z);
-  gl_Position = ubo.projection * ubo.view * push.modelMatrix * vec4(position.xyz, 1.0);
+    mat4 viewNoTranslation = mat4(mat3(ubo.view));
+    
+    fragUvw = vec3(position.x, position.y * -1, position.z);
+    gl_Position = ubo.projection * viewNoTranslation * push.modelMatrix * vec4(position.xyz, 1.0);
 }

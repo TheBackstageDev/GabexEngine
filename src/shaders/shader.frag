@@ -8,7 +8,7 @@ layout(location = 4) in vec3 fragTangent;
 
 layout(location = 0) out vec4 outColor;
 
-struct PointLight {
+struct Light {
   vec4 position; // ignore W
   vec4 color; // W is itensity
 };
@@ -42,7 +42,7 @@ void main() {
   diffuseLight += cosAngSunIncidence * ubo.sunLight.w;
 
   for (int i = 0; i < ubo.numLights; i++) {
-    PointLight light = ubo.pointLights[i];
+    Light light = ubo.light[i];
     vec3 directionToLight = light.position.xyz - fragPosWorld;
     float attenuation = 1.0 / dot(directionToLight, directionToLight); // distance squared
     float cosAngIncidence = max(dot(surfaceNormal, normalize(directionToLight)), 0);

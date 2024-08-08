@@ -5,9 +5,9 @@ layout(location = 0) out vec4 outColor;
 
 layout(set = 1, binding = 0) uniform samplerCube skyboxSampler;
 
-struct PointLight {
-    vec4 position; // ignore W
-    vec4 color; // W is intensity
+struct Light {
+  vec4 position; // ignore W
+  vec4 color; // W is itensity
 };
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
@@ -16,7 +16,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 inverseView;
     vec4 sunLight;
     vec4 ambientLightColor; // w is intensity
-    PointLight pointLights[10];
+    Light lights[10];
     int numLights;
 } ubo;
 
