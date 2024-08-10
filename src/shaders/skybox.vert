@@ -10,9 +10,10 @@ layout(location = 0) out vec3 fragUvw;
 
 layout(set = 1, binding = 0) uniform samplerCube skyboxSampler;
 
-struct PointLight {
-  vec4 position; // ignore W
+struct Light {
+  vec4 position; //w is type; 0 - Point, 1 - Spot
   vec4 color; // W is itensity
+  vec2 angles; // x - internal angles, y - external angles
 };
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
@@ -21,7 +22,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 inverseView;
   vec4 sunLight;
   vec4 ambientLightColor; // w is intensity
-  PointLight pointLights[10];
+  Light lights[10];
   int numLights;
 } ubo;
 

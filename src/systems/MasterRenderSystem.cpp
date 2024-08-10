@@ -18,8 +18,8 @@ namespace GWIN
     {
         renderer = std::make_unique<GWRenderer>(window, device);
         offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount());
-
         cubemapHandler = std::make_unique<GWCubemapHandler>(device);
+        materialHandler = std::make_unique<GWMaterialHandler>(device);
 
         initialize();
         loadGameObjects();
@@ -151,6 +151,7 @@ namespace GWIN
                 ubo.inverseView = camera.getInverseView();
                 ubo.sunLight = interfaceSystem->getLightDirection();
                 pointLightSystem->update(frameInfo, ubo);
+                materialHandler->setMaterials(ubo);
                 globalUboBuffer->writeToIndex(&ubo, frameIndex);
                 globalUboBuffer->flushIndex(frameIndex);
 
@@ -271,11 +272,24 @@ namespace GWIN
                 sphere.transform.translation.z = z * 1.25;
                 sphere.transform.scale = .5f;
 
+                sphere.Material = materialHandler->createMaterial(
+                1.0f / (x + 1), 
+                1.0f / (z + 1), 
+                { 
+                    (1.0f + cos(3.14159f * x / 5.0f)) * 0.5f,  // R component varies between 0 and 1
+                    (1.0f + cos(3.14159f * z / 5.0f)) * 0.5f,  // G component varies between 0 and 1
+                    (1.0f + sin(3.14159f * (x + z) / 10.0f)) * 0.5f, // B component varies between 0 and 1
+                    1.0f
+                }
+            );
+
                 gameObjects.emplace(sphere.getId(), std::move(sphere));
             }
         }
 
-        auto light = GWGameObject::createLight(1.0f, .05f, {1.0f, 1.0f, 1.0f});
+        auto light = GWGameObject::createLight(1.0f, .1f, {1.f, 1.f, 1.f});
+        light.transform.translation.y = 2.5f;
+        
         gameObjects.emplace(light.getId(), std::move(light));
     }
 }

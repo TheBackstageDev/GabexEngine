@@ -39,7 +39,7 @@ namespace GWIN
         gameObject.transform.scale = radius;
         gameObject.light = std::make_unique<LightComponent>();
         gameObject.light->lightIntensity = intensity;
-        
+        gameObject.light->angles = {0.f, 0.f};
         return gameObject;
     }
 }

@@ -72,6 +72,7 @@ namespace GWIN
             // copy light to ubo
             ubo.lights[lightIndex].Position = glm::vec4(obj.transform.translation, 1.f);
             ubo.lights[lightIndex].Color = glm::vec4(obj.color, obj.light->lightIntensity);
+            //ubo.lights[lightIndex].Angles = obj.light->angles;
 
             lightIndex += 1;
         }

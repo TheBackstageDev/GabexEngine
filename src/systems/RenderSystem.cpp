@@ -8,6 +8,7 @@ namespace GWIN
     struct SpushConstant
     {
         glm::mat4 modelMatrix{1.f};
+        uint32_t MaterialIndex;
     };
 
     RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, std::vector<VkDescriptorSetLayout> setLayouts)
@@ -106,6 +107,7 @@ namespace GWIN
 
             SpushConstant push{};
             push.modelMatrix = obj.transform.mat4();
+            push.MaterialIndex = obj.Material;
 
             vkCmdPushConstants(
                 frameInfo.commandBuffer,

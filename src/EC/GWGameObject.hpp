@@ -26,6 +26,7 @@ namespace GWIN
     struct LightComponent
     {
         float lightIntensity = 1.f;
+        glm::vec2 angles{1.0f};
     };
 
     class GWGameObject
@@ -56,6 +57,7 @@ namespace GWIN
 
         //opitional components
         VkDescriptorSet textureDescriptorSet = VK_NULL_HANDLE;
+        uint32_t Material = 0; //ID of the material
 
         std::shared_ptr<GWModel> model{};
         std::unique_ptr<LightComponent> light = nullptr;
