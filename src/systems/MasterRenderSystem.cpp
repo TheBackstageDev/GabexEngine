@@ -25,7 +25,7 @@ namespace GWIN
         loadGameObjects();
 
         //Initializes GUI
-        interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat(), textureHandler);
+        interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat(), textureHandler, materialHandler);
         interfaceSystem->setLoadGameObjectCallback([this](GameObjectInfo& objectInfo) {
             loadGameObject(objectInfo);
         });
@@ -287,9 +287,11 @@ namespace GWIN
             }
         }
 
-        auto light = GWGameObject::createLight(1.0f, .1f, {1.f, 1.f, 1.f});
-        light.transform.translation.y = 2.5f;
-        
+        auto light = GWGameObject::createLight(1.0f, 0.05f, {1.0f, 1.0f, 1.0f});
+        auto light2 = GWGameObject::createLight(2.0f, 0.05f, {1.0f, 1.0f, 1.0f}, 75.f);
+        light2.transform.translation.y = -2.5f;
+
         gameObjects.emplace(light.getId(), std::move(light));
+        gameObjects.emplace(light2.getId(), std::move(light2));
     }
 }

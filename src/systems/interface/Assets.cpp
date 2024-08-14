@@ -5,7 +5,8 @@ namespace fs = std::filesystem;
 
 namespace GWIN
 {
-    AssetsWindow::AssetsWindow(GWTextureHandler& imageLoader) : imageLoader(imageLoader)
+    AssetsWindow::AssetsWindow(std::unique_ptr<GWTextureHandler>& imageLoader, std::unique_ptr<GWMaterialHandler>& materialHandler) 
+    : imageLoader(imageLoader), materialHandler(materialHandler)
     {
         createDefaultImages();
     }
@@ -30,7 +31,9 @@ namespace GWIN
             ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), true, ImGuiWindowFlags_NoResize);
             for (auto& kv : images)
             {
+                auto image = kv.second;
 
+                ImGui::Image((ImTextureID) image, ImVec2(500, 500));
             }
             ImGui::EndChild();
 
@@ -39,18 +42,18 @@ namespace GWIN
 
     VkDescriptorSet AssetsWindow::createImage(const std::string &pathToFile)
     {
-        Image NewImage = imageLoader.getImageLoader().loadImage(pathToFile, false);
+        Image NewImage = imageLoader->getImageLoader().loadImage(pathToFile, false);
 
         VkSampler sampler;
 
-        imageLoader.createSampler(1, sampler);
+        imageLoader->createSampler(1, sampler);
 
         return ImGui_ImplVulkan_AddTexture(sampler, NewImage.imageView, NewImage.layout);
     }
 
     void AssetsWindow::createDefaultImages()
     {
-        std::string relativePath = ".../src/systems/interface/images";
+        std::string relativePath = "/src/systems/interface/images";
         fs::path imageDirectory = fs::current_path() / relativePath;
 
         if (fs::exists(imageDirectory) && fs::is_directory(imageDirectory))

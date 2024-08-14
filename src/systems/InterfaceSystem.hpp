@@ -6,6 +6,7 @@
 #include "../EC/GWDescriptors.hpp"
 #include "../EC/GWFrameInfo.hpp"
 #include "../EC/GWTextureHandler.hpp"
+#include "../EC/GWMaterialHandler.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -31,7 +32,8 @@ namespace GWIN
     class GWInterface
     {
     public:
-        GWInterface(GWindow &window, GWinDevice &device, VkFormat imageFormat, std::unique_ptr<GWTextureHandler> &textureHandler);
+        GWInterface(GWindow &window, GWinDevice &device, VkFormat imageFormat, std::unique_ptr<GWTextureHandler> &textureHandler,
+                    std::unique_ptr<GWMaterialHandler>& materialHandler);
         ~GWInterface();
 
         void newFrame(FrameInfo& frameInfo);
@@ -52,6 +54,7 @@ namespace GWIN
         std::function<void(VkDescriptorSet& set, Texture& texture)> createTextureCallback;
 
         std::unique_ptr<GWTextureHandler>& textureHandler;
+        std::unique_ptr<GWMaterialHandler>& materialHandler;
 
         void initializeGUI(VkFormat imageFormat);
         void drawImGuizmo(FrameInfo &frameInfo, ImDrawList* drawList);

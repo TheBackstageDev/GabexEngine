@@ -66,5 +66,5 @@ target_compile_definitions(GabexEngine PUBLIC DEBUG)
 
 # Set output directory
 set_target_properties(GabexEngine PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/"
 )

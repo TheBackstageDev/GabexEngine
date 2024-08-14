@@ -26,7 +26,7 @@ namespace GWIN
     struct LightComponent
     {
         float lightIntensity = 1.f;
-        glm::vec2 angles{1.0f};
+        float cutOffAngle = 0.0f;
     };
 
     class GWGameObject
@@ -42,6 +42,7 @@ namespace GWIN
         }
 
         static GWGameObject createLight(float intensity, float radius, glm::vec3 color);
+        static GWGameObject createLight(float intensity, float radius, glm::vec3 color, float cutOffAngle);
 
         GWGameObject(const GWGameObject &) = delete;
         GWGameObject &operator=(const GWGameObject &) = delete;

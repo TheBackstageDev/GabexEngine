@@ -1,7 +1,7 @@
 #include "PointLightSystem.hpp"
 
 #include <glm/gtc/constants.hpp>
-
+#include <iostream>
 namespace GWIN
 {
     struct pointLightPushConstant
@@ -68,11 +68,17 @@ namespace GWIN
             if (obj.light == nullptr) continue;
 
             assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified");
-            
-            // copy light to ubo
-            ubo.lights[lightIndex].Position = glm::vec4(obj.transform.translation, 1.f);
+
+            if (obj.light->cutOffAngle == 0.f)
+            {
+                ubo.lights[lightIndex].Position = glm::vec4(obj.transform.translation, 0.f);
+                ubo.lights[lightIndex].Direction = glm::vec4(obj.transform.rotation, 0.0f);
+            } else {
+                ubo.lights[lightIndex].Position = glm::vec4(obj.transform.translation, 1.f);
+                ubo.lights[lightIndex].Direction = glm::vec4(obj.transform.rotation, glm::cos(obj.light->cutOffAngle));
+            }
+
             ubo.lights[lightIndex].Color = glm::vec4(obj.color, obj.light->lightIntensity);
-            //ubo.lights[lightIndex].Angles = obj.light->angles;
 
             lightIndex += 1;
         }

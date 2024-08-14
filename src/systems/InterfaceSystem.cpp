@@ -2,10 +2,11 @@
 
 namespace GWIN
 {
-    GWInterface::GWInterface(GWindow &window, GWinDevice &device, VkFormat imageFormat, std::unique_ptr<GWTextureHandler>& textureHandler) : window(window), device(device), textureHandler(textureHandler)
+    GWInterface::GWInterface(GWindow &window, GWinDevice &device, VkFormat imageFormat, std::unique_ptr<GWTextureHandler>& textureHandler, 
+    std::unique_ptr<GWMaterialHandler>& materialHandler) : window(window), device(device), textureHandler(textureHandler), materialHandler(materialHandler)
     {
         initializeGUI(imageFormat);
-        //assets = std::make_unique<AssetsWindow>(textureHandler->getImageLoader());
+        assets = std::make_unique<AssetsWindow>(textureHandler, materialHandler);
     }
 
     GWInterface::~GWInterface()
@@ -78,7 +79,7 @@ namespace GWIN
 
     //Temporary to load Object
     char filePathBuffer[256];
-    char texturePathBuffer[256];
+    char texturePathBuffer[256] = "C:\\Users\\cleve\\OneDrive\\Documents\\GitHub\\GabexEngine\\src\\textures\\no_texture.png";
     float Objscale = 1,f;
     float Objposition[3] = {0.f, 0.f, 0.f};
     VkDescriptorSet texture = VK_NULL_HANDLE;
@@ -268,7 +269,7 @@ namespace GWIN
         //Object List and Properties
         objectList.Draw(frameInfo);
         console.draw(frameInfo);
-        //assets->draw();
+        assets->draw();
 
         ImDrawList* drawList;
         ImGui::SetNextWindowDockID(ImGui::GetID("##Viewport"));

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GWFrameInfo.hpp"
-#include <vector>
+#include <array>
 
 namespace GWIN
 {
@@ -13,9 +13,11 @@ namespace GWIN
 
         uint32_t createMaterial(float roughness, float metallic, glm::vec4 color);
         void setMaterials(GlobalUbo& ubo);
+
+        std::array<Material, MAX_MATERIALS> getMaterials() { return materials; }
     private:
         GWinDevice& device;
-        std::vector<Material> materials{MAX_MATERIALS};
+        std::array<Material, MAX_MATERIALS> materials;
 
         uint32_t lastId{0};
     };

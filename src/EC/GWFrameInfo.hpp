@@ -6,14 +6,14 @@
 
 namespace GWIN
 {
-    #define MAX_LIGHTS 10
+    #define MAX_LIGHTS 20
     #define MAX_MATERIALS 100
 
     struct Light
     {
         glm::vec4 Position; //w is type; 0 - Point, 1 - Spot
         glm::vec4 Color; //W is intensity
-        //glm::vec2 Angles; // x - internal angles, y - external angles
+        glm::vec4 Direction;
     };
 
     struct Material

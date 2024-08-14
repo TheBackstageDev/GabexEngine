@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 #include "GWTextureHandler.hpp"
+#include "GWMaterialHandler.hpp"
 
 namespace GWIN
 {
@@ -28,12 +29,11 @@ namespace GWIN
     class AssetsWindow
     {
     public:
-        AssetsWindow(GWTextureHandler& imageLoader);
+        AssetsWindow(std::unique_ptr<GWTextureHandler>& imageLoader, std::unique_ptr<GWMaterialHandler>& materialHandler);
         ~AssetsWindow();
 
         void draw();
     private:
-
         void actions(AssetType type);
         void materialEditor();
 
@@ -43,7 +43,8 @@ namespace GWIN
         void createDefaultImages();
         VkDescriptorSet createImage(const std::string& pathToFile);
 
-        GWTextureHandler& imageLoader;
+        std::unique_ptr<GWTextureHandler>& imageLoader;
+        std::unique_ptr<GWMaterialHandler>& materialHandler;
 
         std::vector<Asset> assets;
         std::unordered_map<std::string, VkDescriptorSet> images;
