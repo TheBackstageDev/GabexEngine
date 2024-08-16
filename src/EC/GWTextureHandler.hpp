@@ -8,6 +8,16 @@
 
 namespace GWIN
 {
+    enum TextureType
+    {
+        TEXTURE_TYPE_DIFFUSE,
+        TEXTURE_TYPE_NORMAL,
+        TEXTURE_TYPE_SPECULAR,
+        TEXTURE_TYPE_ROUGHNESS,
+        TEXTURE_TYPE_DISPLACEMENT,
+        TEXTURE_TYPE_AMBIENT,
+    };
+
     struct Texture
     {
         VkSampler textureSampler = VK_NULL_HANDLE;
@@ -25,7 +35,8 @@ namespace GWIN
         GWTextureHandler(const GWTextureHandler &) = delete;
         GWTextureHandler &operator=(const GWTextureHandler &) = delete;
 
-        Texture createTexture(std::string &pathToTexture);
+        Texture createTexture(std::string &pathToTexture, bool mipMap);
+        void destroyTexture(uint32_t id);
         void changeImageLayout(Texture& texture, VkImageLayout newLayout);
 
         GWImageLoader getImageLoader() { return imageLoader; }

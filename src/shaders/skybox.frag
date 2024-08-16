@@ -24,4 +24,5 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 void main()
 {
     outColor = texture(skyboxSampler, fragUvw);
+    outColor.rgb = pow(outColor.rgb, vec3(0.5)); 
 }

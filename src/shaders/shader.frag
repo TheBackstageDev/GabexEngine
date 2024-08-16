@@ -76,7 +76,6 @@ void calculateSpotLight(Light currentLight, LightInfo lightInfo, inout vec3 diff
         float spotEffect = smoothstep(currentLight.direction.w, currentLight.direction.w + smoothFactor, cosTheta);
         vec3 intensity = currentLight.color.xyz * currentLight.color.w * attenuation * spotEffect;
 
-        // Diffuse contribution
         float cosAngIncidence = max(dot(lightInfo.surfaceNormal, lightInfo.directionToLight), 0.0);
         vec3 diffuse = intensity * cosAngIncidence * (1.0 - lightInfo.material.data.x);
 

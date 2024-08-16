@@ -41,7 +41,7 @@ namespace GWIN
         void meshVisualizator();
 
         void createDefaultImages();
-        VkDescriptorSet createImage(const std::string& pathToFile);
+        void createImage(const std::string& pathToFile);
 
         std::unique_ptr<GWTextureHandler>& imageLoader;
         std::unique_ptr<GWMaterialHandler>& materialHandler;

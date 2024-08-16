@@ -116,7 +116,6 @@ namespace GWIN
     {
         auto viewerObject = GWGameObject::createGameObject("Viewer Object");
         viewerObject.transform.translation.z = -2.5;
-        gameObjects.emplace(viewerObject.getId(), std::move(viewerObject));
         
         currentTime = std::chrono::high_resolution_clock::now();
 
@@ -178,30 +177,22 @@ namespace GWIN
                 offscreenRenderer->endOffscreenRenderPass(commandBuffer);
 
                 offscreenRenderer->createNextImage();
-                offscreenImageDescriptor = ImGui_ImplVulkan_AddTexture(
+                frameInfo.currentFrameSet = ImGui_ImplVulkan_AddTexture(
                     offscreenRenderer->getImageSampler(),
                     offscreenRenderer->getCurrentImageView(),
                     VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL);
-
-                frameInfo.currentFrameSet = offscreenImageDescriptor;
 
                 // render
                 interfaceSystem->newFrame(frameInfo);
 
                 renderer->startSwapChainRenderPass(commandBuffer);
 
-                /* if (ImGui::Begin("Image", nullptr))
-                {
-                    ImGui::Image((ImTextureID)skyboxSet, ImVec2(500,500));
-                    ImGui::End();
-                } */
-
                 interfaceSystem->render(commandBuffer);
                 renderer->endSwapChainRenderPass(commandBuffer);
                 renderer->endFrame();
 
-                ImGui_ImplVulkan_RemoveTexture(offscreenImageDescriptor);
-                offscreenImageDescriptor = VK_NULL_HANDLE;
+                ImGui_ImplVulkan_RemoveTexture(frameInfo.currentFrameSet);
+                frameInfo.currentFrameSet = VK_NULL_HANDLE;
 
                 isWireFrame = false;
             }
@@ -228,12 +219,12 @@ namespace GWIN
             Model;
 
         CubeMapInfo info{};
-        info.negX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negx.jpg";
-        info.posX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/posx.jpg";
-        info.negY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negy.jpg";
-        info.posY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/posy.jpg"; 
-        info.negZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/negz.jpg";
-        info.posZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/posz.jpg";
+        info.negX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/nx.png";
+        info.posX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/px.png";
+        info.negY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/ny.png";
+        info.posY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/py.png"; 
+        info.negZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/nz.png";
+        info.posZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/pz.png";
         VkDescriptorSet skyboxSet;
         CubeMap cubeMap = cubemapHandler->createCubeMap(info);
         Texture texture2{};
@@ -251,7 +242,7 @@ namespace GWIN
         createSet(skyboxSet, texture2);
         skyboxSystem->setSkybox(skyboxSet);
 
-        Texture no_texture = textureHandler->createTexture(std::string("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/no_texture.png"));
+        Texture no_texture = textureHandler->createTexture(std::string("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/no_texture.png"), true);
 
         VkDescriptorSet no_texture_set;
 

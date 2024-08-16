@@ -13,13 +13,20 @@ namespace GWIN
     {
         glm::vec4 Position; //w is type; 0 - Point, 1 - Spot
         glm::vec4 Color; //W is intensity
-        glm::vec4 Direction;
+        glm::vec4 Direction; // W is cutoff angle
     };
 
     struct Material
     {
         glm::vec4 color; // w is intensity
         alignas(16) glm::vec3 data; // x is metallic, y is roughness, z is id
+    };
+
+    struct CameraInfo
+    {
+        glm::mat4 projection{1.f};
+        glm::mat4 view{1.f};
+        glm::mat4 inverseView{1.f};
     };
 
     struct GlobalUbo
@@ -43,6 +50,12 @@ namespace GWIN
         VkDescriptorSet globalDescriptorSet;
         GWGameObject::map &gameObjects;
         VkDescriptorSet currentFrameSet;
+    };
+
+    struct SceneInfo
+    {
+        GWGameObject::map gameObjects;
+        std::vector<GWCamera> cameras;
     };
 
     struct GameObjectInfo

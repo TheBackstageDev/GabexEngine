@@ -22,20 +22,28 @@ namespace GWIN
         }
     }
 
-    Texture GWTextureHandler::createTexture(std::string& pathToTexture)
+    Texture GWTextureHandler::createTexture(std::string& pathToTexture, bool mipMap)
     {
         Texture texture{};
 
         ++lastTextureId;
         texture.id = lastTextureId;
         
-        texture.textureImage = imageLoader.loadImage(pathToTexture, true);
+        texture.textureImage = imageLoader.loadImage(pathToTexture, mipMap);
         
         createSampler(texture.textureImage.mipLevels, texture.textureSampler);
 
         textures.push_back(std::move(texture));
 
         return texture;
+    }
+
+    void GWTextureHandler::destroyTexture(uint32_t id)
+    {
+        auto currentTexture = textures[id - 1];
+        vkDestroySampler(device.device(), currentTexture.textureSampler, nullptr);
+        vkDestroyImageView(device.device(), currentTexture.textureImage.imageView, nullptr);
+        vmaDestroyImage(device.getAllocator(), currentTexture.textureImage.image, currentTexture.textureImage.allocation);
     }
 
     void GWTextureHandler::createSampler(uint32_t mipLevels, VkSampler& sampler)

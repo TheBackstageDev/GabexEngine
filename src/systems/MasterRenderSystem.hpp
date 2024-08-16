@@ -70,8 +70,6 @@ namespace GWIN
         GWCamera camera{};
         keyboardMovementController cameraController{};
 
-        VkDescriptorSet offscreenImageDescriptor = VK_NULL_HANDLE;
-
         std::chrono::time_point<std::chrono::high_resolution_clock> currentTime;
     };
 }
