@@ -12,6 +12,9 @@ namespace GWIN
         skybox.model = model;
 
         auto directionalLight = GWGameObject::createGameObject("Directional Light");
+        directionalLight.transform.rotation.y = -.25 * glm::two_pi<float>();
+        directionalLight.transform.rotation.x = .25 * glm::two_pi<float>();
+        directionalLight.transform.rotation.z = .15 * glm::two_pi<float>();
 
         sceneInformation.gameObjects.emplace(skybox.getId(), std::move(skybox));
         sceneInformation.gameObjects.emplace(directionalLight.getId(), std::move(directionalLight));

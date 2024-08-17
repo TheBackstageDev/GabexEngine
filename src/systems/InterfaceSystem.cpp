@@ -122,33 +122,37 @@ namespace GWIN
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::SetDrawlist(drawList);
 
-        uint32_t selectedObject = objectList.getSelectedObject();
-        if (selectedObject != -1)
+          uint32_t selectedObject = objectList.getSelectedObject();
+    if (selectedObject != -1)
+    {
+        GWGameObject &gameObject = frameInfo.gameObjects.at(selectedObject);
+
+        glm::mat4 transformMatrix = gameObject.transform.mat4();
+
+        glm::mat4 view = frameInfo.currentCamera.getView();
+        glm::mat4 projection = frameInfo.currentCamera.getProjection();
+
+        projection[1][1] *= -1;
+
+        ImGuizmo::AllowAxisFlip(true);
+        ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
+                             mCurrentGizmoOperation, ImGuizmo::MODE::WORLD,
+                             glm::value_ptr(transformMatrix));
+
+        if (ImGuizmo::IsUsing())
         {
-            GWGameObject &gameObject = frameInfo.gameObjects.at(selectedObject);
+            glm::vec3 translation, rotation, scale;
+            ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix),
+                                                  glm::value_ptr(translation),
+                                                  glm::value_ptr(rotation),
+                                                  glm::value_ptr(scale));
 
-            glm::mat4 transformMatrix = gameObject.transform.mat4();
+            rotation = glm::radians(rotation);
 
-            glm::mat4 view = frameInfo.currentCamera.getView();
-            glm::mat4 projection = frameInfo.currentCamera.getProjection();
-
-            projection[1][1] *= -1;
-
-            ImGuizmo::AllowAxisFlip(true);
-            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
-                                 mCurrentGizmoOperation, ImGuizmo::MODE::WORLD,
-                                 glm::value_ptr(transformMatrix));
-
-            if (ImGuizmo::IsUsing())
+            if (glm::any(glm::epsilonNotEqual(gameObject.transform.rotation, rotation, glm::epsilon<float>())))
             {
-                glm::vec3 translation, rotation, scale;
-                ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix),
-                                                      glm::value_ptr(translation),
-                                                      glm::value_ptr(rotation),
-                                                      glm::value_ptr(scale));
-
                 gameObject.transform.translation = translation;
-                gameObject.transform.rotation = glm::radians(rotation);
+                gameObject.transform.rotation = rotation;
                 if (mCurrentGizmoOperation == ImGuizmo::SCALE)
                 {
                     float uniformScale = (scale.x + scale.y + scale.z) / 3.0f;
@@ -157,6 +161,7 @@ namespace GWIN
                 }
             }
         }
+    }
     }
 
     void GWInterface::drawSceneSettings()
