@@ -129,8 +129,8 @@ namespace GWIN
 
             glm::mat4 transformMatrix = gameObject.transform.mat4();
 
-            glm::mat4 view = frameInfo.camera.getView();
-            glm::mat4 projection = frameInfo.camera.getProjection();
+            glm::mat4 view = frameInfo.currentCamera.getView();
+            glm::mat4 projection = frameInfo.currentCamera.getProjection();
 
             projection[1][1] *= -1;
 
@@ -163,7 +163,6 @@ namespace GWIN
     {
         if (ImGui::Begin("Scene Settings", nullptr))
         {
-            ImGui::DragFloat3("LightDirection", DirectionalLightingDirection, 1.f, -360.f, 360.f);
             ImGui::DragFloat("LightIntensity", &DirectionalLightingIntensity, .1f, 0.f, 10.f);
             ImGui::Checkbox("Render Shadows", &showShadows);
         }

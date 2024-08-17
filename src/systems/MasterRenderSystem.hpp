@@ -12,6 +12,7 @@
 #include "GWTextureHandler.hpp"
 #include "GWMaterialHandler.hpp"
 #include "SkyboxSystem.hpp"
+#include "GWScene.hpp"
 
 #include "GWOffscreenRenderer.hpp"
 
@@ -35,8 +36,8 @@ namespace GWIN
         void loadGameObject(GameObjectInfo& objectInfo);
 
     private:
-        void initialize();  
-        void updateCamera(GWGameObject& viewerObject, float deltaTime);
+        void initialize();
+        void updateCamera(FrameInfo &frameInfo);
         void loadGameObjects();
 
         void MasterRenderSystem::createSet(VkDescriptorSet &set, Texture &texture);
@@ -66,8 +67,8 @@ namespace GWIN
         std::unique_ptr<GWCubemapHandler> cubemapHandler;
         std::unique_ptr<GWMaterialHandler> materialHandler;
 
-        GWGameObject::map gameObjects;
-        GWCamera camera{};
+        GWScene currentScene{modelLoader};
+
         keyboardMovementController cameraController{};
 
         std::chrono::time_point<std::chrono::high_resolution_clock> currentTime;

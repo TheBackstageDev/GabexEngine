@@ -44,7 +44,7 @@ namespace GWIN
 
         GWConsole getConsole() const { return console; }
 
-        glm::vec4 getLightDirection() { return {DirectionalLightingDirection[0], DirectionalLightingDirection[1] * -1, DirectionalLightingDirection[2], DirectionalLightingIntensity}; }
+        glm::vec4 getLightDirection(GWGameObject& directionalLight) { return {directionalLight.transform.rotation, DirectionalLightingIntensity}; }
 
     private:
         GWindow& window;
@@ -69,7 +69,6 @@ namespace GWIN
         ImGuizmo::OPERATION mCurrentGizmoOperation{ImGuizmo::TRANSLATE};
 
         //values
-        float DirectionalLightingDirection[3] = {0.f, 45.f, 0.f};
         float DirectionalLightingIntensity = 1.f;
 
         //Flags

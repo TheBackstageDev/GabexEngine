@@ -22,13 +22,6 @@ namespace GWIN
         alignas(16) glm::vec3 data; // x is metallic, y is roughness, z is id
     };
 
-    struct CameraInfo
-    {
-        glm::mat4 projection{1.f};
-        glm::mat4 view{1.f};
-        glm::mat4 inverseView{1.f};
-    };
-
     struct GlobalUbo
     {
         glm::mat4 projection{1.f};
@@ -46,7 +39,7 @@ namespace GWIN
         int frameIndex;
         float deltaTime;
         VkCommandBuffer commandBuffer;
-        GWCamera& camera;
+        GWCamera& currentCamera;
         VkDescriptorSet globalDescriptorSet;
         GWGameObject::map &gameObjects;
         VkDescriptorSet currentFrameSet;

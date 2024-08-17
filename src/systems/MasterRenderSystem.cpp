@@ -27,12 +27,14 @@ namespace GWIN
         //Initializes GUI
         interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat(), textureHandler, materialHandler);
         interfaceSystem->setLoadGameObjectCallback([this](GameObjectInfo& objectInfo) {
-            loadGameObject(objectInfo);
+            currentScene.createGameObject(objectInfo);
         });
 
         interfaceSystem->setCreateTextureCallback([this](VkDescriptorSet& set, Texture& texture) {
             createSet(set, texture);
         });
+
+        currentScene.createCamera();
     }
 
     void MasterRenderSystem::createSet(VkDescriptorSet &set, Texture &texture)
@@ -103,20 +105,18 @@ namespace GWIN
         skyboxSystem = std::make_unique<SkyboxSystem>(device, offscreenRenderer->getRenderPass(), setLayouts);
     }
 
-    void MasterRenderSystem::updateCamera(GWGameObject& viewerObject, float deltaTime)
+    void MasterRenderSystem::updateCamera(FrameInfo& frameInfo)
     {
-        cameraController.moveInPlaneXZ(window.getWindow(), deltaTime, viewerObject);
-        camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+        auto& viewerObject = frameInfo.gameObjects.at(frameInfo.currentCamera.getViewerObject());
+        cameraController.moveInPlaneXZ(window.getWindow(), frameInfo.deltaTime,  viewerObject);
+        frameInfo.currentCamera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
         float aspect = renderer->getAspectRatio();
-        camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
+        frameInfo.currentCamera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
     }
 
     void MasterRenderSystem::run()
     {
-        auto viewerObject = GWGameObject::createGameObject("Viewer Object");
-        viewerObject.transform.translation.z = -2.5;
-        
         currentTime = std::chrono::high_resolution_clock::now();
 
         while (!window.shouldClose())
@@ -125,8 +125,6 @@ namespace GWIN
             auto newTime = std::chrono::high_resolution_clock::now();
             float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
             currentTime = newTime;
-
-            updateCamera(viewerObject, deltaTime);
 
             if (auto commandBuffer = renderer->startFrame())
             {
@@ -139,16 +137,18 @@ namespace GWIN
                     frameIndex,
                     deltaTime,
                     commandBuffer,
-                    camera,
+                    currentScene.getCurrentCamera(),
                     globalDescriptorSets[frameIndex],
-                    gameObjects,
+                    currentScene.getSceneInfo().gameObjects,
                     VK_NULL_HANDLE};
 
+                updateCamera(frameInfo);
+
                 GlobalUbo ubo{};
-                ubo.projection = frameInfo.camera.getProjection();
-                ubo.view = frameInfo.camera.getView();
-                ubo.inverseView = camera.getInverseView();
-                ubo.sunLight = interfaceSystem->getLightDirection();
+                ubo.projection = frameInfo.currentCamera.getProjection();
+                ubo.view = frameInfo.currentCamera.getView();
+                ubo.inverseView = frameInfo.currentCamera.getInverseView();
+                ubo.sunLight = interfaceSystem->getLightDirection(frameInfo.gameObjects.at(1));
                 pointLightSystem->update(frameInfo, ubo);
                 materialHandler->setMaterials(ubo);
                 globalUboBuffer->writeToIndex(&ubo, frameIndex);
@@ -199,20 +199,6 @@ namespace GWIN
         }
     }
 
-    void MasterRenderSystem::loadGameObject(GameObjectInfo& objectInfo)
-    {
-        std::shared_ptr<GWModel> model;
-        modelLoader.importFile(objectInfo.filePath, model, false);
-
-        auto obj = GWGameObject::createGameObject(objectInfo.objName);
-        obj.model = model;
-        obj.textureDescriptorSet = objectInfo.texture;
-        obj.transform.translation = objectInfo.position;
-        obj.transform.scale = objectInfo.scale;
-
-        gameObjects.emplace(obj.getId(), std::move(obj));
-    }
-
     void MasterRenderSystem::loadGameObjects()
     {
         std::shared_ptr<GWModel>
@@ -230,14 +216,6 @@ namespace GWIN
         Texture texture2{};
         texture2.textureImage = cubeMap.Cubeimage;
         textureHandler->createSampler(0, texture2.textureSampler);
-
-        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/cube.obj", Model, false);
-
-        GWGameObject skyboxObject = GWGameObject::createGameObject("Skybox");
-        skyboxObject.model = Model;
-        skyboxObject.transform.scale = 5.f;
-
-        gameObjects.emplace(skyboxObject.getId(), std::move(skyboxObject));
 
         createSet(skyboxSet, texture2);
         skyboxSystem->setSkybox(skyboxSet);
@@ -264,25 +242,18 @@ namespace GWIN
                 sphere.transform.scale = .5f;
 
                 sphere.Material = materialHandler->createMaterial(
-                1.0f / (x + 1), 
-                1.0f / (z + 1), 
-                { 
-                    (1.0f + cos(3.14159f * x / 5.0f)) * 0.5f,  // R component varies between 0 and 1
-                    (1.0f + cos(3.14159f * z / 5.0f)) * 0.5f,  // G component varies between 0 and 1
-                    (1.0f + sin(3.14159f * (x + z) / 10.0f)) * 0.5f, // B component varies between 0 and 1
-                    1.0f
-                }
-            );
-
-                gameObjects.emplace(sphere.getId(), std::move(sphere));
+                    1.0f / (x + 1), 
+                    1.0f / (z + 1), 
+                    { 
+                        (1.0f + cos(3.14159f * x / 5.0f)) * 0.5f,  // R component varies between 0 and 1
+                        (1.0f + cos(3.14159f * z / 5.0f)) * 0.5f,  // G component varies between 0 and 1
+                        (1.0f + sin(3.14159f * (x + z) / 10.0f)) * 0.5f, // B component varies between 0 and 1
+                        1.0f
+                    }
+                );
+                
+                currentScene.createGameObject(sphere);
             }
         }
-
-        auto light = GWGameObject::createLight(1.0f, 0.05f, {1.0f, 1.0f, 1.0f});
-        auto light2 = GWGameObject::createLight(2.0f, 0.05f, {1.0f, 1.0f, 1.0f}, 75.f);
-        light2.transform.translation.y = -2.5f;
-
-        gameObjects.emplace(light.getId(), std::move(light));
-        gameObjects.emplace(light2.getId(), std::move(light2));
     }
 }
