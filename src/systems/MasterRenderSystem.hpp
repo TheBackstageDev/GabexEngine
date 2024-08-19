@@ -67,7 +67,9 @@ namespace GWIN
         std::unique_ptr<GWCubemapHandler> cubemapHandler;
         std::unique_ptr<GWMaterialHandler> materialHandler;
 
-        GWScene currentScene{modelLoader};
+        JSONHandler jsonHandler{};
+
+        GWScene currentScene{modelLoader, jsonHandler};
 
         keyboardMovementController cameraController{};
 

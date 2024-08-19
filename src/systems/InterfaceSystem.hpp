@@ -41,6 +41,7 @@ namespace GWIN
 
         void setLoadGameObjectCallback(std::function<void(GameObjectInfo& objectInfo)> callback);
         void setCreateTextureCallback(std::function<void(VkDescriptorSet &, Texture &texture)> callback);
+        void setSaveSceneCallback(std::function<void(const std::string path)> callback);
 
         GWConsole getConsole() const { return console; }
 
@@ -52,6 +53,7 @@ namespace GWIN
 
         std::function<void(GameObjectInfo &objectInfo)> loadGameObjectCallback;
         std::function<void(VkDescriptorSet& set, Texture& texture)> createTextureCallback;
+        std::function<void(const std::string path)> SaveSceneCallback;
 
         std::unique_ptr<GWTextureHandler>& textureHandler;
         std::unique_ptr<GWMaterialHandler>& materialHandler;

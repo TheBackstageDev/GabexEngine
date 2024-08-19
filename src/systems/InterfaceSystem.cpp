@@ -77,6 +77,11 @@ namespace GWIN
         createTextureCallback = callback;
     }
 
+    void GWInterface::setSaveSceneCallback(std::function<void(const std::string path)> callback)
+    {
+        SaveSceneCallback = callback;
+    }
+
     //Temporary to load Object
     char filePathBuffer[256];
     char texturePathBuffer[256] = "C:\\Users\\cleve\\OneDrive\\Documents\\GitHub\\GabexEngine\\src\\textures\\no_texture.png";
@@ -117,42 +122,46 @@ namespace GWIN
 
     void GWInterface::drawImGuizmo(FrameInfo &frameInfo, ImDrawList* drawList)
     {
-        ImGuizmo::BeginFrame();
-
-        ImGuizmo::SetOrthographic(false);
-        ImGuizmo::SetDrawlist(drawList);
-
-          uint32_t selectedObject = objectList.getSelectedObject();
-    if (selectedObject != -1)
-    {
-        GWGameObject &gameObject = frameInfo.gameObjects.at(selectedObject);
-
-        glm::mat4 transformMatrix = gameObject.transform.mat4();
-
-        glm::mat4 view = frameInfo.currentCamera.getView();
-        glm::mat4 projection = frameInfo.currentCamera.getProjection();
-
-        projection[1][1] *= -1;
-
-        ImGuizmo::AllowAxisFlip(true);
-        ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
-                             mCurrentGizmoOperation, ImGuizmo::MODE::WORLD,
-                             glm::value_ptr(transformMatrix));
-
-        if (ImGuizmo::IsUsing())
+        uint32_t selectedObject = objectList.getSelectedObject();
+        if (selectedObject != -1)
         {
-            glm::vec3 translation, rotation, scale;
-            ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix),
-                                                  glm::value_ptr(translation),
-                                                  glm::value_ptr(rotation),
-                                                  glm::value_ptr(scale));
+            ImGuizmo::BeginFrame();
 
-            rotation = glm::radians(rotation);
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::SetDrawlist(drawList);
 
-            if (glm::any(glm::epsilonNotEqual(gameObject.transform.rotation, rotation, glm::epsilon<float>())))
+            GWGameObject &gameObject = frameInfo.gameObjects.at(selectedObject);
+
+            glm::mat4 transformMatrix = gameObject.transform.mat4();
+
+            glm::mat4 view = frameInfo.currentCamera.getView();
+            glm::mat4 projection = frameInfo.currentCamera.getProjection();
+
+            projection[1][1] *= -1;
+
+            ImGuizmo::AllowAxisFlip(true);
+            ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
+                                mCurrentGizmoOperation, ImGuizmo::MODE::WORLD,
+                                glm::value_ptr(transformMatrix));
+
+            if (ImGuizmo::IsUsing())
             {
-                gameObject.transform.translation = translation;
-                gameObject.transform.rotation = rotation;
+                glm::vec3 translation, rotation, scale;
+                ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transformMatrix),
+                                                    glm::value_ptr(translation),
+                                                    glm::value_ptr(rotation),
+                                                    glm::value_ptr(scale));
+
+                if (glm::any(glm::epsilonNotEqual(gameObject.transform.rotation, rotation, glm::epsilon<float>())))
+                {
+                    gameObject.transform.rotation = glm::radians(rotation);
+                }
+
+                if(glm::any(glm::epsilonNotEqual(gameObject.transform.translation, translation, glm::epsilon<float>())))
+                {
+                    gameObject.transform.translation = translation;
+                }
+
                 if (mCurrentGizmoOperation == ImGuizmo::SCALE)
                 {
                     float uniformScale = (scale.x + scale.y + scale.z) / 3.0f;
@@ -161,7 +170,6 @@ namespace GWIN
                 }
             }
         }
-    }
     }
 
     void GWInterface::drawSceneSettings()
@@ -198,6 +206,7 @@ namespace GWIN
                 }
                 if (ImGui::MenuItem("Save Project As.."))
                 {
+                    ImGuiFileDialog::Instance()->OpenDialog("SaveProjectDialog", "Choose a Save Folder", nullptr);
                 }
                 ImGui::Separator();
                 if (ImGui::MenuItem("Load new Object"))
@@ -313,6 +322,16 @@ namespace GWIN
 
         drawSceneSettings();
         drawImGuizmo(frameInfo, drawList);
+
+        if (ImGuiFileDialog::Instance()->Display("SaveProjectDialog", ImGuiWindowFlags_NoCollapse, ImVec2(600, 400)))
+        {
+            if (ImGuiFileDialog::Instance()->IsOk())
+            {
+                SaveSceneCallback(ImGuiFileDialog::Instance()->GetCurrentPath());
+            }
+
+            ImGuiFileDialog::Instance()->Close();
+        }
 
         //Temporary Object Loader
         if (showCreateObjectWindow)

@@ -4,6 +4,9 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
+#include <string>
+#include "../json.hpp"
+
 namespace GWIN
 {
     class GWCamera
@@ -24,6 +27,8 @@ namespace GWIN
     const glm::mat4& getProjection() const { return projectionMatrix; };
     const glm::mat4& getView() const { return viewMatrix; };
     const glm::mat4& getInverseView() const { return inverseViewMatrix; };
+
+    std::string toJson() const;
 
     private:
         glm::mat4 projectionMatrix{1.f};

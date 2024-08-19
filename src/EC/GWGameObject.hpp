@@ -5,6 +5,7 @@
 //std 
 #include <memory>
 #include <unordered_map>
+#include "../json.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -62,6 +63,8 @@ namespace GWIN
 
         std::shared_ptr<GWModel> model{};
         std::unique_ptr<LightComponent> light = nullptr;
+
+        std::string toJson() const;
 
     private:
         GWGameObject(id_t ID, const std::string name) : Objname(name)

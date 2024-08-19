@@ -53,4 +53,29 @@ namespace GWIN
 
         return gameObject;
     }
+
+    std::string GWGameObject::toJson() const
+    {
+        nlohmann::json jsonObject;
+
+        jsonObject["id"] = id;
+        jsonObject["name"] = getName();
+        jsonObject["transform"] = {
+            {"translation", {transform.translation.x, transform.translation.y, transform.translation.z}},
+            {"rotation", {transform.rotation.x, transform.rotation.y, transform.rotation.z}},
+            {"scale", transform.scale}};
+
+        if (light)
+        {
+            jsonObject["color"] = {color.x, color.y, color.z};
+            
+            jsonObject["light"] = {
+                {"intensity", light->lightIntensity},
+                {"cutOffAngle", light->cutOffAngle}};
+        }
+
+        jsonObject["material"] = Material;
+
+        return jsonObject.dump();
+    }
 }

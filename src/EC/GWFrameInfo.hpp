@@ -47,6 +47,7 @@ namespace GWIN
 
     struct SceneInfo
     {
+        std::string name = "DefaultScene"; 
         GWGameObject::map gameObjects;
         std::vector<GWCamera> cameras;
     };

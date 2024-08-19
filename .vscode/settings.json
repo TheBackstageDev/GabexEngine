@@ -98,6 +98,9 @@
     "shared_mutex": "cpp",
     "stop_token": "cpp",
     "thread": "cpp",
-    "regex": "cpp"
+    "regex": "cpp",
+    "any": "cpp",
+    "ranges": "cpp",
+    "valarray": "cpp"
   },
 }

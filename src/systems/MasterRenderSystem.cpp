@@ -34,6 +34,10 @@ namespace GWIN
             createSet(set, texture);
         });
 
+        interfaceSystem->setSaveSceneCallback([this](const std::string path) {
+            currentScene.saveScene(path);
+        });
+
         currentScene.createCamera();
     }
 

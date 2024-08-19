@@ -100,17 +100,21 @@ void main() {
     vec3 cameraPosWorld = ubo.invView[3].xyz;
     vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
 
-    vec3 sunDirection = normalize(ubo.sunLight.xyz);
+    if (ubo.sunLight.w > 0.01)
+    {
+      vec3 sunDirection = normalize(ubo.sunLight.xyz);
 
-    float cosAngSunIncidence = max(dot(surfaceNormal, sunDirection), 0);
-    diffuseLight += cosAngSunIncidence * ubo.sunLight.w;
+      float cosAngSunIncidence = max(dot(surfaceNormal, sunDirection), 0);
+      diffuseLight += cosAngSunIncidence * ubo.sunLight.w;
 
-      // Sunlight Specular Contribution
-    vec3 sunHalfAngle = normalize(sunDirection + viewDirection);
-    float sunBlinnTerm = max(dot(surfaceNormal, sunHalfAngle), 0.0);
-    sunBlinnTerm = pow(sunBlinnTerm, mix(50.0, 4.0, material.data.y)); 
+              // Sunlight Specular Contribution
+      vec3 sunHalfAngle = normalize(sunDirection + viewDirection);
+      float sunBlinnTerm = max(dot(surfaceNormal, sunHalfAngle), 0.0);
+      sunBlinnTerm = pow(sunBlinnTerm, mix(50.0, 4.0, material.data.y)); 
 
-    specularLight += 0.1 * ubo.sunLight.w * sunBlinnTerm * mix(0.04, 1.0, material.data.x); 
+      specularLight += 0.1 * ubo.sunLight.w * sunBlinnTerm * mix(0.04, 1.0, material.data.x); 
+    }
+
     // Light contributions
     for (int i = 0; i < ubo.numLights; i++) {
         Light light = ubo.lights[i];

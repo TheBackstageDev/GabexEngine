@@ -1,8 +1,10 @@
 #include "GWScene.hpp"
 
+#include <iostream>
+
 namespace GWIN
 {
-    GWScene::GWScene(GWModelLoader &modelLoader) : modelLoader(modelLoader)
+    GWScene::GWScene(GWModelLoader &modelLoader, JSONHandler &jsonHandler) : modelLoader(modelLoader), jsonHandler(jsonHandler)
     {
         std::shared_ptr<GWModel> model;
 
@@ -20,10 +22,9 @@ namespace GWIN
         sceneInformation.gameObjects.emplace(directionalLight.getId(), std::move(directionalLight));
     }
 
-    GWScene::GWScene(SceneInfo &info, GWModelLoader &modelLoader) : modelLoader(modelLoader)
+    GWScene::GWScene(std::string& sceneJson, GWModelLoader &modelLoader, JSONHandler &jsonHandler) : modelLoader(modelLoader), jsonHandler(jsonHandler)
     {
-/*         sceneInformation.gameObjects = info.gameObjects;
-        sceneInformation.cameras = info.cameras; */
+
     }
 
     GWScene::~GWScene() {};
@@ -58,8 +59,22 @@ namespace GWIN
         sceneInformation.gameObjects.erase(id);
     }
 
-    void GWScene::saveScene()
+    void GWScene::saveScene(const std::string path)
     {
+        nlohmann::json jsonObject;
 
+        // Save all game objects
+        for (const auto &gameObjectPair : sceneInformation.gameObjects)
+        {
+            jsonObject["gameObjects"].push_back(nlohmann::json::parse(gameObjectPair.second.toJson()));
+        }
+
+        for (const auto &camera : sceneInformation.cameras)
+        {
+            jsonObject["cameras"].push_back(nlohmann::json::parse(camera.toJson()));
+        }
+
+        jsonHandler.setValue(sceneInformation.name, jsonObject);
+        jsonHandler.saveToFile(path, sceneInformation.name); 
     }
 }
