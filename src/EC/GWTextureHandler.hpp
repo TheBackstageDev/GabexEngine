@@ -4,6 +4,7 @@
 #include "GWDescriptors.hpp"
 #include "../GWBuffer.hpp"
 
+#include <string>
 #include <memory>
 
 namespace GWIN
@@ -16,6 +17,12 @@ namespace GWIN
         TEXTURE_TYPE_ROUGHNESS,
         TEXTURE_TYPE_DISPLACEMENT,
         TEXTURE_TYPE_AMBIENT,
+    };
+
+    struct TextureInfo
+    {
+        std::string pathToTexture;
+        uint32_t id;
     };
 
     struct Texture
@@ -41,6 +48,8 @@ namespace GWIN
 
         GWImageLoader getImageLoader() { return imageLoader; }
         void createSampler(uint32_t mipLevels, VkSampler &sampler);
+
+        std::vector<TextureInfo> getTextures() const;
 
     private:
         GWinDevice& device;

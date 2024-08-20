@@ -76,4 +76,16 @@ namespace GWIN
     {
         imageLoader.transitionImageLayout(texture.textureImage, newLayout);
     }
+
+    std::vector<TextureInfo> GWTextureHandler::getTextures() const
+    {
+        std::vector<TextureInfo> info;
+        
+        for (auto& texture : textures)
+        {
+            info.push_back({texture.pathToTexture, texture.id});
+        }
+
+        return info;
+    }
 }

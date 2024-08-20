@@ -93,17 +93,14 @@ namespace GWIN
             if (obj.model == nullptr || obj.getName() == "Skybox")
                 continue;
 
-            if (obj.textureDescriptorSet != VK_NULL_HANDLE)
-            {
-                vkCmdBindDescriptorSets(
-                    frameInfo.commandBuffer,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    pipelineLayout,
-                    1, 1,
-                    &obj.textureDescriptorSet,
-                    0,
-                    nullptr);
-            }
+            vkCmdBindDescriptorSets(
+                frameInfo.commandBuffer,
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipelineLayout,
+                1, 1,
+                &frameInfo.textures[obj.Textures[0]],
+                0,
+                nullptr);
 
             SpushConstant push{};
             push.modelMatrix = obj.transform.mat4();

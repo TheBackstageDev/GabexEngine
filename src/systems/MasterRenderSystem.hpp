@@ -33,7 +33,6 @@ namespace GWIN
         MasterRenderSystem& operator=(const MasterRenderSystem&) = delete;
 
         void run();
-        void loadGameObject(GameObjectInfo& objectInfo);
 
     private:
         void initialize();
@@ -69,7 +68,7 @@ namespace GWIN
 
         JSONHandler jsonHandler{};
 
-        GWScene currentScene{modelLoader, jsonHandler};
+        std::unique_ptr<GWScene> currentScene;
 
         keyboardMovementController cameraController{};
 

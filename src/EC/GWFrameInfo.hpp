@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include "GWCamera.hpp"
 #include "GWGameObject.hpp"
+#include <vector>
 
 namespace GWIN
 {
@@ -42,14 +43,8 @@ namespace GWIN
         GWCamera& currentCamera;
         VkDescriptorSet globalDescriptorSet;
         GWGameObject::map &gameObjects;
+        std::vector<VkDescriptorSet> textures;
         VkDescriptorSet currentFrameSet;
-    };
-
-    struct SceneInfo
-    {
-        std::string name = "DefaultScene"; 
-        GWGameObject::map gameObjects;
-        std::vector<GWCamera> cameras;
     };
 
     struct GameObjectInfo
@@ -57,7 +52,8 @@ namespace GWIN
         std::string objName{"DefaultName"};
         std::string filePath;
         float scale{1.f};
-        glm::vec3 position{0.f, .5f, 0.f}; 
-        VkDescriptorSet texture = VK_NULL_HANDLE;
+        glm::vec3 position{0.f, .0f, 0.f}; 
+        uint32_t texture{0};
+        uint32_t textureType{0};
     };
 }

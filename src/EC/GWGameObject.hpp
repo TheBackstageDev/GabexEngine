@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GWModel.hpp"
-
+#include <array>
 //std 
 #include <memory>
 #include <unordered_map>
@@ -58,7 +58,7 @@ namespace GWIN
         TransformComponent transform{};
 
         //opitional components
-        VkDescriptorSet textureDescriptorSet = VK_NULL_HANDLE;
+        std::array<uint32_t, 6> Textures; // ID of the textures
         uint32_t Material = 0; //ID of the material
 
         std::shared_ptr<GWModel> model{};

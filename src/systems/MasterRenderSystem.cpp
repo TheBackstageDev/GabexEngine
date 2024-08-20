@@ -27,32 +27,18 @@ namespace GWIN
         //Initializes GUI
         interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat(), textureHandler, materialHandler);
         interfaceSystem->setLoadGameObjectCallback([this](GameObjectInfo& objectInfo) {
-            currentScene.createGameObject(objectInfo);
+            currentScene->createGameObject(objectInfo);
         });
 
         interfaceSystem->setCreateTextureCallback([this](VkDescriptorSet& set, Texture& texture) {
-            createSet(set, texture);
+            currentScene->createSet(set, texture);
         });
 
         interfaceSystem->setSaveSceneCallback([this](const std::string path) {
-            currentScene.saveScene(path);
+            currentScene->saveScene(path);
         });
 
-        currentScene.createCamera();
-    }
-
-    void MasterRenderSystem::createSet(VkDescriptorSet &set, Texture &texture)
-    {
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = texture.textureImage.layout;
-        imageInfo.imageView = texture.textureImage.imageView;
-        imageInfo.sampler = texture.textureSampler;
-
-        auto bufferInfo = globalUboBuffer->descriptorInfo();
-
-        GWDescriptorWriter(*textureSetLayout, *texturePool)
-            .writeImage(0, &imageInfo)
-            .build(set);
+        currentScene->createCamera();
     }
 
     void MasterRenderSystem::initialize()
@@ -103,6 +89,10 @@ namespace GWIN
                 .build(globalDescriptorSets[i]);
         }
 
+        SceneCreateInfo createInfo{textureSetLayout, texturePool, modelLoader, jsonHandler};
+        
+        currentScene = std::make_unique<GWScene>(createInfo);
+
         renderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), false, setLayouts);
         wireframeRenderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), true, setLayouts);
         pointLightSystem = std::make_unique<PointLightSystem>(device, offscreenRenderer->getRenderPass(), globalSetLayout->getDescriptorSetLayout());
@@ -141,9 +131,10 @@ namespace GWIN
                     frameIndex,
                     deltaTime,
                     commandBuffer,
-                    currentScene.getCurrentCamera(),
+                    currentScene->getCurrentCamera(),
                     globalDescriptorSets[frameIndex],
-                    currentScene.getSceneInfo().gameObjects,
+                    currentScene->getGameObjects(),
+                    currentScene->getTextures(),
                     VK_NULL_HANDLE};
 
                 updateCamera(frameInfo);
@@ -221,26 +212,26 @@ namespace GWIN
         texture2.textureImage = cubeMap.Cubeimage;
         textureHandler->createSampler(0, texture2.textureSampler);
 
-        createSet(skyboxSet, texture2);
-        skyboxSystem->setSkybox(skyboxSet);
-
         Texture no_texture = textureHandler->createTexture(std::string("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/no_texture.png"), true);
 
         VkDescriptorSet no_texture_set;
 
-        createSet(no_texture_set, no_texture);
+        currentScene->createSet(no_texture_set, no_texture);
+
+        currentScene->createSet(skyboxSet, texture2);
+        skyboxSystem->setSkybox(skyboxSet);
 
         modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/sphere.obj", Model, false);
 
         int index = 0;
-        for (uint32_t x = 0; x < 5; x++)
+        for (uint32_t x = 0; x < 6; x++)
         {
-            for (uint32_t z = 0; z < 5; z++)
+            for (uint32_t z = 0; z < 6; z++)
             {
                 index++;
                 auto sphere = GWGameObject::createGameObject("Sphere " + std::to_string(index));
                 sphere.model = Model;
-                sphere.textureDescriptorSet = no_texture_set;
+                sphere.Textures[0] = 0;
                 sphere.transform.translation.x = x * 1.25;
                 sphere.transform.translation.z = z * 1.25;
                 sphere.transform.scale = .5f;
@@ -256,7 +247,7 @@ namespace GWIN
                     }
                 );
                 
-                currentScene.createGameObject(sphere);
+                currentScene->createGameObject(sphere);
             }
         }
     }

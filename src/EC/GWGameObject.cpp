@@ -74,6 +74,7 @@ namespace GWIN
                 {"cutOffAngle", light->cutOffAngle}};
         }
 
+        jsonObject["textures"] = Textures;
         jsonObject["material"] = Material;
 
         return jsonObject.dump();

@@ -345,10 +345,7 @@ namespace GWIN
                 {
                     if (loadGameObjectCallback)
                     {
-                        Texture createTexture = textureHandler->createTexture(std::string(texturePathBuffer), true);
-                        createTextureCallback(texture, createTexture);
-
-                        GameObjectInfo objectInfo{"DefaultName", filePathBuffer, Objscale, {Objposition[0], Objposition[1] * -1, Objposition[2]}, texture};
+                        GameObjectInfo objectInfo{"DefaultName", filePathBuffer, Objscale, {Objposition[0], Objposition[1] * -1, Objposition[2]}};
                         loadGameObjectCallback(objectInfo);
 
                         texture = VK_NULL_HANDLE;
