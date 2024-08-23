@@ -93,12 +93,17 @@ namespace GWIN
             if (obj.model == nullptr || obj.getName() == "Skybox")
                 continue;
 
+            uint32_t textureToBind = obj.Textures[0];
+
+            if (frameInfo.textures[textureToBind] == nullptr)   
+                textureToBind = 0;
+
             vkCmdBindDescriptorSets(
                 frameInfo.commandBuffer,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                 pipelineLayout,
                 1, 1,
-                &frameInfo.textures[obj.Textures[0]],
+                &frameInfo.textures[textureToBind],
                 0,
                 nullptr);
 

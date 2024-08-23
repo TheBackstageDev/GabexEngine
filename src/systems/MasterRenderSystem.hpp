@@ -39,6 +39,8 @@ namespace GWIN
         void updateCamera(FrameInfo &frameInfo);
         void loadGameObjects();
 
+        void loadNewScene(const std::string pathToFile);
+
         void MasterRenderSystem::createSet(VkDescriptorSet &set, Texture &texture);
 
         GWindow& window;
@@ -71,6 +73,8 @@ namespace GWIN
         std::unique_ptr<GWScene> currentScene;
 
         keyboardMovementController cameraController{};
+
+        bool isLoading{false};
 
         std::chrono::time_point<std::chrono::high_resolution_clock> currentTime;
     };

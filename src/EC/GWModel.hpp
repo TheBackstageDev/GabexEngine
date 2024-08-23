@@ -42,11 +42,15 @@ namespace GWIN
         void bind(VkCommandBuffer commandBuffer);
         void draw(VkCommandBuffer commandBuffer);
 
+        std::string getPath() { return pathToModel; }
+        void setPath(const std::string path) { pathToModel = path; }
     private:
         void createVertexBuffers(const std::vector<Vertex> &vertices);
         void createIndexBuffers(const std::vector<uint32_t> &indices);
 
         GWinDevice &device;
+
+        std::string pathToModel = "";
 
         std::unique_ptr<GWBuffer> vertexBuffer;
         uint32_t vertexCount;

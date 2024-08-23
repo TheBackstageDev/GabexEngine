@@ -73,7 +73,10 @@ namespace GWIN
                 {"intensity", light->lightIntensity},
                 {"cutOffAngle", light->cutOffAngle}};
         }
-
+        if (model)
+        {
+            jsonObject["modelPath"] = model->getPath();
+        }
         jsonObject["textures"] = Textures;
         jsonObject["material"] = Material;
 

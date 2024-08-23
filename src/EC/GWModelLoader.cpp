@@ -25,6 +25,7 @@ namespace GWIN
             //To Do
         } else {
             model = object[0];
+            model->setPath(pfile);
         }
 
         return true;

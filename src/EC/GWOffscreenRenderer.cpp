@@ -12,6 +12,8 @@ namespace GWIN
 
     GWOffscreenRenderer::~GWOffscreenRenderer()
     {
+        vkDestroySampler(device.device(), imageSampler, nullptr);
+
         for (auto imageView : imageViews)
         {
             vkDestroyImageView(device.device(), imageView, nullptr);
@@ -72,78 +74,96 @@ namespace GWIN
 
     void GWOffscreenRenderer::createNextImage()
     {
-        if (frameBuffers[imageIndex] != VK_NULL_HANDLE)
-        {
-            vkDestroyFramebuffer(device.device(), frameBuffers[imageIndex], nullptr);
-            frameBuffers[imageIndex] = VK_NULL_HANDLE;
-        }
-
-        if (imageViews[imageIndex] != VK_NULL_HANDLE)
-        {
-            vkDestroyImageView(device.device(), imageViews[imageIndex], nullptr);
-            imageViews[imageIndex] = VK_NULL_HANDLE;
-        }
-
-        if (images[imageIndex] != VK_NULL_HANDLE)
-        {
-            vmaDestroyImage(device.getAllocator(), images[imageIndex], imageAllocations[imageIndex]);
-            images[imageIndex] = VK_NULL_HANDLE;
-            imageAllocations[imageIndex] = VK_NULL_HANDLE;
-        }
-
-        VkImageCreateInfo imageInfo{};
-        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width = window.getExtent().width;
-        imageInfo.extent.height = window.getExtent().height;
-        imageInfo.extent.depth = 1;
-        imageInfo.mipLevels = 1;
-        imageInfo.arrayLayers = 1;
-        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        device.createImageWithInfo(imageInfo, VMA_MEMORY_USAGE_GPU_ONLY, images[imageIndex], imageAllocations[imageIndex]);
-
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = images[imageIndex];
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = 1;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = 1;
-
-        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &imageViews[imageIndex]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create offscreen image view!");
-        }
-
-        std::array<VkImageView, 2> attachments = {
-            imageViews[imageIndex],
-            depthImageViews[imageIndex]};
-
-        VkFramebufferCreateInfo framebufferInfo{};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = renderPass;
-        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        framebufferInfo.pAttachments = attachments.data();
-        framebufferInfo.width = window.getExtent().width;
-        framebufferInfo.height = window.getExtent().height;
-        framebufferInfo.layers = 1;
-
-        if (vkCreateFramebuffer(device.device(), &framebufferInfo, nullptr, &frameBuffers[imageIndex]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create offscreen framebuffer!");
-        }
-
         if (imageIndex >= images.size() - 1)
         {
+            for (size_t i = 0; i < images.size(); ++i)
+            {
+                if (frameBuffers[i] != VK_NULL_HANDLE)
+                {
+                    vkDestroyFramebuffer(device.device(), frameBuffers[i], nullptr);
+                    frameBuffers[i] = VK_NULL_HANDLE;
+                }
+
+                if (imageViews[i] != VK_NULL_HANDLE)
+                {
+                    vkDestroyImageView(device.device(), imageViews[i], nullptr);
+                    imageViews[i] = VK_NULL_HANDLE;
+                }
+
+                if (images[i] != VK_NULL_HANDLE)
+                {
+                    vmaDestroyImage(device.getAllocator(), images[i], imageAllocations[i]);
+                    images[i] = VK_NULL_HANDLE;
+                    imageAllocations[i] = VK_NULL_HANDLE;
+                }
+            }
+
+            for (size_t i = 0; i < images.size(); ++i)
+            {
+                VkImageCreateInfo imageInfo{};
+                imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+                imageInfo.imageType = VK_IMAGE_TYPE_2D;
+                imageInfo.extent.width = window.getExtent().width;
+                imageInfo.extent.height = window.getExtent().height;
+                imageInfo.extent.depth = 1;
+                imageInfo.mipLevels = 1;
+                imageInfo.arrayLayers = 1;
+                imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+                imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+                imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+                imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+                imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+                VmaAllocationCreateInfo allocInfo{};
+                allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+                if (vmaCreateImage(device.getAllocator(), &imageInfo, &allocInfo, &images[i], &imageAllocations[i], nullptr) != VK_SUCCESS)
+                {
+                    throw std::runtime_error("Failed to create offscreen image!");
+                }
+            }
+
+            for (size_t i = 0; i < imageViews.size(); i++)
+            {
+                VkImageViewCreateInfo viewInfo{};
+                viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+                viewInfo.image = images[i];
+                viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+                viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                viewInfo.subresourceRange.baseMipLevel = 0;
+                viewInfo.subresourceRange.levelCount = 1;
+                viewInfo.subresourceRange.baseArrayLayer = 0;
+                viewInfo.subresourceRange.layerCount = 1;
+
+                if (vkCreateImageView(device.device(), &viewInfo, nullptr, &imageViews[i]) != VK_SUCCESS)
+                {
+                    throw std::runtime_error("Failed to create offscreen image views!");
+                }
+            }
+
+            for (size_t i = 0; i < frameBuffers.size(); i++)
+            {
+                std::array<VkImageView, 2> attachments = {
+                    imageViews[i],
+                    depthImageViews[i]};
+
+                VkFramebufferCreateInfo framebufferInfo{};
+                framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+                framebufferInfo.renderPass = renderPass;
+                framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+                framebufferInfo.pAttachments = attachments.data();
+                framebufferInfo.width = window.getExtent().width;
+                framebufferInfo.height = window.getExtent().height;
+                framebufferInfo.layers = 1;
+
+                if (vkCreateFramebuffer(device.device(), &framebufferInfo, nullptr, &frameBuffers[i]) != VK_SUCCESS)
+                {
+                    throw std::runtime_error("Failed to create offscreen framebuffer!");
+                }
+            }
+
             imageIndex = 0;
             return;
         }
@@ -244,8 +264,8 @@ namespace GWIN
             VkImageCreateInfo imageInfo{};
             imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             imageInfo.imageType = VK_IMAGE_TYPE_2D;
-            imageInfo.extent.width = window.getExtent().width;
-            imageInfo.extent.height = window.getExtent().height;
+            imageInfo.extent.width = 2000;
+            imageInfo.extent.height = 2000;
             imageInfo.extent.depth = 1;
             imageInfo.mipLevels = 1;
             imageInfo.arrayLayers = 1;

@@ -82,6 +82,11 @@ namespace GWIN
         SaveSceneCallback = callback;
     }
 
+    void GWInterface::setLoadSceneCallback(std::function<void(const std::string path)> callback)
+    {
+        LoadSceneCallback = callback;
+    }
+
     //Temporary to load Object
     char filePathBuffer[256];
     char texturePathBuffer[256] = "C:\\Users\\cleve\\OneDrive\\Documents\\GitHub\\GabexEngine\\src\\textures\\no_texture.png";
@@ -200,6 +205,7 @@ namespace GWIN
                 }
                 if (ImGui::MenuItem("Open Project", "Ctrl+O"))
                 {
+                    ImGuiFileDialog::Instance()->OpenDialog("OpenProjectDialog", "Choose a Scene to Load", ".json");
                 }
                 if (ImGui::MenuItem("Save Project", "Ctrl+S"))
                 {
@@ -328,6 +334,16 @@ namespace GWIN
             if (ImGuiFileDialog::Instance()->IsOk())
             {
                 SaveSceneCallback(ImGuiFileDialog::Instance()->GetCurrentPath());
+            }
+
+            ImGuiFileDialog::Instance()->Close();
+        }
+
+        if (ImGuiFileDialog::Instance()->Display("OpenProjectDialog", ImGuiWindowFlags_NoCollapse, ImVec2(600, 400)))
+        {
+            if (ImGuiFileDialog::Instance()->IsOk())
+            {
+                LoadSceneCallback(ImGuiFileDialog::Instance()->GetCurrentFileName());
             }
 
             ImGuiFileDialog::Instance()->Close();

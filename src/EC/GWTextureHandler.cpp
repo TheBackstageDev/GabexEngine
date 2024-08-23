@@ -30,6 +30,7 @@ namespace GWIN
         texture.id = lastTextureId;
         
         texture.textureImage = imageLoader.loadImage(pathToTexture, mipMap);
+        texture.pathToTexture = pathToTexture;
         
         createSampler(texture.textureImage.mipLevels, texture.textureSampler);
 

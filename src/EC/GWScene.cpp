@@ -1,12 +1,17 @@
 #include "GWScene.hpp"
 
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 
 namespace GWIN
 {
     GWScene::GWScene(SceneCreateInfo createInfo)
-        : modelLoader(createInfo.modelLoader),
+        : device(createInfo.device),
+          modelLoader(createInfo.modelLoader),
           jsonHandler(createInfo.jsonHandler),
+          textureHandler(createInfo.textureHandler),
+          materialHandler(createInfo.materialHandler),
           name(createInfo.name),
           textureLayout(createInfo.textureLayout),
           texturePool(createInfo.texturePool)
@@ -40,31 +45,48 @@ namespace GWIN
 
             if (jsonData.contains("gameObjects"))
             {
+                gameObjects.clear();
+                std::shared_ptr<GWModel> model;
                 for (const auto &obj : jsonData["gameObjects"])
                 {
-                    float translation[3]{obj["transform"]["translation"].get<float>()};
-                    float rotation[3]{obj["transform"]["rotation"].get<float>()};
-                    uint32_t textures[6]{obj["textures"].get<uint32_t>()};
-
-                    auto gameObject = GWGameObject::createGameObject(obj["name"].get<std::string>());
-                    gameObject.transform.translation = {translation[0], translation[1], translation[2]};
-                    gameObject.transform.rotation = {rotation[0], rotation[1], rotation[2]};
-                    gameObject.transform.scale = obj["transform"]["scale"].get<float>();
+                    auto gameObject = GWGameObject::createGameObject(obj["name"].get<std::string>(), obj["id"].get<uint32_t>());
                     
-                    for (uint32_t i = 0; i < 6; ++i)
+                    glm::vec3 translation = {
+                        obj["transform"]["translation"][0].get<float>(),
+                        obj["transform"]["translation"][1].get<float>(),
+                        obj["transform"]["translation"][2].get<float>()};
+
+                    glm::vec3 rotation = {
+                        obj["transform"]["rotation"][0].get<float>(),
+                        obj["transform"]["rotation"][1].get<float>(),
+                        obj["transform"]["rotation"][2].get<float>()};
+
+                    gameObject.transform.scale = obj["transform"]["scale"].get<float>();
+                    gameObject.transform.rotation = rotation;
+                    gameObject.transform.translation = translation;
+
+                    if (obj.contains("textures"))
                     {
-                        gameObject.Textures[i] = textures[i];
+                        auto textures = obj["textures"].get<std::vector<uint32_t>>();
+                        for (size_t i = 0; i < textures.size(); ++i)
+                        {
+                            gameObject.Textures[i] = textures[i];
+                        }
+                    }
+
+                    if (obj.contains("material"))
+                    {
+                        gameObject.Material = obj["material"].get<uint32_t>();
                     }
 
                     if (obj.contains("modelPath"))
                     {
-                        std::shared_ptr<GWModel> model;
                         modelLoader.importFile(obj["modelPath"].get<std::string>(), model, false);
                         gameObject.model = model;
-                    }
-
+                    } 
+                    
                     gameObjects.emplace(gameObject.getId(), std::move(gameObject));
-                }
+                } 
             }
 
             if (jsonData.contains("cameras"))
@@ -72,19 +94,42 @@ namespace GWIN
                 for (const auto& cam : jsonData["cameras"])
                 {
                     GWCamera camera;
-                    auto viewerObject = GWGameObject::createGameObject("Camera");
-                    camera.setViewerObject(viewerObject.getId());
+
+                    camera.setViewerObject(cam["viewerobject"]);
+
+                    auto& viewerObject = gameObjects.at(camera.getViewerObject());
                     camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
-                    cameras.push_back(std::move(camera));
-                    gameObjects.emplace(viewerObject.getId(), std::move(viewerObject));
+                    cameras.emplace(viewerObject.getId(), camera);
+                } 
+            }
+
+            if (jsonData.contains("texturesinfo"))
+            {
+                texturePool->resetPool();
+                textures.clear();
+
+                for (const auto &textureData : jsonData["texturesinfo"])
+                {
+                    Texture texture = textureHandler->createTexture(textureData["path"].get<std::string>(), true);
+
+                    VkDescriptorSet newSet;
+                    createSet(newSet, texture);
+                    textures.push_back(std::move(newSet));
                 }
+            }
+
+            if (jsonData.contains("materials"))
+            {
+                
             }
         }
         catch (const nlohmann::json::parse_error& e)
         {
             std::cerr << "JSON parse error: " << e.what() << std::endl;
         }
+
+        std::cout << "Completed loading! \n";
     }
 
     GWScene::~GWScene() {};
@@ -111,7 +156,7 @@ namespace GWIN
         newCamera.setViewerObject(viewerObject.getId());
 
         gameObjects.emplace(viewerObject.getId(), std::move(viewerObject));
-        cameras.push_back(std::move(newCamera)); 
+        cameras.emplace(newCamera.getId(), newCamera);
     }
 
     void GWScene::createGameObject(GameObjectInfo& objectInfo)
@@ -128,16 +173,29 @@ namespace GWIN
         gameObjects.emplace(obj.getId(), std::move(obj)); 
     }
 
+     void GWScene::createGameObject(GWGameObject& obj)
+     {
+        gameObjects.emplace(obj.getId(), std::move(obj)); 
+     }
+
     void GWScene::removeGameObject(uint32_t id)
     {
         gameObjects.erase(id);
     }
 
+    //helper Func
+    std::string formatFloat(float value, int precision)
+    {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(precision) << value;
+        return stream.str();
+    }
     void GWScene::saveScene(const std::string path)
     {
         nlohmann::json jsonObject;
 
-        jsonObject["sceneName"] = name;
+        jsonObject["scene"]["sceneName"] = name;
+        jsonObject["scene"]["skybox"] = 1;
 
         for (const auto &gameObjectPair : gameObjects)
         {
@@ -146,7 +204,39 @@ namespace GWIN
 
         for (const auto &camera : cameras)
         {
-            jsonObject["cameras"].push_back(nlohmann::json::parse(camera.toJson()));
+            jsonObject["cameras"].push_back(nlohmann::json::parse(camera.second.toJson()));
+        }
+
+        auto& texturesToSerialize = textureHandler->getTextures();
+
+        for (const auto& texture : texturesToSerialize)
+        {
+            nlohmann::json textureObject;
+            textureObject["id"] = texture.id;
+            textureObject["path"] = texture.pathToTexture;
+
+            jsonObject["texturesinfo"].push_back(nlohmann::json::parse(textureObject.dump()));
+        }
+
+        auto& materialsToSerialize = materialHandler->getMaterials();
+
+        for (const auto &material : materialsToSerialize)
+        {
+            if (material.color.x == -431602080 && material.color.y == -431602080 && material.color.z == -431602080)
+                continue;
+                
+            nlohmann::json materialObject;
+            materialObject["color"] = {
+                formatFloat(material.color.r, 2),
+                formatFloat(material.color.g, 2),
+                formatFloat(material.color.b, 2),
+                formatFloat(material.color.a, 2)};
+            materialObject["data"] = {
+                formatFloat(material.data.x, 2),
+                formatFloat(material.data.y, 2),
+                formatFloat(material.data.z, 2)};
+
+            jsonObject["materials"].push_back(materialObject);
         }
 
         jsonHandler.setValue(name, jsonObject);

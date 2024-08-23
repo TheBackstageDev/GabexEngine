@@ -38,6 +38,10 @@ namespace GWIN
             currentScene->saveScene(path);
         });
 
+        interfaceSystem->setLoadSceneCallback([this](const std::string path) {
+            loadNewScene(path);
+        });
+
         currentScene->createCamera();
     }
 
@@ -46,6 +50,7 @@ namespace GWIN
         globalPool = GWDescriptorPool::Builder(device)
                          .setMaxSets(GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
                          .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
+                         .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
                          .build();
 
         auto globalSetLayout = GWDescriptorSetLayout::Builder(device)
@@ -55,6 +60,7 @@ namespace GWIN
         texturePool = GWDescriptorPool::Builder(device)
                           .setMaxSets(1000)
                           .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
+                          .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
                           .build();
 
         textureSetLayout = GWDescriptorSetLayout::Builder(device)
@@ -89,7 +95,7 @@ namespace GWIN
                 .build(globalDescriptorSets[i]);
         }
 
-        SceneCreateInfo createInfo{textureSetLayout, texturePool, modelLoader, jsonHandler};
+        SceneCreateInfo createInfo{device, textureSetLayout, texturePool, modelLoader, jsonHandler, textureHandler, materialHandler};
         
         currentScene = std::make_unique<GWScene>(createInfo);
 
@@ -107,6 +113,33 @@ namespace GWIN
 
         float aspect = renderer->getAspectRatio();
         frameInfo.currentCamera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
+    }
+
+    void MasterRenderSystem::loadNewScene(const std::string pathToFile)
+    {
+        std::ifstream file(pathToFile);
+
+        std::string json;
+
+        if (file.is_open())
+        {
+            try {
+                json = std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+                SceneCreateInfo createInfo{device, textureSetLayout, texturePool, modelLoader, jsonHandler, textureHandler, materialHandler, "DefaultScene", json};
+
+                vkDeviceWaitIdle(device.device());
+
+                currentScene->loadScene(json);
+                isLoading = true;
+            }
+            catch (const nlohmann::json::parse_error &e)
+            {
+                std::cerr << "Parse error: " << e.what() << std::endl;
+            }
+        } else {
+            std::cout << "Cannot open file! " << pathToFile << std::endl;
+        }
     }
 
     void MasterRenderSystem::run()
@@ -156,7 +189,10 @@ namespace GWIN
 
                 offscreenRenderer->startOffscreenRenderPass(commandBuffer);
 
-                skyboxSystem->render(frameInfo);
+                if (!isLoading)
+                {
+                    skyboxSystem->render(frameInfo);
+                }
 
                 if (isWireFrame)
                 {
@@ -168,6 +204,12 @@ namespace GWIN
                 }
 
                 pointLightSystem->render(frameInfo);
+
+                if (isLoading)
+                {
+                    skyboxSystem->render(frameInfo);
+                    isLoading = false;
+                }
 
                 offscreenRenderer->endOffscreenRenderPass(commandBuffer);
 
@@ -219,7 +261,7 @@ namespace GWIN
         currentScene->createSet(no_texture_set, no_texture);
 
         currentScene->createSet(skyboxSet, texture2);
-        skyboxSystem->setSkybox(skyboxSet);
+        skyboxSystem->setSkybox(skyboxSet, texture2.id);
 
         modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/sphere.obj", Model, false);
 

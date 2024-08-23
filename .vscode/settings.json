@@ -101,6 +101,7 @@
     "regex": "cpp",
     "any": "cpp",
     "ranges": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "strstream": "cpp"
   },
 }

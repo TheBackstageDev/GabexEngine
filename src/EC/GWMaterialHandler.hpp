@@ -15,8 +15,15 @@ namespace GWIN
         void setMaterials(GlobalUbo& ubo);
 
         std::array<Material, MAX_MATERIALS> getMaterials() { return materials; }
+        void resetMaterials() { 
+            for (auto &material : materials)
+            {
+                material = Material{}; 
+            }
+            lastId = 0; 
+        };
     private:
-        GWinDevice& device;
+        GWinDevice & device;
         std::array<Material, MAX_MATERIALS> materials;
 
         uint32_t lastId{0};

@@ -91,21 +91,16 @@ namespace GWIN
 
         pipeline->bind(frameInfo.commandBuffer);
 
-        vkCmdBindDescriptorSets(
-            frameInfo.commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout,
-            0, 1,
-            &frameInfo.globalDescriptorSet,
-            0,
-            nullptr);
+
+        VkDescriptorSet descriptorSets[] = {frameInfo.globalDescriptorSet, currentSkybox};
 
         vkCmdBindDescriptorSets(
             frameInfo.commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipelineLayout,
-            1, 1,
-            &currentSkybox,
+            0, 
+            2, 
+            descriptorSets,
             0,
             nullptr);
 

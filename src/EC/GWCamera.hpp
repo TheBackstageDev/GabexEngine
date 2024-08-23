@@ -13,6 +13,8 @@ namespace GWIN
     {
     public:
 
+    GWCamera() { static uint32_t last_id = 0; id = ++last_id - 1; }
+
     void setOrthographicProjection(float left, float right, float top, float bottom, float near, float far);
 
     void setPerspectiveProjection(float fovy, float aspect, float near, float far);
@@ -28,6 +30,8 @@ namespace GWIN
     const glm::mat4& getView() const { return viewMatrix; };
     const glm::mat4& getInverseView() const { return inverseViewMatrix; };
 
+    uint32_t getId() { return id; }
+
     std::string toJson() const;
 
     private:
@@ -36,6 +40,7 @@ namespace GWIN
         glm::mat4 inverseViewMatrix{1.f};
 
         uint32_t viewerObject = 0; //None
+        uint32_t id;
     };
     
 } // namespace GWIN

@@ -42,6 +42,11 @@ namespace GWIN
             return GWGameObject(currentID++, name);
         }
 
+        static GWGameObject createGameObject(const std::string name, id_t id)
+        {
+            return GWGameObject(id, name);
+        }
+
         static GWGameObject createLight(float intensity, float radius, glm::vec3 color);
         static GWGameObject createLight(float intensity, float radius, glm::vec3 color, float cutOffAngle);
 
@@ -67,6 +72,8 @@ namespace GWIN
         std::string toJson() const;
 
     private:
+        static id_t currentID;
+        
         GWGameObject(id_t ID, const std::string name) : Objname(name)
         {
             id = ID;
