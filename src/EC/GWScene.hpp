@@ -3,6 +3,7 @@
 #include "GWFrameInfo.hpp"
 #include "GWModelLoader.hpp"
 #include "GWTextureHandler.hpp"
+#include "GWCubemapHandler.hpp"
 #include "GWMaterialHandler.hpp"
 #include "../JSONHandler.hpp"
 
@@ -61,6 +62,7 @@ namespace GWIN
 
         void removeGameObject(uint32_t id);
         void createSet(VkDescriptorSet &set, Texture &texture);
+        void createSet(VkDescriptorSet& set, CubeMap &texture);
 
         void saveScene(const std::string path);
         GWCamera& getCurrentCamera() { return cameras.at(currentCamera); }

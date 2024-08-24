@@ -1,8 +1,6 @@
 #include "GWScene.hpp"
 
 #include <iostream>
-#include <iomanip>
-#include <sstream>
 
 namespace GWIN
 {
@@ -20,7 +18,7 @@ namespace GWIN
         {
             std::shared_ptr<GWModel> model;
 
-            modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/cube.obj", model, false);
+            modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/cube.obj", model);
 
             auto skybox = GWGameObject::createGameObject("Skybox");
             skybox.model = model;
@@ -81,7 +79,7 @@ namespace GWIN
 
                     if (obj.contains("modelPath"))
                     {
-                        modelLoader.importFile(obj["modelPath"].get<std::string>(), model, false);
+                        modelLoader.importFile(obj["modelPath"].get<std::string>(), model);
                         gameObject.model = model;
                     } 
                     
@@ -107,7 +105,7 @@ namespace GWIN
             if (jsonData.contains("texturesinfo"))
             {
                 texturePool->resetPool();
-                textures.clear();
+                textureHandler->resetTextures();
 
                 for (const auto &textureData : jsonData["texturesinfo"])
                 {
@@ -121,15 +119,27 @@ namespace GWIN
 
             if (jsonData.contains("materials"))
             {
-                
+                materialHandler->resetMaterials();
+
+                for (const auto &material : jsonData["materials"])
+                {
+                    glm::vec4 color;
+                    for (size_t i = 0; i < 4; ++i)
+                    {
+                        color[i] = material["color"][i].get<float>();
+                    }
+
+                    float roughness = material["data"][0].get<float>();
+                    float metallic =(material["data"][1].get<float>());
+
+                    materialHandler->createMaterial(roughness, metallic, color);
+                }
             }
         }
         catch (const nlohmann::json::parse_error& e)
         {
             std::cerr << "JSON parse error: " << e.what() << std::endl;
         }
-
-        std::cout << "Completed loading! \n";
     }
 
     GWScene::~GWScene() {};
@@ -162,7 +172,7 @@ namespace GWIN
     void GWScene::createGameObject(GameObjectInfo& objectInfo)
     {
         std::shared_ptr<GWModel> model;
-        modelLoader.importFile(objectInfo.filePath, model, false);
+        modelLoader.importFile(objectInfo.filePath, model);
 
         auto obj = GWGameObject::createGameObject(objectInfo.objName);
         obj.model = model;
@@ -183,13 +193,6 @@ namespace GWIN
         gameObjects.erase(id);
     }
 
-    //helper Func
-    std::string formatFloat(float value, int precision)
-    {
-        std::stringstream stream;
-        stream << std::fixed << std::setprecision(precision) << value;
-        return stream.str();
-    }
     void GWScene::saveScene(const std::string path)
     {
         nlohmann::json jsonObject;
@@ -200,6 +203,7 @@ namespace GWIN
         for (const auto &gameObjectPair : gameObjects)
         {
             jsonObject["gameObjects"].push_back(nlohmann::json::parse(gameObjectPair.second.toJson()));
+            std::cout << gameObjectPair.second.toJson();
         }
 
         for (const auto &camera : cameras)
@@ -227,16 +231,16 @@ namespace GWIN
                 
             nlohmann::json materialObject;
             materialObject["color"] = {
-                formatFloat(material.color.r, 2),
-                formatFloat(material.color.g, 2),
-                formatFloat(material.color.b, 2),
-                formatFloat(material.color.a, 2)};
+                material.color.r,
+                material.color.g,
+                material.color.b,
+                material.color.a};
             materialObject["data"] = {
-                formatFloat(material.data.x, 2),
-                formatFloat(material.data.y, 2),
-                formatFloat(material.data.z, 2)};
+                material.data.x,
+                material.data.y,
+                material.data.z};
 
-            jsonObject["materials"].push_back(materialObject);
+            jsonObject["materials"].push_back(nlohmann::json::parse(materialObject.dump()));
         }
 
         jsonHandler.setValue(name, jsonObject);

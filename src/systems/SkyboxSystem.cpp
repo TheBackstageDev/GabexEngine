@@ -91,7 +91,6 @@ namespace GWIN
 
         pipeline->bind(frameInfo.commandBuffer);
 
-
         VkDescriptorSet descriptorSets[] = {frameInfo.globalDescriptorSet, currentSkybox};
 
         vkCmdBindDescriptorSets(

@@ -90,6 +90,11 @@ namespace GWIN
         {
             vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
         }
+
+        for (auto& subModel : subModels)
+        {
+            subModel->bind(commandBuffer);
+        }
     }
 
     void GWModel::draw(VkCommandBuffer commandBuffer)
@@ -99,6 +104,11 @@ namespace GWIN
             vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
         } else {
             vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
+        }
+
+        for (auto &subModel : subModels)
+        {
+            subModel->draw(commandBuffer);
         }
     }
 

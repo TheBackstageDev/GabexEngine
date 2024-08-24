@@ -50,6 +50,7 @@ namespace GWIN
         void createSampler(uint32_t mipLevels, VkSampler &sampler);
 
         std::vector<TextureInfo> getTextures() const;
+        void resetTextures() { textures.clear(); lastTextureId = 0; };
 
     private:
         GWinDevice& device;

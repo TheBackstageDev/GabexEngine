@@ -41,6 +41,9 @@ namespace GWIN
 
         void bind(VkCommandBuffer commandBuffer);
         void draw(VkCommandBuffer commandBuffer);
+        
+        void addSubModel(std::shared_ptr<GWModel>& model) { subModels.push_back(std::move(model)); }
+        bool hasSubModels() { return subModels.size() > 0; }
 
         std::string getPath() { return pathToModel; }
         void setPath(const std::string path) { pathToModel = path; }
@@ -51,6 +54,8 @@ namespace GWIN
         GWinDevice &device;
 
         std::string pathToModel = "";
+
+        std::vector<std::shared_ptr<GWModel>> subModels;
 
         std::unique_ptr<GWBuffer> vertexBuffer;
         uint32_t vertexCount;

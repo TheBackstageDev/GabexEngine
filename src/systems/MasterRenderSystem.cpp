@@ -263,12 +263,12 @@ namespace GWIN
         currentScene->createSet(skyboxSet, texture2);
         skyboxSystem->setSkybox(skyboxSet, texture2.id);
 
-        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/sphere.obj", Model, false);
+        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/sphere.obj", Model);
 
         int index = 0;
-        for (uint32_t x = 0; x < 6; x++)
+        for (uint32_t x = 0; x < 3; x++)
         {
-            for (uint32_t z = 0; z < 6; z++)
+            for (uint32_t z = 0; z < 3; z++)
             {
                 index++;
                 auto sphere = GWGameObject::createGameObject("Sphere " + std::to_string(index));
