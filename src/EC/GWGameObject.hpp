@@ -11,9 +11,9 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-#include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace GWIN
 {
@@ -21,7 +21,21 @@ namespace GWIN
     {
         glm::vec3 translation{0}; // (position offset)
         float scale{1.f};
-        glm::vec3 rotation{0};
+        glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
+
+        void rotate(glm::vec3 axis, float angle)
+        {
+            glm::quat deltaRotation = glm::angleAxis(glm::radians(angle), glm::normalize(axis));
+
+            rotation = glm::normalize(deltaRotation * rotation); // Normalize the quaternion to avoid drift
+        }
+
+        void rotateEuler(glm::vec3 angles)
+        {
+            rotation = glm::normalize(glm::quat(glm::radians(angles)));
+        }
+
+        glm::vec3 getRotation() { return glm::degrees(glm::eulerAngles(rotation)); };
 
         glm::mat4 mat4();
     };

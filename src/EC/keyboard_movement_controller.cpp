@@ -4,7 +4,7 @@ namespace GWIN
 {
     void keyboardMovementController::moveInPlaneXZ(GLFWwindow* window, float dt, GWGameObject& gameObject)
     {
-        glm::vec3 rotate{0};
+        glm::vec3 rotate{ 0 };
         if (glfwGetKey(window, keys.lookRight) == GLFW_PRESS)
             rotate.y += 1.f;
         if (glfwGetKey(window, keys.lookLeft) == GLFW_PRESS)
@@ -14,21 +14,23 @@ namespace GWIN
         if (glfwGetKey(window, keys.lookDown) == GLFW_PRESS)
             rotate.x -= 1.f;
 
+        glm::vec3 currentRotation = gameObject.transform.getRotation();
+
         if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon())
         {
-            gameObject.transform.rotation += lookSpeed * dt * glm::normalize(rotate);
+            currentRotation += lookSpeed * dt * glm::normalize(rotate);
+            currentRotation.x = glm::clamp(currentRotation.x, -1.5f, 1.5f);
+            currentRotation.y = glm::mod(currentRotation.y, glm::two_pi<float>());
+
+            gameObject.transform.rotateEuler(currentRotation);
         }
 
-        // limit pitch values between about +/- 85ish degrees
-        gameObject.transform.rotation.x = glm::clamp(gameObject.transform.rotation.x, -1.5f, 1.5f);
-        gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y, glm::two_pi<float>());
+        float yaw = currentRotation.y;
+        const glm::vec3 forwardDir{ sin(yaw), 0.f, cos(yaw) };
+        const glm::vec3 rightDir{ forwardDir.z, 0.f, -forwardDir.x };
+        const glm::vec3 upDir{ 0.f, -1.f, 0.f };
 
-        float yaw = gameObject.transform.rotation.y;
-        const glm::vec3 forwardDir{sin(yaw), 0.f, cos(yaw)};
-        const glm::vec3 rightDir{forwardDir.z, 0.f, -forwardDir.x};
-        const glm::vec3 upDir{0.f, -1.f, 0.f};
-
-        glm::vec3 moveDir{0.f};
+        glm::vec3 moveDir{ 0.f };
         if (glfwGetKey(window, keys.moveForward) == GLFW_PRESS)
             moveDir += forwardDir;
         if (glfwGetKey(window, keys.moveBackward) == GLFW_PRESS)

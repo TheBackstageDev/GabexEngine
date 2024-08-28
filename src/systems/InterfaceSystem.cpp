@@ -146,7 +146,7 @@ namespace GWIN
 
             ImGuizmo::AllowAxisFlip(true);
             ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
-                                mCurrentGizmoOperation, ImGuizmo::MODE::WORLD,
+                                mCurrentGizmoOperation, ImGuizmo::MODE::LOCAL,
                                 glm::value_ptr(transformMatrix));
 
             if (ImGuizmo::IsUsing())
@@ -157,9 +157,9 @@ namespace GWIN
                                                     glm::value_ptr(rotation),
                                                     glm::value_ptr(scale));
 
-                if (glm::any(glm::epsilonNotEqual(gameObject.transform.rotation, rotation, glm::epsilon<float>())))
+                if (glm::any(glm::epsilonNotEqual(gameObject.transform.getRotation(), rotation, glm::epsilon<float>())))
                 {
-                    gameObject.transform.rotation = glm::radians(rotation);
+                    gameObject.transform.rotateEuler(rotation);
                 }
 
                 if(glm::any(glm::epsilonNotEqual(gameObject.transform.translation, translation, glm::epsilon<float>())))

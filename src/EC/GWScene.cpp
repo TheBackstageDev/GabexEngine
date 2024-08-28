@@ -96,7 +96,7 @@ namespace GWIN
                     camera.setViewerObject(cam["viewerobject"]);
 
                     auto& viewerObject = gameObjects.at(camera.getViewerObject());
-                    camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+                    camera.setViewYXZ(viewerObject.transform.translation, glm::eulerAngles(viewerObject.transform.rotation));
 
                     cameras.emplace(viewerObject.getId(), camera);
                 } 
@@ -132,7 +132,7 @@ namespace GWIN
                     float roughness = material["data"][0].get<float>();
                     float metallic =(material["data"][1].get<float>());
 
-                    materialHandler->createMaterial(roughness, metallic, color);
+                    materialHandler->createMaterial(roughness, metallic, color, material["name"].get<std::string>());
                 }
             }
         }
@@ -223,12 +223,16 @@ namespace GWIN
         }
 
         auto& materialsToSerialize = materialHandler->getMaterials();
+        auto& materialsDataToSerialize = materialHandler->getMaterialData();
 
-        for (const auto &material : materialsToSerialize)
+        for (size_t i = 0; i < materialsToSerialize.size(); ++i)
         {
+            const auto &material = materialsToSerialize[i];
+
+            // Skip the material if the color is null
             if (material.color.x == -431602080 && material.color.y == -431602080 && material.color.z == -431602080)
                 continue;
-                
+
             nlohmann::json materialObject;
             materialObject["color"] = {
                 material.color.r,
@@ -239,6 +243,8 @@ namespace GWIN
                 material.data.x,
                 material.data.y,
                 material.data.z};
+
+            materialObject["name"] = materialsDataToSerialize[i].name;
 
             jsonObject["materials"].push_back(nlohmann::json::parse(materialObject.dump()));
         }

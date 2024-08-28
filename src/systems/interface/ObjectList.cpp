@@ -1,5 +1,7 @@
 #include "ObjectList.hpp"
 
+#include <iostream>
+
 namespace GWIN
 {
     void GWObjectList::inputPosition(GWGameObject &selectedObject)
@@ -43,36 +45,38 @@ namespace GWIN
     {
         ImGui::Text("Rotation:");
 
+        rotationChanged = false;
+
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
         ImGui::Button("X");
         ImGui::PopStyleColor();
-        ImGui::SameLine(0, 0); 
+        ImGui::SameLine(0, 0);
         ImGui::SetNextItemWidth(80);
-        if (ImGui::DragFloat("##RotX", &rotationBuffer.x, .2f, -360.0f, 360.0f, "%.1f°"))
+        if (ImGui::DragFloat("##RotX", &rotationBuffer.x, .2f, -180.0f, 180.0f, "%.1f°"))
         {
-            selectedObject.transform.rotation.x = glm::radians(rotationBuffer.x);
+            rotationChanged = true;
         }
 
-        ImGui::SameLine(0, 0); 
+        ImGui::SameLine(0, 0);
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 0.0f, 1.0f));
         ImGui::Button("Y");
         ImGui::PopStyleColor();
-        ImGui::SameLine(0, 0); 
+        ImGui::SameLine(0, 0);
         ImGui::SetNextItemWidth(80);
-        if (ImGui::DragFloat("##RotY", &rotationBuffer.y, .2f, -360.0f, 360.0f, "%.1f°"))
+        if (ImGui::DragFloat("##RotY", &rotationBuffer.y, .2f, -180.0f, 180.0f, "%.1f°"))
         {
-            selectedObject.transform.rotation.y = glm::radians(rotationBuffer.y);
+            rotationChanged = true;
         }
 
-        ImGui::SameLine(0, 0); 
+        ImGui::SameLine(0, 0);
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
         ImGui::Button("Z");
         ImGui::PopStyleColor();
-        ImGui::SameLine(0, 0); 
+        ImGui::SameLine(0, 0);
         ImGui::SetNextItemWidth(80);
-        if (ImGui::DragFloat("##RotZ", &rotationBuffer.z, .2f, -360.0f, 360.0f, "%.1f°"))
+        if (ImGui::DragFloat("##RotZ", &rotationBuffer.z, .2f, -180.0f, 180.0f, "%.1f°"))
         {
-            selectedObject.transform.rotation.z = glm::radians(rotationBuffer.z);
+            rotationChanged = true;
         }
     }
 
@@ -94,31 +98,45 @@ namespace GWIN
 
         if (ImGui::CollapsingHeader("Material", nullptr))
         {
-            //Temporary
-            static const char *materials[] = {"Material1", "Material2", "Material3"};
-            static int selectedMaterial = 0;
+            auto &materials = materialHandler->getMaterialData();
 
-            ImGui::Text("Material");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(150);
-            if (ImGui::BeginCombo("##MaterialCombo", materials[selectedMaterial]))
+            if (!materials.empty())
             {
-                for (int i = 0; i < IM_ARRAYSIZE(materials); i++)
+                if (selectedMaterial >= materials.size())
                 {
-                    bool isSelected = (selectedMaterial == i);
-                    if (ImGui::Selectable(materials[i], isSelected))
-                    {
-                        selectedMaterial = i;
-                    }
-                    if (isSelected)
-                        ImGui::SetItemDefaultFocus();
+                    selectedMaterial = 0;
                 }
-                ImGui::EndCombo();
+
+                ImGui::Text("Material");
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(150);
+                if (ImGui::BeginCombo("##MaterialCombo", materials[selectedMaterial].name.c_str()))
+                {
+                    for (int i = 0; i < materials.size(); i++)
+                    {
+                        if (i != 0 && materials[i].id == 0)
+                            continue;
+
+                        bool isSelected = (selectedMaterial == i);
+                        if (ImGui::Selectable(materials[i].name.c_str(), isSelected))
+                        {
+                            selectedMaterial = i;
+                            selectedObject.Material = materials[i].id;
+                        }
+                        if (isSelected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+            }
+            else
+            {
+                ImGui::Text("No materials available.");
             }
         }
     }
 
-    void GWObjectList::addComponent(FrameInfo& frameInfo)
+    void GWObjectList::addComponent(FrameInfo &frameInfo)
     {
 
     }
@@ -139,15 +157,15 @@ namespace GWIN
                 if (kv.first == selectedItem)
                 {
                     positionBuffer = kv.second.transform.translation;
-                    rotationBuffer = glm::degrees(kv.second.transform.rotation);
+                    rotationBuffer = kv.second.transform.getRotation();
                     scaleBuffer = kv.second.transform.scale;
                 }
 
                 if (ImGui::Selectable(objId.c_str(), selectedItem == kv.second.getId()))
                 {
-                    selectedItem = kv.second.getId(); //Sets to its Index
+                    selectedItem = kv.second.getId(); 
                     strncpy_s(nameBuffer, kv.second.getName().c_str(), sizeof(nameBuffer) - 1);
-                    nameBuffer[sizeof(nameBuffer) - 1] = '\0'; 
+                    nameBuffer[sizeof(nameBuffer) - 1] = '\0';
                     isEditingName = false;
                 }
             }
@@ -184,11 +202,26 @@ namespace GWIN
                 }
 
                 inspectorGuis(selectedObject);
-            } else {
-                ImGui::Text("Select a Object");
+
+                if (rotationChanged)
+                {
+                    // Calculate the difference in rotation to get the angle
+                    glm::vec3 rotationDelta = rotationBuffer - selectedObject.transform.getRotation();
+
+                    float angle = glm::length(rotationDelta);
+                    if (angle > glm::epsilon<float>())
+                    {
+                        //axis is rotation delta normalized
+                        selectedObject.transform.rotate(glm::normalize(rotationDelta), angle);
+                    }
+                }
+            }
+            else
+            {
+                ImGui::Text("Select an Object");
             }
 
-            //addComponent(frameInfo);
+            addComponent(frameInfo);
 
             ImGui::EndChild();
         }

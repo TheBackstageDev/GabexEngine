@@ -72,10 +72,10 @@ namespace GWIN
             if (obj.light->cutOffAngle == 0.f)
             {
                 ubo.lights[lightIndex].Position = glm::vec4(obj.transform.translation, 0.f);
-                ubo.lights[lightIndex].Direction = glm::vec4(obj.transform.rotation, 0.0f);
+                ubo.lights[lightIndex].Direction = glm::vec4(glm::eulerAngles(obj.transform.rotation), 0.0f);
             } else {
                 ubo.lights[lightIndex].Position = glm::vec4(obj.transform.translation, 1.f);
-                ubo.lights[lightIndex].Direction = glm::vec4(obj.transform.rotation, glm::cos(obj.light->cutOffAngle));
+                ubo.lights[lightIndex].Direction = glm::vec4(glm::eulerAngles(obj.transform.rotation), glm::cos(obj.light->cutOffAngle));
             }
 
             ubo.lights[lightIndex].Color = glm::vec4(obj.color, obj.light->lightIntensity);

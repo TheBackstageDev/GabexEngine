@@ -109,7 +109,7 @@ namespace GWIN
     {
         auto& viewerObject = frameInfo.gameObjects.at(frameInfo.currentCamera.getViewerObject());
         cameraController.moveInPlaneXZ(window.getWindow(), frameInfo.deltaTime,  viewerObject);
-        frameInfo.currentCamera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
+        frameInfo.currentCamera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.getRotation());
 
         float aspect = renderer->getAspectRatio();
         frameInfo.currentCamera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
@@ -286,7 +286,7 @@ namespace GWIN
                         (1.0f + cos(3.14159f * z / 5.0f)) * 0.5f,  // G component varies between 0 and 1
                         (1.0f + sin(3.14159f * (x + z) / 10.0f)) * 0.5f, // B component varies between 0 and 1
                         1.0f
-                    }
+                    }, std::string("Material " + std::to_string(index))
                 );
                 
                 currentScene->createGameObject(sphere);

@@ -5,7 +5,8 @@
 
 #include <string>
 
-#include "GWFrameInfo.hpp" //this just to have device and others
+#include "../GWDevice.hpp"
+#include "../GWBuffer.hpp"
 #include "vma/vk_mem_alloc.h"
 
 namespace GWIN
