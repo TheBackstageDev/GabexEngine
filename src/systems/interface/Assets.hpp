@@ -22,6 +22,13 @@ namespace GWIN
     struct Asset
     {
         VkDescriptorSet image = VK_NULL_HANDLE;
+        std::string name = "Default Name";
+        uint32_t id{0};
+        AssetType type{ASSET_TYPE_MESH};
+    };
+
+    struct AssetInfo 
+    {
         std::string name;
         AssetType type;
     };
@@ -43,10 +50,15 @@ namespace GWIN
         void createDefaultImages();
         void createImage(const std::string& pathToFile);
 
+        void createAsset(AssetInfo& assetInfo);
+        void removeAsset(std::string name);
+
         std::unique_ptr<GWTextureHandler>& imageLoader;
         std::unique_ptr<GWMaterialHandler>& materialHandler;
 
         std::vector<Asset> assets;
         std::unordered_map<std::string, VkDescriptorSet> images;
+
+        uint32_t lastAssetID{0};
     };
 }

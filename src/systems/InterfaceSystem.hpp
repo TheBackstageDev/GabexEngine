@@ -46,7 +46,7 @@ namespace GWIN
 
         GWConsole getConsole() const { return console; }
 
-        glm::vec4 getLightDirection(GWGameObject& directionalLight) { return {glm::eulerAngles(directionalLight.transform.rotation), DirectionalLightingIntensity}; }
+        glm::vec4 getLightDirection(GWGameObject& directionalLight) { return {directionalLight.transform.getRotation(), DirectionalLightingIntensity}; }
 
     private:
         GWindow& window;

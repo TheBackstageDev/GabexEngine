@@ -145,8 +145,7 @@ namespace GWIN
     {
         auto io = ImGui::GetIO();
 
-        ImGui::SetNextWindowDockID(ImGui::GetID("Instance"), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowPos(ImVec2(0, 20));
+        ImGui::SetNextWindowDockID(ImGui::GetID("##Dockspace"), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Scene Hierarchy##", nullptr))
         {
             ImGui::BeginChild("ScrollingRegion##1", ImVec2(0, 0), true);
@@ -174,10 +173,11 @@ namespace GWIN
             ImGui::End();
         }
 
-        ImGui::SetNextWindowDockID(ImGui::GetID("Instance"), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowDockID(ImGui::GetID("##Dockspace"), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Inspector", nullptr, ImGuiWindowFlags_NoCollapse))
         {
             ImGui::BeginChild("ScrollingRegion##2", ImVec2(0, 0), true, ImGuiWindowFlags_NoResize);
+
             if (selectedItem != -1)
             {
                 GWGameObject &selectedObject = frameInfo.gameObjects.at(selectedItem);
@@ -211,7 +211,6 @@ namespace GWIN
                     float angle = glm::length(rotationDelta);
                     if (angle > glm::epsilon<float>())
                     {
-                        //axis is rotation delta normalized
                         selectedObject.transform.rotate(glm::normalize(rotationDelta), angle);
                     }
                 }

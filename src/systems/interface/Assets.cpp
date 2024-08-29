@@ -11,7 +11,8 @@ namespace GWIN
     AssetsWindow::AssetsWindow(std::unique_ptr<GWTextureHandler>& imageLoader, std::unique_ptr<GWMaterialHandler>& materialHandler) 
     : imageLoader(imageLoader), materialHandler(materialHandler)
     {
-        //createDefaultImages();
+        createDefaultImages();
+        createAsset(AssetInfo{"Amogus", ASSET_TYPE_TEXTURE});
     }
 
     AssetsWindow::~AssetsWindow()
@@ -24,7 +25,11 @@ namespace GWIN
 
     void AssetsWindow::actions(AssetType type)
     {
-
+        switch(type)
+        {
+        default:
+            std::cout << "Invalid asset type! \n";
+        }
     }
 
     void AssetsWindow::draw()
@@ -32,15 +37,48 @@ namespace GWIN
         if (ImGui::Begin("Assets", nullptr, ImGuiWindowFlags_NoCollapse))
         {
             ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), true, ImGuiWindowFlags_NoResize);
-/*             for (auto& kv : images)
+            
+            for (const auto& asset : assets)
             {
-                auto image = kv.second;
+                ImGui::PushID(asset.id);
+            
 
-                ImGui::Image((ImTextureID) image, ImVec2(500, 500));
-            } */
+                ImGui::PopID();
+            }
+
             ImGui::EndChild();
 
         } ImGui::End();
+    }
+
+    void AssetsWindow::createAsset(AssetInfo& assetInfo)
+    {
+        Asset newAsset{};
+        newAsset.name = assetInfo.name;
+        newAsset.type = assetInfo.type;
+        newAsset.id = lastAssetID++;
+
+        switch(assetInfo.type)
+        {
+        case ASSET_TYPE_MESH:
+            break;
+        case ASSET_TYPE_MATERIAL:
+            break;
+        case ASSET_TYPE_SCRIPT:
+            break;
+        case ASSET_TYPE_TEXTURE:
+            break;
+        default:
+            std::cout << "Invalid asset type";
+            break; 
+        }
+
+        assets.push_back(newAsset);
+    }
+
+    void AssetsWindow::removeAsset(std::string name)
+    {
+
     }
 
     void AssetsWindow::createImage(const std::string &pathToFile)
@@ -68,8 +106,6 @@ namespace GWIN
             {
                 images.emplace(fileName, descriptorSet);
             }
-
-            imageLoader->destroyTexture(NewImage.id);
         }
     }
 
@@ -78,14 +114,13 @@ namespace GWIN
         std::string relativePath = "..\\src\\systems\\interface\\images";
         fs::path imageDirectory = fs::current_path() / relativePath;
 
-        //createImage("C\\Users\\cleve\\OneDrive\\Documents\\GitHub\\GabexEngine\\src\\systems\\interface\\images\\move.png");
-
         if (fs::exists(imageDirectory) && fs::is_directory(imageDirectory))
         {
             for (const auto &entry : fs::directory_iterator(imageDirectory))
             {
                 if (entry.is_regular_file())
                 {
+                    std::cout << entry.path().string() << std::endl;
                     createImage(entry.path().string());
                 }
             }

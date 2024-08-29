@@ -30,17 +30,17 @@ namespace GWIN
         ImGui::StyleColorsDark();
 
         guipool = GWDescriptorPool::Builder(device)
-                      .setMaxSets(GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                      .addPoolSize(VK_DESCRIPTOR_TYPE_SAMPLER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                      .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                      .addPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                      .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                      .addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                      .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                      .addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                      .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                      .addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
-                      .addPoolSize(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, GWinSwapChain::MAX_FRAMES_IN_FLIGHT)
+                      .setMaxSets(1000)
+                      .addPoolSize(VK_DESCRIPTOR_TYPE_SAMPLER, 1000)
+                      .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
+                      .addPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000)
+                      .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000)
+                      .addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000)
+                      .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
+                      .addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000)
+                      .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000)
+                      .addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000)
+                      .addPoolSize(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000)
                       .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
                       .build();
 
@@ -195,6 +195,20 @@ namespace GWIN
         ImGui::NewFrame();
         //ImGui::ShowDemoWindow();
 
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+        ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+        ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+        windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+        ImGui::SetNextWindowDockID(ImGui::GetID("##Dockspace"));
+        ImGui::Begin("DockSpace", nullptr, windowFlags);
+        ImGui::PopStyleVar(2);
+        ImGui::DockSpace(ImGui::GetID("DockSpace"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+
         //Top Menu
         if (ImGui::BeginMainMenuBar())
         {
@@ -277,24 +291,17 @@ namespace GWIN
             ImGui::EndMainMenuBar();
         }
 
-        if (ImGui::Begin("Instance", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar))
-        {
-            ImGui::SetWindowSize(ImGui::GetContentRegionAvail());
+        ImGui::End();
 
-            ImGui::DockSpace(ImGui::GetID("InstanceSpace"), ImGui::GetWindowSize());
-            ImGui::End();
-        }
-
-        //Object List and Properties
         objectList.Draw(frameInfo);
         console.draw(frameInfo);
         assets->draw();
 
         ImDrawList* drawList;
-        ImGui::SetNextWindowDockID(ImGui::GetID("##Viewport"));
-        ImGui::SetNextWindowPos(ImVec2((ImGui::GetWindowSize().x + 50) / 2, 20));
-        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove))
+
+        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar))
         {
+            drawList = ImGui::GetWindowDrawList();
             if (ImGui::Button("Translate"))
             {
                 mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
@@ -309,8 +316,7 @@ namespace GWIN
             {
                 mCurrentGizmoOperation = ImGuizmo::SCALE;
             }
-            
-            drawList = ImGui::GetWindowDrawList();
+
             ImVec2 windowSize = ImGui::GetContentRegionAvail();
             if (frameInfo.currentFrameSet)
             {
@@ -322,55 +328,55 @@ namespace GWIN
             ImVec2 windowPos = ImGui::GetWindowPos();
 
             ImGuizmo::SetRect(windowPos.x, windowPos.y, windowSize.x, windowSize.y);
-
+            
             ImGui::End();
         }
 
-        drawSceneSettings();
-        drawImGuizmo(frameInfo, drawList);
+            drawSceneSettings();
+            drawImGuizmo(frameInfo, drawList);
 
-        if (ImGuiFileDialog::Instance()->Display("SaveProjectDialog", ImGuiWindowFlags_NoCollapse, ImVec2(600, 400)))
-        {
-            if (ImGuiFileDialog::Instance()->IsOk())
+            if (ImGuiFileDialog::Instance()->Display("SaveProjectDialog", ImGuiWindowFlags_NoCollapse, ImVec2(600, 400)))
             {
-                SaveSceneCallback(ImGuiFileDialog::Instance()->GetCurrentPath());
-            }
-
-            ImGuiFileDialog::Instance()->Close();
-        }
-
-        if (ImGuiFileDialog::Instance()->Display("OpenProjectDialog", ImGuiWindowFlags_NoCollapse, ImVec2(600, 400)))
-        {
-            if (ImGuiFileDialog::Instance()->IsOk())
-            {
-                LoadSceneCallback(ImGuiFileDialog::Instance()->GetCurrentFileName());
-            }
-
-            ImGuiFileDialog::Instance()->Close();
-        }
-
-        //Temporary Object Loader
-        if (showCreateObjectWindow)
-        {
-            if (ImGui::Begin("Create New Object", &showCreateObjectWindow, ImGuiWindowFlags_AlwaysAutoResize))
-            {
-                drawFileDialog();
-                ImGui::SliderFloat("Scale", &Objscale, 0.1f, 10.f);
-                ImGui::InputFloat3("Position", Objposition);
-                if (ImGui::Button("Load Object"))
+                if (ImGuiFileDialog::Instance()->IsOk())
                 {
-                    if (loadGameObjectCallback)
-                    {
-                        GameObjectInfo objectInfo{"DefaultName", filePathBuffer, Objscale, {Objposition[0], Objposition[1] * -1, Objposition[2]}};
-                        loadGameObjectCallback(objectInfo);
-
-                        texture = VK_NULL_HANDLE;
-                    }
+                    SaveSceneCallback(ImGuiFileDialog::Instance()->GetCurrentPath());
                 }
-                ImGui::End();
+
+                ImGuiFileDialog::Instance()->Close();
+            }
+
+            if (ImGuiFileDialog::Instance()->Display("OpenProjectDialog", ImGuiWindowFlags_NoCollapse, ImVec2(600, 400)))
+            {
+                if (ImGuiFileDialog::Instance()->IsOk())
+                {
+                    LoadSceneCallback(ImGuiFileDialog::Instance()->GetCurrentFileName());
+                }
+
+                ImGuiFileDialog::Instance()->Close();
+            }
+
+            // Temporary Object Loader
+            if (showCreateObjectWindow)
+            {
+                if (ImGui::Begin("Create New Object", &showCreateObjectWindow, ImGuiWindowFlags_AlwaysAutoResize))
+                {
+                    drawFileDialog();
+                    ImGui::SliderFloat("Scale", &Objscale, 0.1f, 10.f);
+                    ImGui::InputFloat3("Position", Objposition);
+                    if (ImGui::Button("Load Object"))
+                    {
+                        if (loadGameObjectCallback)
+                        {
+                            GameObjectInfo objectInfo{"DefaultName", filePathBuffer, Objscale, {Objposition[0], Objposition[1] * -1, Objposition[2]}};
+                            loadGameObjectCallback(objectInfo);
+
+                            texture = VK_NULL_HANDLE;
+                        }
+                    }
+                    ImGui::End();
+                }
             }
         }
-    }
 
     void GWInterface::render(VkCommandBuffer commandBuffer)
     {
