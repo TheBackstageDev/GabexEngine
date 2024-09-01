@@ -64,9 +64,9 @@ namespace GWIN
         void drawImGuizmo(FrameInfo &frameInfo, ImDrawList* drawList);
         void drawSceneSettings();
 
-        GWObjectList objectList{materialHandler};
         GWConsole console{};
         std::unique_ptr<AssetsWindow> assets;
+        GWObjectList objectList{materialHandler, assets};
         void drawFileDialog();
 
         bool showCreateObjectWindow{false};

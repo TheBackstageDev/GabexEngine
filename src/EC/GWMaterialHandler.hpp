@@ -23,6 +23,9 @@ namespace GWIN
         std::array<Material, MAX_MATERIALS> getMaterials() { return materials; }
         std::vector<MaterialData>& getMaterialData() { return materialsData; };
 
+        MaterialData& getMaterialDataAt(uint32_t index) { return materialsData[index]; }
+        Material& getMaterial(uint32_t index) { return materials[index]; };
+
         void resetMaterials() { 
             for (auto &material : materials)
             {

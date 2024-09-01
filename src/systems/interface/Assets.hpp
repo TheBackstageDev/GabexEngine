@@ -16,18 +16,26 @@ namespace GWIN
         ASSET_TYPE_MESH,
         ASSET_TYPE_SCRIPT,
         ASSET_TYPE_TEXTURE,
-        ASSET_TYPE_MATERIAL
+        ASSET_TYPE_MATERIAL,
+        ASSET_TYPE_SOUND
+    };
+
+    struct AssetInfo
+    {
+        std::string pathToFile{"None"};
+        uint32_t index{0}; // what X object it points to, such as material.
     };
 
     struct Asset
     {
-        VkDescriptorSet image = VK_NULL_HANDLE;
+        std::string image{""}; // 0 is no image;
         std::string name = "Default Name";
         uint32_t id{0};
+        AssetInfo info{};
         AssetType type{ASSET_TYPE_MESH};
     };
 
-    struct AssetInfo 
+    struct AssetCreateInfo 
     {
         std::string name;
         AssetType type;
@@ -40,18 +48,28 @@ namespace GWIN
         ~AssetsWindow();
 
         void draw();
+
+        std::unordered_map<std::string, VkDescriptorSet>& getImages() { return images; }
+        int32_t getSelectedAsset() { return selectedAsset; }
+
+        std::vector<Asset>& getAssets() { return assets; }
+
+        bool isNewAssetSelected() { return hasNewAssetBeenSelected; }
+        void setDisable(bool isDisabled) { selectedDisable = isDisabled; }
     private:
-        void actions(AssetType type);
-        void materialEditor();
 
         //Future
+        void scriptVisualizator();
         void meshVisualizator();
 
         void createDefaultImages();
         void createImage(const std::string& pathToFile);
 
-        void createAsset(AssetInfo& assetInfo);
-        void removeAsset(std::string name);
+        void createAsset(AssetCreateInfo& assetInfo);
+        void removeAsset(uint32_t id);
+
+        void drawAsset(Asset& asset);
+        void assetMenu();
 
         std::unique_ptr<GWTextureHandler>& imageLoader;
         std::unique_ptr<GWMaterialHandler>& materialHandler;
@@ -59,6 +77,10 @@ namespace GWIN
         std::vector<Asset> assets;
         std::unordered_map<std::string, VkDescriptorSet> images;
 
+        int32_t selectedAsset{-1}; //-1 for none
         uint32_t lastAssetID{0};
+
+        bool hasNewAssetBeenSelected{false};
+        bool selectedDisable{false};
     };
 }

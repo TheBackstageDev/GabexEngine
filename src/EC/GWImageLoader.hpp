@@ -47,5 +47,7 @@ namespace GWIN
 
         void createImageView(Image& image);
         void generateMipMaps(Image& image);
+
+        std::vector<Image> imagesForDeletion;
     };
 }

@@ -13,7 +13,14 @@ namespace GWIN
 {
     GWImageLoader::GWImageLoader(GWinDevice &device) : device(device) {}
 
-    GWImageLoader::~GWImageLoader() {}
+    GWImageLoader::~GWImageLoader() 
+    {
+        for (const auto &image : imagesForDeletion)
+        {
+            vmaDestroyImage(device.getAllocator(), image.image, image.allocation);
+            vkDestroyImageView(device.device(), image.imageView, nullptr);
+        }
+    }
 
     Image GWImageLoader::loadImage(const std::string &filepath, bool isMipMapped)
     {
@@ -64,6 +71,8 @@ namespace GWIN
         transitionImageLayout(newImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         createImageView(newImage);
+
+        imagesForDeletion.push_back(newImage);
 
         return newImage;
     }

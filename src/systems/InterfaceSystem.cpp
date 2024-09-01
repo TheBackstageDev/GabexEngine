@@ -23,7 +23,6 @@ namespace GWIN
 
         ImGuiIO &io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-        //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
         ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 
@@ -128,7 +127,7 @@ namespace GWIN
     void GWInterface::drawImGuizmo(FrameInfo &frameInfo, ImDrawList* drawList)
     {
         uint32_t selectedObject = objectList.getSelectedObject();
-        if (selectedObject != -1)
+        if (selectedObject != -1 && !objectList.isAssetSelected())
         {
             ImGuizmo::BeginFrame();
 
@@ -146,7 +145,7 @@ namespace GWIN
 
             ImGuizmo::AllowAxisFlip(true);
             ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
-                                mCurrentGizmoOperation, ImGuizmo::MODE::LOCAL,
+                                mCurrentGizmoOperation, ImGuizmo::MODE::WORLD,
                                 glm::value_ptr(transformMatrix));
 
             if (ImGuizmo::IsUsing())
@@ -299,36 +298,46 @@ namespace GWIN
 
         ImDrawList* drawList;
 
-        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar))
+        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus))
         {
             drawList = ImGui::GetWindowDrawList();
-            if (ImGui::Button("Translate"))
+
+            auto& images = assets->getImages();
+
+            int16_t buttonSize = 32;
+
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));           // Darker background
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.35f, 0.35f, 0.35f, 1.0f)); // Highlight on hover
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));     // Highlight on active
+
+            if (ImGui::ImageButton((ImTextureID)images.at("move"), ImVec2(buttonSize, buttonSize)))
             {
                 mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Rotate"))
+            if (ImGui::ImageButton((ImTextureID)images.at("rotate"), ImVec2(buttonSize, buttonSize)))
             {
                 mCurrentGizmoOperation = ImGuizmo::ROTATE;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Scale"))
+            if (ImGui::ImageButton((ImTextureID)images.at("scale"), ImVec2(buttonSize, buttonSize)))
             {
                 mCurrentGizmoOperation = ImGuizmo::SCALE;
             }
 
+            ImGui::PopStyleColor(3);
+            ImGui::PopStyleVar();
+
             ImVec2 windowSize = ImGui::GetContentRegionAvail();
             if (frameInfo.currentFrameSet)
             {
-                float windowAspectRatio = windowSize.x / windowSize.y;
-
                 ImGui::Image((ImTextureID)frameInfo.currentFrameSet, windowSize);
             }
 
             ImVec2 windowPos = ImGui::GetWindowPos();
+            ImGuizmo::SetRect(windowPos.x, windowPos.y + buttonSize, windowSize.x, windowSize.y + buttonSize);
 
-            ImGuizmo::SetRect(windowPos.x, windowPos.y, windowSize.x, windowSize.y);
-            
             ImGui::End();
         }
 

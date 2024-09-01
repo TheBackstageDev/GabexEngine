@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -33,6 +34,8 @@ namespace GWIN
             std::vector<uint32_t> indices{};
         };
 
+        using map = std::unordered_map<uint32_t, GWModel>;
+
         GWModel(GWinDevice &device, const GWModel::Builder &builder);
         ~GWModel();
 
@@ -47,6 +50,8 @@ namespace GWIN
 
         std::string getPath() { return pathToModel; }
         void setPath(const std::string path) { pathToModel = path; }
+
+        uint32_t numVertices() { return vertexCount; }
     private:
         void createVertexBuffers(const std::vector<Vertex> &vertices);
         void createIndexBuffers(const std::vector<uint32_t> &indices);

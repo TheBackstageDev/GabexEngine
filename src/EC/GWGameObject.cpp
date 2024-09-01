@@ -4,9 +4,11 @@ namespace GWIN
 {
     glm::mat4 TransformComponent::mat4()
     {
-        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
+        glm::mat4 matrix(1.0f);
+
+        glm::mat4 scaleMatrix = glm::scale(matrix, glm::vec3(scale));
         glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
-        glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), translation);
+        glm::mat4 translationMatrix = glm::translate(matrix, translation);
 
         return translationMatrix * rotationMatrix * scaleMatrix;
     }
