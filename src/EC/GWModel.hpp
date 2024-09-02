@@ -34,7 +34,7 @@ namespace GWIN
             std::vector<uint32_t> indices{};
         };
 
-        using map = std::unordered_map<uint32_t, GWModel>;
+        using map = std::unordered_map<uint32_t, std::shared_ptr<GWModel>>;
 
         GWModel(GWinDevice &device, const GWModel::Builder &builder);
         ~GWModel();
@@ -48,7 +48,7 @@ namespace GWIN
         void addSubModel(std::shared_ptr<GWModel>& model) { subModels.push_back(std::move(model)); }
         bool hasSubModels() { return subModels.size() > 0; }
 
-        std::string getPath() { return pathToModel; }
+        std::string getPath() const { return pathToModel; }
         void setPath(const std::string path) { pathToModel = path; }
 
         uint32_t numVertices() { return vertexCount; }

@@ -8,12 +8,17 @@
 
 namespace GWIN
 {
+    std::vector<GWConsole::LogEntry> GWConsole::History;
+    float GWConsole::passedTime = 0.0f;
+
     GWConsole::GWConsole()
     {
         Commands.push_back(std::move("help"));
         Commands.push_back(std::move("clear"));
         Commands.push_back(std::move("print"));
         Commands.push_back(std::move("register"));
+
+        passedTime += 0.0f;
     };
 
     GWConsole::~GWConsole()
@@ -47,7 +52,7 @@ namespace GWIN
 
     GWGameObject* GWConsole::findObjectByName(std::string &name, FrameInfo& frameInfo)
     {
-        for (auto &kv : frameInfo.gameObjects)
+        for (auto &kv : frameInfo.currentInfo.gameObjects)
         {
             auto& obj = kv.second;
             if (obj.getName() == name)

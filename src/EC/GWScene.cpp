@@ -1,6 +1,7 @@
 #include "GWScene.hpp"
 
 #include <iostream>
+#include "../systems/interface/Console.hpp"
 
 namespace GWIN
 {
@@ -16,12 +17,8 @@ namespace GWIN
     {
         if (createInfo.sceneJson == "")
         {
-            std::shared_ptr<GWModel> model;
-
-            modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/cube.obj", model);
-
             auto skybox = GWGameObject::createGameObject("Skybox");
-            skybox.model = model;
+            skybox.model = createMesh("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/cube.obj");
 
             auto directionalLight = GWGameObject::createGameObject("Directional Light");
             directionalLight.transform.rotation.y = -.25f * glm::two_pi<float>();
@@ -77,14 +74,21 @@ namespace GWIN
                         gameObject.Material = obj["material"].get<uint32_t>();
                     }
 
-                    if (obj.contains("modelPath"))
+                    if (obj.contains("model"))
                     {
-                        modelLoader.importFile(obj["modelPath"].get<std::string>(), model);
-                        gameObject.model = model;
+                        gameObject.model = obj["model"].get<uint32_t>();
                     } 
                     
                     gameObjects.emplace(gameObject.getId(), std::move(gameObject));
                 } 
+            }
+
+            if (jsonData.contains("meshes"))
+            {
+                for (const auto& mesh : jsonData["meshes"])
+                {
+                    createMesh(mesh["path"].get<std::string>());
+                }
             }
 
             if (jsonData.contains("cameras"))
@@ -169,16 +173,11 @@ namespace GWIN
         cameras.emplace(newCamera.getId(), newCamera);
     }
 
-    void GWScene::createGameObject(GameObjectInfo& objectInfo)
+    void GWScene::createGameObject()
     {
-        std::shared_ptr<GWModel> model;
-        modelLoader.importFile(objectInfo.filePath, model);
-
-        auto obj = GWGameObject::createGameObject(objectInfo.objName);
-        obj.model = model;
-        obj.Textures[objectInfo.textureType] = objectInfo.texture;
-        obj.transform.translation = objectInfo.position;
-        obj.transform.scale = objectInfo.scale;
+        auto& camera = gameObjects.at(cameras.at(currentCamera).getViewerObject());
+        auto obj = GWGameObject::createGameObject("New Object");
+        obj.transform.translation = camera.transform.translation + glm::vec3(5.f, -5.f, 5.f);
 
         gameObjects.emplace(obj.getId(), std::move(obj)); 
     }
@@ -193,6 +192,19 @@ namespace GWIN
         gameObjects.erase(id);
     }
 
+    uint32_t GWScene::createMesh(const std::string pathToFile)
+    {
+        modelLoader.importFile(pathToFile, model);
+        meshes.emplace(++lastMeshID, std::move(model));
+
+        return lastMeshID;
+    }
+
+    void GWScene::removeMesh(uint32_t id)
+    {
+        meshes.erase(id);
+    }
+
     void GWScene::saveScene(const std::string path)
     {
         nlohmann::json jsonObject;
@@ -203,7 +215,11 @@ namespace GWIN
         for (const auto &gameObjectPair : gameObjects)
         {
             jsonObject["gameObjects"].push_back(nlohmann::json::parse(gameObjectPair.second.toJson()));
-            std::cout << gameObjectPair.second.toJson();
+        }
+
+        for (const auto& mesh : meshes)
+        {
+            jsonObject["meshes"].push_back(nlohmann::json::parse(mesh.second->getPath()));
         }
 
         for (const auto &camera : cameras)
@@ -251,5 +267,7 @@ namespace GWIN
 
         jsonHandler.setValue(name, jsonObject);
         jsonHandler.saveToFile(path, name); 
+
+        GWConsole::addLog("Scene sucessfully saved!");
     }
 }

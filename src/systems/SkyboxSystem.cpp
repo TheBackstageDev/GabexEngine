@@ -87,7 +87,7 @@ namespace GWIN
         if (currentSkybox == VK_NULL_HANDLE)
             return;
 
-        auto& skybox = frameInfo.gameObjects.at(0);
+        auto &skybox = frameInfo.currentInfo.gameObjects.at(0);
 
         pipeline->bind(frameInfo.commandBuffer);
 
@@ -114,7 +114,8 @@ namespace GWIN
             sizeof(SpushConstant),
             &push);
 
-        skybox.model->bind(frameInfo.commandBuffer);
-        skybox.model->draw(frameInfo.commandBuffer);
+        auto& model = frameInfo.currentInfo.meshes.at(skybox.model);
+        model->bind(frameInfo.commandBuffer);
+        model->draw(frameInfo.commandBuffer);
     }
 }

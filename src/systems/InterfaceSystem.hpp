@@ -39,7 +39,6 @@ namespace GWIN
         void newFrame(FrameInfo& frameInfo);
         void render(VkCommandBuffer commandBuffer);
 
-        void setLoadGameObjectCallback(std::function<void(GameObjectInfo& objectInfo)> callback);
         void setCreateTextureCallback(std::function<void(VkDescriptorSet &, Texture &texture)> callback);
         void setSaveSceneCallback(std::function<void(const std::string path)> callback);
         void setLoadSceneCallback(std::function<void(const std::string path)> callback);
@@ -52,7 +51,6 @@ namespace GWIN
         GWindow& window;
         GWinDevice& device;
 
-        std::function<void(GameObjectInfo &objectInfo)> loadGameObjectCallback;
         std::function<void(VkDescriptorSet& set, Texture& texture)> createTextureCallback;
         std::function<void(const std::string path)> SaveSceneCallback;
         std::function<void(const std::string path)> LoadSceneCallback;
@@ -69,7 +67,6 @@ namespace GWIN
         GWObjectList objectList{materialHandler, assets};
         void drawFileDialog();
 
-        bool showCreateObjectWindow{false};
         ImGuizmo::OPERATION mCurrentGizmoOperation{ImGuizmo::TRANSLATE};
 
         //values

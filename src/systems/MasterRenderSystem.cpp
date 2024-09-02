@@ -26,9 +26,6 @@ namespace GWIN
 
         //Initializes GUI
         interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat(), textureHandler, materialHandler);
-        interfaceSystem->setLoadGameObjectCallback([this](GameObjectInfo& objectInfo) {
-            currentScene->createGameObject(objectInfo);
-        });
 
         interfaceSystem->setCreateTextureCallback([this](VkDescriptorSet& set, Texture& texture) {
             currentScene->createSet(set, texture);
@@ -107,12 +104,12 @@ namespace GWIN
 
     void MasterRenderSystem::updateCamera(FrameInfo& frameInfo)
     {
-        auto& viewerObject = frameInfo.gameObjects.at(frameInfo.currentCamera.getViewerObject());
+        auto& viewerObject = frameInfo.currentInfo.gameObjects.at(frameInfo.currentInfo.currentCamera.getViewerObject());
         cameraController.moveInPlaneXZ(window.getWindow(), frameInfo.deltaTime,  viewerObject);
-        frameInfo.currentCamera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.getRotation());
+        frameInfo.currentInfo.currentCamera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.getRotation());
 
         float aspect = renderer->getAspectRatio();
-        frameInfo.currentCamera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
+        frameInfo.currentInfo.currentCamera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
     }
 
     void MasterRenderSystem::loadNewScene(const std::string pathToFile)
@@ -160,23 +157,28 @@ namespace GWIN
                 bool isWireFrame = false;
 
                 // update
+
+                SceneInfo currentInfo{
+                    currentScene->getCurrentCamera(),
+                    currentScene->getGameObjects(),
+                    currentScene->getMeshes(),
+                    currentScene->getTextures()};
+
                 FrameInfo frameInfo{
                     frameIndex,
                     deltaTime,
                     commandBuffer,
-                    currentScene->getCurrentCamera(),
                     globalDescriptorSets[frameIndex],
-                    currentScene->getGameObjects(),
-                    currentScene->getTextures(),
+                    currentInfo,
                     VK_NULL_HANDLE};
 
                 updateCamera(frameInfo);
 
                 GlobalUbo ubo{};
-                ubo.projection = frameInfo.currentCamera.getProjection();
-                ubo.view = frameInfo.currentCamera.getView();
-                ubo.inverseView = frameInfo.currentCamera.getInverseView();
-                ubo.sunLight = interfaceSystem->getLightDirection(frameInfo.gameObjects.at(1));
+                ubo.projection = frameInfo.currentInfo.currentCamera.getProjection();
+                ubo.view = frameInfo.currentInfo.currentCamera.getView();
+                ubo.inverseView = frameInfo.currentInfo.currentCamera.getInverseView();
+                ubo.sunLight = interfaceSystem->getLightDirection(frameInfo.currentInfo.gameObjects.at(1));
                 pointLightSystem->update(frameInfo, ubo);
                 materialHandler->setMaterials(ubo);
                 globalUboBuffer->writeToIndex(&ubo, frameIndex);
@@ -238,9 +240,6 @@ namespace GWIN
 
     void MasterRenderSystem::loadGameObjects()
     {
-        std::shared_ptr<GWModel>
-            Model;
-
         CubeMapInfo info{};
         info.negX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/nx.png";
         info.posX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/px.png";
@@ -263,7 +262,7 @@ namespace GWIN
         currentScene->createSet(skyboxSet, texture2);
         skyboxSystem->setSkybox(skyboxSet, texture2.id);
 
-        modelLoader.importFile("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/sphere.obj", Model);
+        uint32_t model = currentScene->createMesh("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/sphere.obj");
 
         int index = 0;
         for (uint32_t x = 0; x < 3; x++)
@@ -272,7 +271,7 @@ namespace GWIN
             {
                 index++;
                 auto sphere = GWGameObject::createGameObject("Sphere " + std::to_string(index));
-                sphere.model = Model;
+                sphere.model = model;
                 sphere.Textures[0] = 0;
                 sphere.transform.translation.x = x * 1.25;
                 sphere.transform.translation.z = z * 1.25;

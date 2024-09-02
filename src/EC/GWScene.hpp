@@ -57,10 +57,13 @@ namespace GWIN
         ~GWScene();
 
         void createCamera();
-        void createGameObject(GameObjectInfo &objectInfo);
+        void createGameObject();
         void createGameObject(GWGameObject& obj);
-
         void removeGameObject(uint32_t id);
+
+        uint32_t createMesh(const std::string pathToFile);
+        void removeMesh(uint32_t id);
+
         void createSet(VkDescriptorSet &set, Texture &texture);
         void createSet(VkDescriptorSet& set, CubeMap &texture);
 
@@ -71,13 +74,18 @@ namespace GWIN
         void loadScene(const std::string &sceneJson);
 
         GWGameObject::map& getGameObjects() { return gameObjects; }
+        GWModel::map& getMeshes() { return meshes; }
         std::vector<VkDescriptorSet>& getTextures() { return textures; }
 
     private:
         uint32_t currentCamera{0};
+        uint32_t lastMeshID{0};
+
+        std::shared_ptr<GWModel> model; //Where meshes will be loaded
 
         std::string name = "DefaultScene";
         GWGameObject::map gameObjects;
+        GWModel::map meshes;
         std::vector<VkDescriptorSet> textures;
         std::unordered_map<uint32_t, GWCamera> cameras;
 

@@ -87,15 +87,15 @@ namespace GWIN
             0,
             nullptr);
 
-        for (auto &kv : frameInfo.gameObjects)
+        for (auto &kv : frameInfo.currentInfo.gameObjects)
         {
             auto &obj = kv.second;
-            if (obj.model == nullptr || obj.getName() == "Skybox")
+            if (obj.model == -1 || obj.getName() == "Skybox")
                 continue;
 
             uint32_t textureToBind = obj.Textures[0];
 
-            if (frameInfo.textures[textureToBind] == nullptr)   
+            if (frameInfo.currentInfo.textures[textureToBind] == nullptr)
                 textureToBind = 0;
 
             vkCmdBindDescriptorSets(
@@ -103,7 +103,7 @@ namespace GWIN
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                 pipelineLayout,
                 1, 1,
-                &frameInfo.textures[textureToBind],
+                &frameInfo.currentInfo.textures[textureToBind],
                 0,
                 nullptr);
 
@@ -119,8 +119,9 @@ namespace GWIN
                 sizeof(SpushConstant),
                 &push);
 
-            obj.model->bind(frameInfo.commandBuffer);
-            obj.model->draw(frameInfo.commandBuffer);
+            auto& model = frameInfo.currentInfo.meshes.at(obj.model);
+            model->bind(frameInfo.commandBuffer);
+            model->draw(frameInfo.commandBuffer);
         }
     }
 }

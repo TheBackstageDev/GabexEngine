@@ -160,8 +160,10 @@ namespace GWIN
 
         if (selectedAsset.info.pathToFile != "None")
         {
-            char *vertexCount = (char *)frameInfo.gameObjects.at(selectedAsset.info.index).model->numVertices();
-            char *triangleCount = (char *)(frameInfo.gameObjects.at(selectedAsset.info.index).model->numVertices() / 3);
+            auto& object = frameInfo.currentInfo.gameObjects.at(selectedAsset.info.index);
+            auto& model = frameInfo.currentInfo.meshes.at(object.model);
+            char *vertexCount = (char *)model->numVertices();
+            char* triangleCount = (char*)(model->numVertices() / 3);
 
             ImGui::Text("Num Vertices: " + *vertexCount);
             ImGui::Text("Num Triangles: " + *triangleCount);
@@ -242,7 +244,7 @@ namespace GWIN
         }
 
         CenteredText("Texture Visualization");
-        ImGui::Image((ImTextureID)frameInfo.textures[selectedAsset.info.index], ImGui::GetContentRegionAvail());
+        ImGui::Image((ImTextureID)frameInfo.currentInfo.textures[selectedAsset.info.index], ImGui::GetContentRegionAvail());
     }
 
     void GWObjectList::assetList(FrameInfo &frameInfo)
@@ -296,7 +298,7 @@ namespace GWIN
         {
             ImGui::BeginChild("##ScrollingRegion1", ImVec2(0, 0), ImGuiChildFlags_None);
 
-            for (auto &kv : frameInfo.gameObjects)
+            for (auto &kv : frameInfo.currentInfo.gameObjects)
             {
                 std::string objId = kv.second.getName() + "##" + (char)kv.first;
                 if (kv.first == selectedItem)
@@ -335,7 +337,7 @@ namespace GWIN
 
                 if (!AssetSelected) 
                 {
-                    GWGameObject &selectedObject = frameInfo.gameObjects.at(selectedItem);
+                    GWGameObject &selectedObject = frameInfo.currentInfo.gameObjects.at(selectedItem);
                     glm::vec3 position = selectedObject.transform.translation;
 
                     if (!isEditingName)

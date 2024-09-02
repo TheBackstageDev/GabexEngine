@@ -66,11 +66,6 @@ namespace GWIN
         ImGui_ImplVulkan_CreateFontsTexture();
     }
 
-    void GWInterface::setLoadGameObjectCallback(std::function<void(GameObjectInfo& objectInfo)> callback)
-    {
-        loadGameObjectCallback = callback;
-    }
-
     void GWInterface::setCreateTextureCallback(std::function<void(VkDescriptorSet& set, Texture& texture)> callback)
     {
         createTextureCallback = callback;
@@ -134,12 +129,12 @@ namespace GWIN
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist(drawList);
 
-            GWGameObject &gameObject = frameInfo.gameObjects.at(selectedObject);
+            GWGameObject &gameObject = frameInfo.currentInfo.gameObjects.at(selectedObject);
 
             glm::mat4 transformMatrix = gameObject.transform.mat4();
 
-            glm::mat4 view = frameInfo.currentCamera.getView();
-            glm::mat4 projection = frameInfo.currentCamera.getProjection();
+            glm::mat4 view = frameInfo.currentInfo.currentCamera.getView();
+            glm::mat4 projection = frameInfo.currentInfo.currentCamera.getProjection();
 
             projection[1][1] *= -1;
 
@@ -226,11 +221,6 @@ namespace GWIN
                 if (ImGui::MenuItem("Save Project As.."))
                 {
                     ImGuiFileDialog::Instance()->OpenDialog("SaveProjectDialog", "Choose a Save Folder", nullptr);
-                }
-                ImGui::Separator();
-                if (ImGui::MenuItem("Load new Object"))
-                {
-                    showCreateObjectWindow = true;
                 }
                 ImGui::EndMenu();
             }
@@ -333,10 +323,10 @@ namespace GWIN
             if (frameInfo.currentFrameSet)
             {
                 ImGui::Image((ImTextureID)frameInfo.currentFrameSet, windowSize);
+                
+                ImVec2 windowPos = ImGui::GetWindowPos();
+                ImGuizmo::SetRect(windowPos.x, windowPos.y + buttonSize, windowSize.x, windowSize.y + buttonSize);
             }
-
-            ImVec2 windowPos = ImGui::GetWindowPos();
-            ImGuizmo::SetRect(windowPos.x, windowPos.y + buttonSize, windowSize.x, windowSize.y + buttonSize);
 
             ImGui::End();
         }
@@ -362,28 +352,6 @@ namespace GWIN
                 }
 
                 ImGuiFileDialog::Instance()->Close();
-            }
-
-            // Temporary Object Loader
-            if (showCreateObjectWindow)
-            {
-                if (ImGui::Begin("Create New Object", &showCreateObjectWindow, ImGuiWindowFlags_AlwaysAutoResize))
-                {
-                    drawFileDialog();
-                    ImGui::SliderFloat("Scale", &Objscale, 0.1f, 10.f);
-                    ImGui::InputFloat3("Position", Objposition);
-                    if (ImGui::Button("Load Object"))
-                    {
-                        if (loadGameObjectCallback)
-                        {
-                            GameObjectInfo objectInfo{"DefaultName", filePathBuffer, Objscale, {Objposition[0], Objposition[1] * -1, Objposition[2]}};
-                            loadGameObjectCallback(objectInfo);
-
-                            texture = VK_NULL_HANDLE;
-                        }
-                    }
-                    ImGui::End();
-                }
             }
         }
 

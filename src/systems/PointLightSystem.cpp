@@ -63,7 +63,7 @@ namespace GWIN
 
     void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
         int lightIndex = 0;
-        for (auto& kv : frameInfo.gameObjects) {
+        for (auto& kv : frameInfo.currentInfo.gameObjects) {
             auto& obj = kv.second;
             if (obj.light == nullptr) continue;
 
@@ -100,7 +100,7 @@ namespace GWIN
             nullptr
         );  
 
-        for(auto& kv : frameInfo.gameObjects)
+        for(auto& kv : frameInfo.currentInfo.gameObjects)
         {
             auto& obj = kv.second;
             if(obj.light == nullptr) continue;

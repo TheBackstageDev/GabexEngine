@@ -35,25 +35,21 @@ namespace GWIN
         int numLights;
     };
 
+    struct SceneInfo
+    {
+        GWCamera &currentCamera;
+        GWGameObject::map &gameObjects;
+        GWModel::map &meshes;
+        std::vector<VkDescriptorSet>& textures;
+    };
+
     struct FrameInfo
     {
         int frameIndex;
         float deltaTime;
         VkCommandBuffer commandBuffer;
-        GWCamera& currentCamera;
         VkDescriptorSet globalDescriptorSet;
-        GWGameObject::map &gameObjects;
-        std::vector<VkDescriptorSet> textures;
+        SceneInfo& currentInfo;
         VkDescriptorSet currentFrameSet;
-    };
-
-    struct GameObjectInfo
-    {
-        std::string objName{"DefaultName"};
-        std::string filePath;
-        float scale{1.f};
-        glm::vec3 position{0.f, .0f, 0.f}; 
-        uint32_t texture{0};
-        uint32_t textureType{0};
     };
 }

@@ -82,7 +82,7 @@ namespace GWIN
         std::array<uint32_t, 6> Textures; // ID of the textures
         uint32_t Material = 0; //ID of the material
 
-        std::shared_ptr<GWModel> model{};
+        int32_t model = -1; //ID of the mesh
         std::unique_ptr<LightComponent> light = nullptr;
 
         std::string toJson() const;

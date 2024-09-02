@@ -8,7 +8,7 @@
 
 namespace GWIN
 {
-    class GWConsole
+    static class GWConsole
     {
     public:
         GWConsole();
@@ -17,9 +17,9 @@ namespace GWIN
 
         void draw(FrameInfo& frameInfo);
 
-        void addLog(const std::string &log);
-        void addError(const std::string &error);
-        void addWarning(const std::string &warning);
+        static void addLog(const std::string &log);
+        static void addError(const std::string &error);
+        static void addWarning(const std::string &warning);
 
         void writeHistoryToFile();
     private:
@@ -37,7 +37,7 @@ namespace GWIN
             std::string message;
         };
 
-        std::vector<LogEntry> History;
+        static std::vector<LogEntry> History;
         std::vector<std::string> Commands;
 
         GWGameObject *findObjectByName(std::string &name, FrameInfo &frameInfo);
@@ -51,6 +51,6 @@ namespace GWIN
         bool logOnExit{true};
         char inputBuffer[256] = "";
 
-        float passedTime{0.f};
+        static float passedTime;
     };
 }
