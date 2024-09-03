@@ -23,7 +23,7 @@ namespace GWIN
     struct AssetInfo
     {
         std::string pathToFile{"None"};
-        uint32_t index{0}; // what X object it points to, such as material.
+        int32_t index{0}; // what X object it points to, such as material.
     };
 
     struct Asset
@@ -47,7 +47,7 @@ namespace GWIN
         AssetsWindow(std::unique_ptr<GWTextureHandler>& imageLoader, std::unique_ptr<GWMaterialHandler>& materialHandler);
         ~AssetsWindow();
 
-        void draw();
+        void draw(FrameInfo &frameInfo);
 
         std::unordered_map<std::string, VkDescriptorSet>& getImages() { return images; }
         int32_t getSelectedAsset() { return selectedAsset; }
@@ -56,6 +56,8 @@ namespace GWIN
 
         bool isNewAssetSelected() { return hasNewAssetBeenSelected; }
         void setDisable(bool isDisabled) { selectedDisable = isDisabled; }
+
+        std::unique_ptr<GWTextureHandler>& getTextureHandler() { return imageLoader; }
     private:
 
         //Future
@@ -68,7 +70,7 @@ namespace GWIN
         void createAsset(AssetCreateInfo& assetInfo);
         void removeAsset(uint32_t id);
 
-        void drawAsset(Asset& asset);
+        void drawAsset(Asset& asset, FrameInfo& frameInfo);
         void assetMenu();
 
         std::unique_ptr<GWTextureHandler>& imageLoader;

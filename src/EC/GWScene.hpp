@@ -7,6 +7,7 @@
 #include "GWMaterialHandler.hpp"
 #include "../JSONHandler.hpp"
 
+#include <optional>
 #include <array>
 
 namespace GWIN
@@ -61,10 +62,10 @@ namespace GWIN
         void createGameObject(GWGameObject& obj);
         void removeGameObject(uint32_t id);
 
-        uint32_t createMesh(const std::string pathToFile);
+        uint32_t createMesh(const std::string &pathToFile, std::optional<uint32_t> replaceId);
         void removeMesh(uint32_t id);
 
-        void createSet(VkDescriptorSet &set, Texture &texture);
+        void createSet(VkDescriptorSet &set, Texture &texture, bool replace = false);
         void createSet(VkDescriptorSet& set, CubeMap &texture);
 
         void saveScene(const std::string path);

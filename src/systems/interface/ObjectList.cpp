@@ -2,28 +2,39 @@
 
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
+#include "./Console.hpp"
+#include "GWTextureHandler.hpp"
 
 namespace GWIN
 {
-    void InputXYZ(const char *label, float &value, const ImVec4 &buttonColor)
+    bool InputXYZ(const char* id, const char *label, float &value, const ImVec4 &buttonColor)
     {
+        ImGui::PushID(id);
         ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
         ImGui::Button(label);
         ImGui::PopStyleColor();
         ImGui::SameLine(0, 0);
         ImGui::SetNextItemWidth(80);
-        ImGui::DragFloat(std::string("##").append(label).c_str(), &value, 0.1f, -FLT_MAX, FLT_MAX, "%.1f");
+        bool valueChanged = ImGui::DragFloat("##hidden", &value, 0.1f, -FLT_MAX, FLT_MAX, "%.1f");
+        ImGui::PopID();
+        return valueChanged;
     }
 
     void GWObjectList::inputPosition(GWGameObject &selectedObject)
     {
         ImGui::Text("Position:");
-        InputXYZ("X", positionBuffer.x, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-        InputXYZ("Y", positionBuffer.y, ImVec4(0.0f, 0.5f, 0.0f, 1.0f));
-        InputXYZ("Z", positionBuffer.z, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+        bool positionChanged = false;
 
-        // Update selected object's position
-        selectedObject.transform.translation = positionBuffer;
+        positionChanged |= InputXYZ("PosX", "X", positionBuffer.x, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+        ImGui::SameLine(0, 0);
+        positionChanged |= InputXYZ("PosY", "Y", positionBuffer.y, ImVec4(0.0f, 0.5f, 0.0f, 1.0f));
+        ImGui::SameLine(0, 0);
+        positionChanged |= InputXYZ("PosZ", "Z", positionBuffer.z, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+        if (positionChanged)
+        {
+            selectedObject.transform.translation = positionBuffer;
+        }
     }
 
     void GWObjectList::inputRotation(GWGameObject &selectedObject)
@@ -31,9 +42,11 @@ namespace GWIN
         ImGui::Text("Rotation:");
         rotationChanged = false;
 
-        rotationChanged |= ImGui::DragFloat("##RotX", &rotationBuffer.x, 0.2f, -360.0f, 360.0f, "%.1f°");
-        rotationChanged |= ImGui::DragFloat("##RotY", &rotationBuffer.y, 0.2f, -360.0f, 360.0f, "%.1f°");
-        rotationChanged |= ImGui::DragFloat("##RotZ", &rotationBuffer.z, 0.2f, -360.0f, 360.0f, "%.1f°");
+        rotationChanged |= InputXYZ("RotX", "X", rotationBuffer.x, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+        ImGui::SameLine(0, 0);
+        rotationChanged |= InputXYZ("RotY", "Y", rotationBuffer.y, ImVec4(0.0f, 0.5f, 0.0f, 1.0f));
+        ImGui::SameLine(0, 0);
+        rotationChanged |= InputXYZ("RotZ", "Z", rotationBuffer.z, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
     }
 
     void CenteredText(const char *text)
@@ -46,6 +59,66 @@ namespace GWIN
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + padding);
 
         ImGui::Text("%s", text);
+    }
+
+    void GWObjectList::inputModel(GWGameObject &selectedObject)
+    {
+        if (selectedObject.model == -1)
+            return;
+
+        if (ImGui::CollapsingHeader("Model", nullptr))
+        {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.0f, 0.0f, 0.6f));
+            if (ImGui::Button("Remove Model"))
+            {
+                selectedObject.model = -1; 
+                GWConsole::addLog("Model removed from the selected object.");
+            }
+            ImGui::PopStyleColor();
+
+            std::string modelName = "Placeholder Code";
+            ImGui::Text("Current Model: %s", modelName.c_str());
+        }
+    }
+
+    void GWObjectList::inputTexture(GWGameObject &selectedObject)
+    {
+        if (selectedObject.Textures[0] == 0)
+            return;
+
+        if (ImGui::CollapsingHeader("Texture", nullptr))
+        {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.0f, 0.0f, 0.6f));
+            if (ImGui::Button("Remove Texture"))
+            {
+                selectedObject.Textures[0] = 0;
+                GWConsole::addLog("Texture removed from the selected object.");
+            }
+            ImGui::PopStyleColor();
+
+            std::string textureName = "Placeholder Code";
+            ImGui::Text("Current Model: %s", textureName.c_str());
+        }
+    }
+
+    void GWObjectList::inputMaterial(GWGameObject &selectedObject)
+    {
+        if (selectedObject.Material == 0)
+            return;
+
+        if (ImGui::CollapsingHeader("Material", nullptr))
+        {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.0f, 0.0f, 0.6f));
+            if (ImGui::Button("Remove Naterial"))
+            {
+                selectedObject.Material = 0; 
+                GWConsole::addLog("Material removed from the selected object.");
+            }
+            ImGui::PopStyleColor();
+
+            std::string materialName = "Placeholder Code";
+            ImGui::Text("Current Model: %s", materialName.c_str());
+        }
     }
 
     void GWObjectList::inspectorGuis(GWGameObject &selectedObject)
@@ -64,45 +137,9 @@ namespace GWIN
             }
         }
 
-        if (ImGui::CollapsingHeader("Material", nullptr))
-        {
-            auto &materials = materialHandler->getMaterialData();
-            selectedMaterial = selectedObject.Material;
-
-            if (!materials.empty())
-            {
-                if (selectedMaterial >= materials.size())
-                {
-                    selectedMaterial = 0;
-                }
-
-                ImGui::Text("Material");
-                ImGui::SameLine();
-                ImGui::SetNextItemWidth(150);
-                if (ImGui::BeginCombo("##MaterialCombo", materials[selectedMaterial].name.c_str()))
-                {
-                    for (int i = 0; i < materials.size(); i++)
-                    {
-                        if (i != 0 && materials[i].id == 0)
-                            continue;
-
-                        bool isSelected = (selectedMaterial == i);
-                        if (ImGui::Selectable(materials[i].name.c_str(), isSelected))
-                        {
-                            selectedMaterial = i;
-                            selectedObject.Material = materials[i].id;
-                        }
-                        if (isSelected)
-                            ImGui::SetItemDefaultFocus();
-                    }
-                    ImGui::EndCombo();
-                }
-            }
-            else
-            {
-                ImGui::Text("No materials available.");
-            }
-        }
+        inputModel(selectedObject);
+        inputTexture(selectedObject);
+        inputMaterial(selectedObject);
     }
 
     // Asset-Related
@@ -160,13 +197,13 @@ namespace GWIN
 
         if (selectedAsset.info.pathToFile != "None")
         {
-            auto& object = frameInfo.currentInfo.gameObjects.at(selectedAsset.info.index);
-            auto& model = frameInfo.currentInfo.meshes.at(object.model);
-            char *vertexCount = (char *)model->numVertices();
-            char* triangleCount = (char*)(model->numVertices() / 3);
+            auto& model = frameInfo.currentInfo.meshes.at(selectedAsset.info.index);
 
-            ImGui::Text("Num Vertices: " + *vertexCount);
-            ImGui::Text("Num Triangles: " + *triangleCount);
+            std::string numVertices = std::to_string(model->numVertices());
+            std::string numTris = std::to_string(model->numVertices() / 3);
+
+            ImGui::Text("Num Vertices: %s", numVertices.c_str());
+            ImGui::Text("Num Triangles: %s", numTris.c_str());
         } else {
             ImGui::Text("Num Vertices: None");
             ImGui::Text("Num Triangles: None");
@@ -178,6 +215,7 @@ namespace GWIN
             {
                 std::string fullPath = ImGuiFileDialog::Instance()->GetFilePathName();
                 selectedAsset.info.pathToFile = fullPath;
+
                 if (fullPath.length() > 20)
                 {
                     path = "..." + fullPath.substr(fullPath.length() - 20);
@@ -185,6 +223,16 @@ namespace GWIN
                 else
                 {
                     path = fullPath;
+                }
+
+                if (selectedAsset.info.index != -1)
+                {
+                    removeMeshCallback(selectedAsset.info.index);
+                    createMeshCallback(fullPath, selectedAsset.info.index);
+                    GWConsole::addLog("Mesh ID: " + std::to_string(selectedAsset.info.index));
+                } else {
+                    selectedAsset.info.index = createMeshCallback(fullPath, std::nullopt);
+                    GWConsole::addLog("New Mesh ID: " + std::to_string(selectedAsset.info.index));
                 }
             }
             ImGuiFileDialog::Instance()->Close();
@@ -239,6 +287,27 @@ namespace GWIN
                 {
                     path = fullPath;
                 }
+
+                Texture newTexture;
+                VkDescriptorSet textureSet = VK_NULL_HANDLE;
+
+                if (selectedAsset.info.index == 0)
+                {
+                    newTexture = assets->getTextureHandler()->createTexture(fullPath, true);
+
+                    createTextureCallback(textureSet, newTexture, false);
+
+                    selectedAsset.info.index = newTexture.id;
+                } else {
+                    assets->getTextureHandler()->destroyTexture(selectedAsset.info.index);
+                    newTexture = assets->getTextureHandler()->createTexture(fullPath, true);
+
+                    newTexture.id = selectedAsset.info.index;
+
+                    assets->getTextureHandler()->decreaseLastTextureID();
+
+                    createTextureCallback(textureSet, newTexture, true);
+                }
             }
             ImGuiFileDialog::Instance()->Close();
         }
@@ -284,9 +353,115 @@ namespace GWIN
         }
     }
 
+    void GWObjectList::createComponentAsset(const Asset& selectedAsset, FrameInfo& frameInfo)
+    {
+        ImGui::Text(selectedAsset.name.c_str());
+    }
+
     void GWObjectList::addComponent(FrameInfo& frameInfo)
     {
+        //Component Button
+        ImVec2 buttonSize(ImGui::GetContentRegionAvail().x * 0.75f, 20);
+        float windowWidth = ImGui::GetContentRegionAvail().x;
+        float windowHeight = ImGui::GetWindowHeight();
+        float buttonPosX = (windowWidth - buttonSize.x) / 2.0f;                             
+        float buttonPosY = windowHeight - buttonSize.y - ImGui::GetStyle().WindowPadding.y; 
 
+        ImGui::SetCursorPosX(buttonPosX);
+        ImGui::SetCursorPosY(buttonPosY);
+        
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 1.0f, .25f, .6f));
+        if (ImGui::Button("Add Component", ImVec2(windowWidth * .75, 20)))
+        {
+            ImGui::OpenPopup("AddComponentPopup");
+        }
+        ImGui::PopStyleColor();
+
+        if (ImGui::BeginPopup("AddComponentPopup"))
+        {
+            auto& currentAssets = assets->getAssets();
+
+            std::unordered_map<uint32_t, std::vector<Asset>> assetsMap = {
+                {ASSET_TYPE_MESH, {}},
+                {ASSET_TYPE_TEXTURE, {}},
+                {ASSET_TYPE_MATERIAL, {}}};
+
+            for (const auto &asset : currentAssets)
+            {
+                assetsMap[asset.type].push_back(asset);
+            }
+
+            std::vector<Asset> &meshAssets = assetsMap[ASSET_TYPE_MESH];
+            std::vector<Asset> &textureAssets = assetsMap[ASSET_TYPE_TEXTURE];
+            std::vector<Asset> &materialAssets = assetsMap[ASSET_TYPE_MATERIAL];
+
+            auto &currentObject = frameInfo.currentInfo.gameObjects.at(selectedItem);
+
+            if (ImGui::BeginCombo("##MeshCombo", "Select Mesh"))
+            {
+                if (meshAssets.empty())
+                {
+                    ImGui::Text("No Meshes Created!");
+                }
+                else
+                {
+                    for (const auto &asset : meshAssets)
+                    {
+                        bool isSelected = (asset.info.index == currentObject.model);
+                        if (ImGui::Selectable(asset.name.c_str(), isSelected))
+                        {
+                            currentObject.model = asset.info.index;
+                            ImGui::CloseCurrentPopup(); 
+                        }
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            if (ImGui::BeginCombo("##TextureCombo", "Select Texture"))
+            {
+                if (textureAssets.empty())
+                {
+                    ImGui::Text("No Textures Created!");
+                }
+                else
+                {
+                    for (const auto &asset : textureAssets)
+                    {
+                        bool isSelected = (asset.info.index == currentObject.Textures[0]);
+                        if (ImGui::Selectable(asset.name.c_str(), isSelected))
+                        {
+                            currentObject.Textures[0] = asset.info.index;
+                            ImGui::CloseCurrentPopup(); 
+                        }
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            if (ImGui::BeginCombo("##MaterialCombo", "Select Material"))
+            {
+                if (materialAssets.empty())
+                {
+                    ImGui::Text("No Materials Created!");
+                }
+                else
+                {
+                    for (const auto &asset : materialAssets)
+                    {
+                        bool isSelected = (asset.info.index == currentObject.Material);
+                        if (ImGui::Selectable(asset.name.c_str(), isSelected))
+                        {
+                            currentObject.Material = asset.info.index;
+                            ImGui::CloseCurrentPopup();  
+                        }
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            ImGui::EndPopup();
+        }
     }
 
     void GWObjectList::Draw(FrameInfo &frameInfo)

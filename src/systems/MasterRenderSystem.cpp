@@ -8,6 +8,7 @@
 #include <iostream>
 #include <glm/gtc/constants.hpp>
 #include <glm/glm.hpp>
+#include <optional>
 
 #include <cassert>
 
@@ -27,8 +28,8 @@ namespace GWIN
         //Initializes GUI
         interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat(), textureHandler, materialHandler);
 
-        interfaceSystem->setCreateTextureCallback([this](VkDescriptorSet& set, Texture& texture) {
-            currentScene->createSet(set, texture);
+        interfaceSystem->setCreateTextureCallback([this](VkDescriptorSet& set, Texture& texture, bool replace = false) {
+            currentScene->createSet(set, texture, replace);
         });
 
         interfaceSystem->setSaveSceneCallback([this](const std::string path) {
@@ -37,6 +38,16 @@ namespace GWIN
 
         interfaceSystem->setLoadSceneCallback([this](const std::string path) {
             loadNewScene(path);
+        });
+
+        interfaceSystem->setCreateMeshCallback([this](const std::string path, std::optional<uint32_t> replaceId = std::nullopt)
+        {
+            return currentScene->createMesh(path, replaceId);
+        });
+
+        interfaceSystem->setRemoveMeshCallback([this](uint32_t id)
+        {
+            currentScene->removeMesh(id);
         });
 
         currentScene->createCamera();
@@ -164,6 +175,7 @@ namespace GWIN
                     currentScene->getMeshes(),
                     currentScene->getTextures()};
 
+
                 FrameInfo frameInfo{
                     frameIndex,
                     deltaTime,
@@ -262,7 +274,7 @@ namespace GWIN
         currentScene->createSet(skyboxSet, texture2);
         skyboxSystem->setSkybox(skyboxSet, texture2.id);
 
-        uint32_t model = currentScene->createMesh("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/sphere.obj");
+        uint32_t model = currentScene->createMesh("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/sphere.obj", std::nullopt);
 
         int index = 0;
         for (uint32_t x = 0; x < 3; x++)

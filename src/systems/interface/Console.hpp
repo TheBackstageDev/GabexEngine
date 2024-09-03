@@ -8,7 +8,7 @@
 
 namespace GWIN
 {
-    static class GWConsole
+    class GWConsole
     {
     public:
         GWConsole();

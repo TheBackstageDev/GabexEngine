@@ -39,9 +39,11 @@ namespace GWIN
         void newFrame(FrameInfo& frameInfo);
         void render(VkCommandBuffer commandBuffer);
 
-        void setCreateTextureCallback(std::function<void(VkDescriptorSet &, Texture &texture)> callback);
+        void setCreateTextureCallback(std::function<void(VkDescriptorSet &, Texture &texture, bool replace)> callback) { createTextureCallback = callback; objectList.setCreateTextureCallback(callback); };
         void setSaveSceneCallback(std::function<void(const std::string path)> callback);
         void setLoadSceneCallback(std::function<void(const std::string path)> callback);
+        void setCreateMeshCallback(std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> callback) { createMeshCallback = callback; objectList.setCreateMeshCallback(callback); };
+        void setRemoveMeshCallback(std::function<void(uint32_t id)> callback) { removeMeshCallback = callback; objectList.setRemoveMeshCallback(callback); };
 
         GWConsole getConsole() const { return console; }
 
@@ -51,9 +53,11 @@ namespace GWIN
         GWindow& window;
         GWinDevice& device;
 
-        std::function<void(VkDescriptorSet& set, Texture& texture)> createTextureCallback;
+        std::function<void(VkDescriptorSet &, Texture &texture, bool replace)> createTextureCallback;
         std::function<void(const std::string path)> SaveSceneCallback;
         std::function<void(const std::string path)> LoadSceneCallback;
+        std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> createMeshCallback;
+        std::function<void(uint32_t id)> removeMeshCallback;
 
         std::unique_ptr<GWTextureHandler>& textureHandler;
         std::unique_ptr<GWMaterialHandler>& materialHandler;

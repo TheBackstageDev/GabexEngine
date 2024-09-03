@@ -66,11 +66,6 @@ namespace GWIN
         ImGui_ImplVulkan_CreateFontsTexture();
     }
 
-    void GWInterface::setCreateTextureCallback(std::function<void(VkDescriptorSet& set, Texture& texture)> callback)
-    {
-        createTextureCallback = callback;
-    }
-
     void GWInterface::setSaveSceneCallback(std::function<void(const std::string path)> callback)
     {
         SaveSceneCallback = callback;
@@ -284,7 +279,7 @@ namespace GWIN
 
         objectList.Draw(frameInfo);
         console.draw(frameInfo);
-        assets->draw();
+        assets->draw(frameInfo);
 
         ImDrawList* drawList;
 

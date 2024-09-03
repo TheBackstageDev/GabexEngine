@@ -18,7 +18,7 @@ namespace GWIN
         if (createInfo.sceneJson == "")
         {
             auto skybox = GWGameObject::createGameObject("Skybox");
-            skybox.model = createMesh("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/cube.obj");
+            skybox.model = createMesh("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/cube.obj", std::nullopt);
 
             auto directionalLight = GWGameObject::createGameObject("Directional Light");
             directionalLight.transform.rotation.y = -.25f * glm::two_pi<float>();
@@ -87,7 +87,7 @@ namespace GWIN
             {
                 for (const auto& mesh : jsonData["meshes"])
                 {
-                    createMesh(mesh["path"].get<std::string>());
+                    createMesh(mesh["path"].get<std::string>(), std::nullopt);
                 }
             }
 
@@ -117,7 +117,6 @@ namespace GWIN
 
                     VkDescriptorSet newSet;
                     createSet(newSet, texture);
-                    textures.push_back(std::move(newSet));
                 }
             }
 
@@ -148,7 +147,7 @@ namespace GWIN
 
     GWScene::~GWScene() {};
 
-    void GWScene::createSet(VkDescriptorSet &set, Texture &texture)
+    void GWScene::createSet(VkDescriptorSet &set, Texture &texture, bool replace)
     {
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = texture.textureImage.layout;
@@ -159,7 +158,13 @@ namespace GWIN
             .writeImage(0, &imageInfo)
             .build(set);
 
-        textures.push_back(std::move(set));
+        if (replace)
+        {
+            textures.at(texture.id) = VK_NULL_HANDLE;
+            textures.at(texture.id) = set;
+        } else {
+            textures.push_back(std::move(set));
+        }
     }
 
     void GWScene::createCamera()
@@ -192,12 +197,22 @@ namespace GWIN
         gameObjects.erase(id);
     }
 
-    uint32_t GWScene::createMesh(const std::string pathToFile)
+    uint32_t GWScene::createMesh(const std::string &pathToFile, std::optional<uint32_t> replaceId = std::nullopt)
     {
         modelLoader.importFile(pathToFile, model);
-        meshes.emplace(++lastMeshID, std::move(model));
 
-        return lastMeshID;
+        if (replaceId.has_value())
+        {
+            meshes[replaceId.value()] = std::move(model);
+
+            return replaceId.value();
+        }
+        else
+        {
+            meshes[++lastMeshID] = std::move(model);
+
+            return lastMeshID;
+        }
     }
 
     void GWScene::removeMesh(uint32_t id)

@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <string>
+#include <optional>
 
 namespace GWIN
 {
@@ -20,11 +21,15 @@ namespace GWIN
         uint32_t getSelectedObject() { return selectedItem; }
         bool isAssetSelected() { return AssetSelected; }
 
+        void setCreateTextureCallback(std::function<void(VkDescriptorSet &, Texture &texture, bool replace)> callback) { createTextureCallback = callback; };
+        void setCreateMeshCallback(std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> callback) { createMeshCallback = callback; };
+        void setRemoveMeshCallback(std::function<void(uint32_t id)> callback) { removeMeshCallback = callback; };
+
     private:
         std::unique_ptr<GWMaterialHandler> &materialHandler;
 
         int selectedItem{-1}; //-1: none selected;
-        int selectedMaterial = {0};
+        int selectedComponentAsset = {0};
         bool isEditingName{false};
         bool rotationChanged{false};
         bool AssetSelected{false};
@@ -35,9 +40,17 @@ namespace GWIN
         glm::vec3 rotationBuffer{0.0f, 0.0f, 0.0f};
         float scaleBuffer = 1.f;
 
+        std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> createMeshCallback;
+        std::function<void(VkDescriptorSet &, Texture &texture, bool replace)> createTextureCallback; 
+        std::function<void(uint32_t id)> removeMeshCallback;
+
         void assetList(FrameInfo &frameInfo);
 
         std::unique_ptr<AssetsWindow>& assets;
+
+        void inputModel(GWGameObject &selectedObject);
+        void inputTexture(GWGameObject& selectedObject);
+        void inputMaterial(GWGameObject& selectedObject);
 
         void inputRotation(GWGameObject &selectedObject);
         void inputPosition(GWGameObject &selectedObject);
@@ -48,6 +61,7 @@ namespace GWIN
         void meshEditor(Asset &selectedAsset, FrameInfo &frameInfo);
         void textureEditor(Asset& selectedAsset, FrameInfo& frameInfo);
 
+        void createComponentAsset(const Asset& selectedAsset, FrameInfo& frameInfo);
         void addComponent(FrameInfo& frameInfo);
     };
 }

@@ -68,7 +68,7 @@ namespace GWIN
         }
     }
 
-    void AssetsWindow::drawAsset(Asset& asset)
+    void AssetsWindow::drawAsset(Asset& asset, FrameInfo& frameInfo)
     {
         bool isSelected = (selectedAsset == asset.id);
         std::string assetId = "Asset" + std::to_string(asset.id) + "##" + std::to_string(asset.id);
@@ -91,6 +91,9 @@ namespace GWIN
         if (asset.image != "" && images[asset.image] != VK_NULL_HANDLE)
         {
             ImGui::Image((ImTextureID)images[asset.image], ImVec2(100, 100), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(1.0f, 1.0f, 1.0f, 0.2f));
+        }
+        else if (asset.type == ASSET_TYPE_TEXTURE) {
+            ImGui::Image((ImTextureID)frameInfo.currentInfo.textures.at(asset.info.index), ImVec2(100, 100), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(1.0f, 1.0f, 1.0f, 0.2f));
         }
         else
         {
@@ -140,7 +143,7 @@ namespace GWIN
         ImGui::PopStyleColor(3);
     }
     
-    void AssetsWindow::draw()
+    void AssetsWindow::draw(FrameInfo& frameInfo)
     {
         ImGui::SetNextWindowDockID(ImGui::GetID("##Dockspace"), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Assets", nullptr, ImGuiWindowFlags_NoScrollbar))
@@ -148,14 +151,14 @@ namespace GWIN
             assetMenu();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(1.0f, 1.0f, 1.0f, 0.1f));
-            ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), ImGuiChildFlags_FrameStyle, ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), ImGuiChildFlags_FrameStyle, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoResize);
 
             if (hasNewAssetBeenSelected)
                 hasNewAssetBeenSelected = false;
 
             for (int i = 0; i < assets.size(); ++i)
             {
-                drawAsset(assets[i]);
+                drawAsset(assets[i], frameInfo);
                 if (ImGui::IsItemClicked())
                 {
                     hasNewAssetBeenSelected = true;
@@ -183,7 +186,7 @@ namespace GWIN
         switch(assetInfo.type)
         {
         case ASSET_TYPE_MESH:
-            //Temporary
+            newAsset.info.index = -1; //No mesh attached
             break;
         case ASSET_TYPE_MATERIAL:
             index = materialHandler->createMaterial(0.5, 0.5, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), std::string("New Material"));
@@ -193,6 +196,7 @@ namespace GWIN
             newAsset.image = "script";
             break;
         case ASSET_TYPE_TEXTURE:
+            //TO DO
             break;
         case ASSET_TYPE_SOUND:
             newAsset.image = "sound";
@@ -242,6 +246,7 @@ namespace GWIN
         }
 
         Texture NewImage = imageLoader->createTexture(std::string(pathToFile), false);
+        imageLoader->decreaseLastTextureID();
 
         if (NewImage.textureImage.imageView != nullptr && NewImage.textureSampler != nullptr)
         {

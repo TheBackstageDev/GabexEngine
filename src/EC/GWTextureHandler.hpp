@@ -51,6 +51,7 @@ namespace GWIN
 
         std::vector<TextureInfo> getTextures() const;
         void resetTextures() { textures.clear(); lastTextureId = 0; };
+        void decreaseLastTextureID() { lastTextureId -= 1; }
 
     private:
         GWinDevice& device;
