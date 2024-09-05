@@ -34,13 +34,23 @@ namespace GWIN
 
     std::string toJson() const;
 
+    void updateFrustumPlanes();
+    bool isPointInFrustum(const glm::vec3& point) const;
+
     private:
+    
         glm::mat4 projectionMatrix{1.f};
         glm::mat4 viewMatrix{1.f};
         glm::mat4 inverseViewMatrix{1.f};
 
+        float nearPlane;
+        float farPlane;
+
         uint32_t viewerObject = 0; //None
-        uint32_t id;
+        uint32_t id{0};
+
+        glm::vec4 frustumPlanes[6];
+        float bias = 0.5f;
     };
     
 } // namespace GWIN

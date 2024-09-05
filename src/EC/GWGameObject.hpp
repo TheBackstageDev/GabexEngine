@@ -17,6 +17,13 @@
 
 namespace GWIN
 {
+    enum class GameObjectType
+    {
+        BasicObject,
+        SpotLight,
+        PointLight
+    };
+
     struct TransformComponent
     {
         glm::vec3 translation{0}; // (position offset)
@@ -51,6 +58,8 @@ namespace GWIN
         public:
         using id_t = unsigned int;
         using map = std::unordered_map<id_t, GWGameObject>;
+
+        GWGameObject() = default;
 
         static GWGameObject createGameObject(const std::string name)
         {

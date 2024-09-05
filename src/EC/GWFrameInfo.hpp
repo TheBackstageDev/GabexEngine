@@ -43,6 +43,11 @@ namespace GWIN
         std::vector<VkDescriptorSet>& textures;
     };
 
+    struct FrameFlags
+    {
+        bool frustumCulling{false};
+    };
+
     struct FrameInfo
     {
         int frameIndex;
@@ -51,5 +56,6 @@ namespace GWIN
         VkDescriptorSet globalDescriptorSet;
         SceneInfo& currentInfo;
         VkDescriptorSet currentFrameSet;
+        FrameFlags flags;
     };
 }

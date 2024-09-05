@@ -137,9 +137,25 @@ namespace GWIN
             }
         }
 
-        inputModel(selectedObject);
-        inputTexture(selectedObject);
-        inputMaterial(selectedObject);
+        if (selectedObject.light == nullptr)
+        {
+            inputModel(selectedObject);
+            inputTexture(selectedObject);
+            inputMaterial(selectedObject);
+        } else {
+            if (ImGui::CollapsingHeader("Light", nullptr))
+            {
+                if (selectedObject.light->cutOffAngle != 0.0f)
+                {
+                    ImGui::Text("Type: Spotlight");
+                    ImGui::DragFloat("CutOff Angle: ", &selectedObject.light->cutOffAngle, .1f, 0.f, 90.f, "%.1f");
+                } else {
+                    ImGui::Text("Type: Pointlight");
+                }
+
+                ImGui::DragFloat("Intensity: ", &selectedObject.light->lightIntensity, .1f, 0.f, FLT_MAX, "%.1f");
+            }
+        }
     }
 
     // Asset-Related
@@ -471,6 +487,75 @@ namespace GWIN
         ImGui::SetNextWindowDockID(ImGui::GetID("##Dockspace"), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Scene Hierarchy##", nullptr))
         {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(.1f, 1.0f, .0f, .5f));
+            if (ImGui::ImageButton((ImTextureID)assets->getImages().at("plus_sign"), ImVec2(16, 16)))
+            {
+                ImGui::OpenPopup("##addObjectPopup");
+            }
+            ImGui::PopStyleColor();
+
+            ImGui::SameLine();
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, .1f, 0.f, .5f));
+            if (ImGui::ImageButton((ImTextureID)assets->getImages().at("minus_sign"), ImVec2(16, 16)))
+            {
+                if (selectedItem != 0 && selectedItem != 1) //Skybox and directional Light
+                {
+                    frameInfo.currentInfo.gameObjects.erase(selectedItem);
+
+                    selectedItem = -1;
+                }
+            }
+            ImGui::PopStyleColor();
+
+            if (ImGui::BeginPopup("##addObjectPopup"))
+            {
+                if (ImGui::BeginCombo("##Object", "Objects"))
+                {
+                    if (ImGui::Button("Empty"))
+                    {
+                        createObjectCallback(GameObjectType::BasicObject);
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    if (ImGui::Button("Plane"))
+                    {
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    if (ImGui::Button("Cube"))
+                    {
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    if (ImGui::Button("Sphere"))
+                    {
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    ImGui::EndCombo();
+                }
+
+                if (ImGui::BeginCombo("##Light", "Light"))
+                {
+                    if (ImGui::Button("PointLight"))
+                    {
+                        createObjectCallback(GameObjectType::PointLight);
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    if (ImGui::Button("SpotLight"))
+                    {
+                        createObjectCallback(GameObjectType::SpotLight);
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    ImGui::EndCombo();
+                }
+                
+                ImGui::EndPopup();
+            }
+
             ImGui::BeginChild("##ScrollingRegion1", ImVec2(0, 0), ImGuiChildFlags_None);
 
             for (auto &kv : frameInfo.currentInfo.gameObjects)

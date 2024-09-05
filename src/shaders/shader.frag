@@ -59,7 +59,7 @@ void calculatePointLight(Light currentLight, LightInfo lightInfo, inout vec3 dif
     blinnTerm = pow(blinnTerm, mix(50.0, 4.0, lightInfo.material.data.y));
 
     vec3 specular = intensity * blinnTerm * mix(0.04, 1.0, lightInfo.material.data.x) * attenuation;
-
+    
     diffuseLight += diffuse;
     specularLight += specular;
 }

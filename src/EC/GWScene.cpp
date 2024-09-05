@@ -178,13 +178,37 @@ namespace GWIN
         cameras.emplace(newCamera.getId(), newCamera);
     }
 
-    void GWScene::createGameObject()
+    void GWScene::createGameObject(GameObjectType type)
     {
-        auto& camera = gameObjects.at(cameras.at(currentCamera).getViewerObject());
-        auto obj = GWGameObject::createGameObject("New Object");
-        obj.transform.translation = camera.transform.translation + glm::vec3(5.f, -5.f, 5.f);
+        auto &camera = gameObjects.at(cameras.at(currentCamera).getViewerObject());
 
-        gameObjects.emplace(obj.getId(), std::move(obj)); 
+        GWGameObject obj;
+
+        switch (type)
+        {
+        case GameObjectType::BasicObject:
+        {
+            obj = GWGameObject::createGameObject("New Object");
+            obj.transform.translation = camera.transform.translation + glm::vec3(1.f, 1.f, 1.f);
+            break;
+        }
+        case GameObjectType::PointLight:
+        {
+            obj = GWGameObject::createLight(1.f, 0.1f, glm::vec3(1.0f, 1.0f, 1.0f));
+            obj.transform.translation = camera.transform.translation + glm::vec3(1.f, 1.f, 1.f);
+            break;
+        }
+        case GameObjectType::SpotLight:
+        {
+            obj = GWGameObject::createLight(1.f, 0.1f, glm::vec3(1.0f, 1.0f, 1.0f), 25.f);
+            obj.transform.translation = camera.transform.translation + glm::vec3(1.f, 1.f, 1.f);
+            break;
+        }
+        default:
+            throw std::invalid_argument("Unknown GameObjectType");
+        }
+
+        createGameObject(obj);
     }
 
      void GWScene::createGameObject(GWGameObject& obj)

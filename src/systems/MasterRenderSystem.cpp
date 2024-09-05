@@ -50,6 +50,11 @@ namespace GWIN
             currentScene->removeMesh(id);
         });
 
+        interfaceSystem->setCreateObjectCallback([this](GameObjectType type)
+        {
+            currentScene->createGameObject(type);
+        });
+
         currentScene->createCamera();
     }
 
@@ -115,12 +120,15 @@ namespace GWIN
 
     void MasterRenderSystem::updateCamera(FrameInfo& frameInfo)
     {
-        auto& viewerObject = frameInfo.currentInfo.gameObjects.at(frameInfo.currentInfo.currentCamera.getViewerObject());
+        auto& camera = frameInfo.currentInfo.currentCamera;
+        auto &viewerObject = frameInfo.currentInfo.gameObjects.at(camera.getViewerObject());
         cameraController.moveInPlaneXZ(window.getWindow(), frameInfo.deltaTime,  viewerObject);
-        frameInfo.currentInfo.currentCamera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.getRotation());
+        camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.getRotation());
 
         float aspect = renderer->getAspectRatio();
-        frameInfo.currentInfo.currentCamera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
+        camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
+
+        camera.updateFrustumPlanes();
     }
 
     void MasterRenderSystem::loadNewScene(const std::string pathToFile)
@@ -169,12 +177,13 @@ namespace GWIN
 
                 // update
 
+                auto& interfaceFlags = interfaceSystem->getFlags();
+
                 SceneInfo currentInfo{
                     currentScene->getCurrentCamera(),
                     currentScene->getGameObjects(),
                     currentScene->getMeshes(),
                     currentScene->getTextures()};
-
 
                 FrameInfo frameInfo{
                     frameIndex,
@@ -183,6 +192,8 @@ namespace GWIN
                     globalDescriptorSets[frameIndex],
                     currentInfo,
                     VK_NULL_HANDLE};
+
+                frameInfo.flags.frustumCulling = interfaceFlags.frustumCulling;
 
                 updateCamera(frameInfo);
 

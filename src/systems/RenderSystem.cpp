@@ -93,6 +93,9 @@ namespace GWIN
             if (obj.model == -1 || obj.getName() == "Skybox")
                 continue;
 
+            if (frameInfo.flags.frustumCulling && !frameInfo.currentInfo.currentCamera.isPointInFrustum(obj.transform.translation))
+                continue;
+
             uint32_t textureToBind = obj.Textures[0];
 
             if (frameInfo.currentInfo.textures[textureToBind] == nullptr)

@@ -29,6 +29,12 @@
 
 namespace GWIN
 {
+    struct Flags
+    {
+        bool showShadows{true};
+        bool frustumCulling{false};
+    };
+
     class GWInterface
     {
     public:
@@ -40,14 +46,18 @@ namespace GWIN
         void render(VkCommandBuffer commandBuffer);
 
         void setCreateTextureCallback(std::function<void(VkDescriptorSet &, Texture &texture, bool replace)> callback) { createTextureCallback = callback; objectList.setCreateTextureCallback(callback); };
-        void setSaveSceneCallback(std::function<void(const std::string path)> callback);
-        void setLoadSceneCallback(std::function<void(const std::string path)> callback);
+        void setSaveSceneCallback(std::function<void(const std::string path)> callback) { SaveSceneCallback = callback;  };
+        void setLoadSceneCallback(std::function<void(const std::string path)> callback) { LoadSceneCallback = callback; };
         void setCreateMeshCallback(std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> callback) { createMeshCallback = callback; objectList.setCreateMeshCallback(callback); };
         void setRemoveMeshCallback(std::function<void(uint32_t id)> callback) { removeMeshCallback = callback; objectList.setRemoveMeshCallback(callback); };
+
+        void setCreateObjectCallback(std::function<void(GameObjectType type)> callback) { createObjectCallback = callback; objectList.setCreateObjectCallback(callback); };
 
         GWConsole getConsole() const { return console; }
 
         glm::vec4 getLightDirection(GWGameObject& directionalLight) { return {directionalLight.transform.getRotation(), DirectionalLightingIntensity}; }
+
+        Flags getFlags() { return flags; }
 
     private:
         GWindow& window;
@@ -58,6 +68,7 @@ namespace GWIN
         std::function<void(const std::string path)> LoadSceneCallback;
         std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> createMeshCallback;
         std::function<void(uint32_t id)> removeMeshCallback;
+        std::function<void(GameObjectType type)> createObjectCallback;
 
         std::unique_ptr<GWTextureHandler>& textureHandler;
         std::unique_ptr<GWMaterialHandler>& materialHandler;
@@ -75,9 +86,8 @@ namespace GWIN
 
         //values
         float DirectionalLightingIntensity = 1.f;
-
-        //Flags
-        bool showShadows{true};
+        
+        Flags flags; 
 
         std::unique_ptr<GWDescriptorPool> guipool;
     };

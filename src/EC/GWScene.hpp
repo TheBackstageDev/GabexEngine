@@ -58,7 +58,7 @@ namespace GWIN
         ~GWScene();
 
         void createCamera();
-        void createGameObject();
+        void createGameObject(GameObjectType type);
         void createGameObject(GWGameObject& obj);
         void removeGameObject(uint32_t id);
 

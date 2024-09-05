@@ -66,16 +66,6 @@ namespace GWIN
         ImGui_ImplVulkan_CreateFontsTexture();
     }
 
-    void GWInterface::setSaveSceneCallback(std::function<void(const std::string path)> callback)
-    {
-        SaveSceneCallback = callback;
-    }
-
-    void GWInterface::setLoadSceneCallback(std::function<void(const std::string path)> callback)
-    {
-        LoadSceneCallback = callback;
-    }
-
     //Temporary to load Object
     char filePathBuffer[256];
     char texturePathBuffer[256] = "C:\\Users\\cleve\\OneDrive\\Documents\\GitHub\\GabexEngine\\src\\textures\\no_texture.png";
@@ -170,8 +160,16 @@ namespace GWIN
     {
         if (ImGui::Begin("Scene Settings", nullptr))
         {
-            ImGui::DragFloat("LightIntensity", &DirectionalLightingIntensity, .1f, 0.f, 10.f);
-            ImGui::Checkbox("Render Shadows", &showShadows);
+            if (ImGui::CollapsingHeader("Light Settings"))
+            {
+                ImGui::DragFloat("LightIntensity", &DirectionalLightingIntensity, .1f, 0.f, 10.f);
+                ImGui::Checkbox("Render Shadows", &flags.showShadows);
+            }
+
+            if (ImGui::CollapsingHeader("Camera Settings"))
+            {
+                ImGui::Checkbox("Frustum Culling", &flags.frustumCulling);
+            }
         }
 
         ImGui::End();
