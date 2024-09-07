@@ -108,7 +108,7 @@ namespace GWIN
             pointLightPushConstant push{};
             push.position = glm::vec4(obj.transform.translation, 1.f);
             push.color = glm::vec4(obj.color, obj.light->lightIntensity);
-            push.radius = obj.transform.scale;
+            push.radius = obj.transform.scale.x;
             
             vkCmdPushConstants
             (

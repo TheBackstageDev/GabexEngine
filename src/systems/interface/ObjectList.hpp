@@ -25,6 +25,8 @@ namespace GWIN
         void setCreateMeshCallback(std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> callback) { createMeshCallback = callback; };
         void setRemoveMeshCallback(std::function<void(uint32_t id)> callback) { removeMeshCallback = callback; };
         void setCreateObjectCallback(std::function<void(GameObjectType type)> callback) { createObjectCallback = callback; };
+        void setDeleteObjectCallback(std::function<void(uint32_t id)> callback) { removeObjectCallback = callback; };
+
 
     private:
         std::unique_ptr<GWMaterialHandler> &materialHandler;
@@ -38,12 +40,13 @@ namespace GWIN
         char nameBuffer[1000]{""};
         glm::vec3 positionBuffer{0.0f, 0.0f, 0.0f};
         glm::vec3 rotationBuffer{0.0f, 0.0f, 0.0f};
-        float scaleBuffer = 1.f;
+        glm::vec3 scaleBuffer = { 1.0f, 1.0f, 1.0f };
 
         std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> createMeshCallback;
         std::function<void(VkDescriptorSet &, Texture &texture, bool replace)> createTextureCallback; 
         std::function<void(uint32_t id)> removeMeshCallback;
         std::function<void(GameObjectType type)> createObjectCallback;
+        std::function<void(uint32_t id)> removeObjectCallback;
 
         void assetList(FrameInfo &frameInfo);
 

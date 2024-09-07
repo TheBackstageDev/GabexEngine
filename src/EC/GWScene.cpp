@@ -56,7 +56,11 @@ namespace GWIN
                         obj["transform"]["rotation"][1].get<float>(),
                         obj["transform"]["rotation"][2].get<float>()};
 
-                    gameObject.transform.scale = obj["transform"]["scale"].get<float>();
+                    gameObject.transform.scale = {
+                        obj["transform"]["scale"][0].get<float>(),
+                        obj["transform"]["scale"][1].get<float>(),
+                        obj["transform"]["scale"][2].get<float>()
+                    };
                     gameObject.transform.rotation = rotation;
                     gameObject.transform.translation = translation;
 
@@ -182,6 +186,7 @@ namespace GWIN
     {
         auto &camera = gameObjects.at(cameras.at(currentCamera).getViewerObject());
 
+        const glm::vec3 dPos = camera.transform.translation + glm::vec3(-.5f, 1.f, -.5f);
         GWGameObject obj;
 
         switch (type)
@@ -189,24 +194,24 @@ namespace GWIN
         case GameObjectType::BasicObject:
         {
             obj = GWGameObject::createGameObject("New Object");
-            obj.transform.translation = camera.transform.translation + glm::vec3(1.f, 1.f, 1.f);
             break;
         }
         case GameObjectType::PointLight:
         {
             obj = GWGameObject::createLight(1.f, 0.1f, glm::vec3(1.0f, 1.0f, 1.0f));
-            obj.transform.translation = camera.transform.translation + glm::vec3(1.f, 1.f, 1.f);
             break;
         }
         case GameObjectType::SpotLight:
         {
-            obj = GWGameObject::createLight(1.f, 0.1f, glm::vec3(1.0f, 1.0f, 1.0f), 25.f);
-            obj.transform.translation = camera.transform.translation + glm::vec3(1.f, 1.f, 1.f);
+            obj = GWGameObject::createLight(1.f, 0.1f, glm::vec3(1.0f, 1.0f, 1.0f), 35.f);
             break;
         }
         default:
             throw std::invalid_argument("Unknown GameObjectType");
         }
+
+        obj.transform.translation = dPos;
+        obj.Textures[0] = 0;
 
         createGameObject(obj);
     }

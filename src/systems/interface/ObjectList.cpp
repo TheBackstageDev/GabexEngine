@@ -128,10 +128,15 @@ namespace GWIN
             inputPosition(selectedObject);
             inputRotation(selectedObject);
 
-            ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Scale: ");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(150);
-            if (ImGui::DragFloat("##Scale", &scaleBuffer, 0.05f, 0.1f, 10.0f, "%.1f", ImGuiInputTextFlags_EnterReturnsTrue))
+            ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Scale:");
+
+            bool scaleChanged = InputXYZ("ScaleX", "X", scaleBuffer.x, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+            ImGui::SameLine(0, 0);
+            scaleChanged |= InputXYZ("ScaleY", "Y", scaleBuffer.y, ImVec4(0.0f, 0.5f, 0.0f, 1.0f));
+            ImGui::SameLine(0, 0);
+            scaleChanged |= InputXYZ("ScaleZ", "Z", scaleBuffer.z, ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+            if (scaleChanged)
             {
                 selectedObject.transform.scale = scaleBuffer;
             }
@@ -499,9 +504,10 @@ namespace GWIN
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, .1f, 0.f, .5f));
             if (ImGui::ImageButton((ImTextureID)assets->getImages().at("minus_sign"), ImVec2(16, 16)))
             {
-                if (selectedItem != 0 && selectedItem != 1) //Skybox and directional Light
+                if (selectedItem != 0 && selectedItem != 1) // Skybox and directional Light
                 {
-                    frameInfo.currentInfo.gameObjects.erase(selectedItem);
+                    removeObjectCallback(selectedItem);
+                    assets->deselect();
 
                     selectedItem = -1;
                 }
@@ -578,7 +584,7 @@ namespace GWIN
                     assets->setDisable(true);
                 }
             }
-
+        
             ImGui::EndChild();
             ImGui::End();
         }
@@ -622,14 +628,7 @@ namespace GWIN
 
                     if (rotationChanged)
                     {
-                        // Calculate the difference in rotation to get the angle
-                        glm::vec3 rotationDelta = rotationBuffer - selectedObject.transform.getRotation();
-
-                        float angle = glm::length(rotationDelta);
-                        if (angle > glm::epsilon<float>())
-                        {
-                            selectedObject.transform.rotate(glm::normalize(rotationDelta), angle);
-                        }
+                        selectedObject.transform.rotate(rotationBuffer);
                     }
 
                     addComponent(frameInfo);

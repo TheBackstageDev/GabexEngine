@@ -6,7 +6,7 @@ namespace GWIN
     {
         glm::mat4 matrix(1.0f);
 
-        glm::mat4 scaleMatrix = glm::scale(matrix, glm::vec3(scale));
+        glm::mat4 scaleMatrix = glm::scale(matrix, scale);
         glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
         glm::mat4 translationMatrix = glm::translate(matrix, translation);
 
@@ -17,7 +17,7 @@ namespace GWIN
     {
         GWGameObject gameObject = GWGameObject::createGameObject("PointLight");
         gameObject.color = color;
-        gameObject.transform.scale = radius;
+        gameObject.transform.scale.x = radius;
         gameObject.light = std::make_unique<LightComponent>();
         gameObject.light->lightIntensity = intensity;
         return gameObject;
@@ -27,7 +27,7 @@ namespace GWIN
     {
         GWGameObject gameObject = GWGameObject::createGameObject("SpotLight");
         gameObject.color = color;
-        gameObject.transform.scale = radius;
+        gameObject.transform.scale.x = radius;
         gameObject.light = std::make_unique<LightComponent>();
         gameObject.light->lightIntensity = intensity;
         gameObject.light->cutOffAngle = cutOffAngle;
@@ -44,7 +44,7 @@ namespace GWIN
         jsonObject["transform"] = {
             {"translation", {transform.translation.x, transform.translation.y, transform.translation.z}},
             {"rotation", {transform.rotation.x, transform.rotation.y, transform.rotation.z}},
-            {"scale", transform.scale}};
+            {"scale", transform.scale.x, transform.scale.y, transform.scale.z}};
 
         if (light)
         {

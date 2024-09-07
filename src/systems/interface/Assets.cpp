@@ -3,6 +3,7 @@
 #include <iostream>
 #include <filesystem>
 #include <regex>
+#include "./Console.hpp"
 
 namespace fs = std::filesystem;
 
@@ -32,6 +33,16 @@ namespace GWIN
         if (ImGui::ImageButton((ImTextureID)images["plus_sign"], ImVec2(16, 16)))
         {
             ImGui::OpenPopup("AddComponent");
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::ImageButton((ImTextureID)images["minus_sign"], ImVec2(16, 16)))
+        {
+            if (selectedAsset != -1)
+            {
+                removeAsset(selectedAsset);
+            }
         }
 
         ImGui::PopStyleVar();
@@ -158,6 +169,7 @@ namespace GWIN
 
             for (int i = 0; i < assets.size(); ++i)
             {
+                assets[i].id = i;
                 drawAsset(assets[i], frameInfo);
                 if (ImGui::IsItemClicked())
                 {
@@ -212,23 +224,20 @@ namespace GWIN
 
     void AssetsWindow::removeAsset(uint32_t id)
     {
-        auto& asset = assets.at(id);
-        switch (asset.type)
+        auto it = std::find_if(assets.begin(), assets.end(),
+                               [id](const Asset &asset)
+                               { return asset.id == id; });
+
+        if (it != assets.end())
         {
-        case ASSET_TYPE_MESH:
-            break;
-        case ASSET_TYPE_MATERIAL:
-            break;
-        case ASSET_TYPE_SCRIPT:
-            break;
-        case ASSET_TYPE_TEXTURE:
-            break;
-        case ASSET_TYPE_SOUND:
-            break;
-        default:
-            std::cerr << "Invalid asset type!";
-            return;
+            assets.erase(it);
         }
+        else
+        {
+            GWConsole::addWarning(std::string("Asset with id " + std::to_string(id) + " not found."));
+        }
+
+        selectedAsset = -1;
     }
 
     void AssetsWindow::createImage(const std::string &pathToFile)

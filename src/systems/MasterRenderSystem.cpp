@@ -55,6 +55,9 @@ namespace GWIN
             currentScene->createGameObject(type);
         });
 
+        interfaceSystem->setDeleteObjectCallback([this](uint32_t id)
+                                                 { currentScene->removeGameObject(id); });
+
         currentScene->createCamera();
     }
 
@@ -128,7 +131,8 @@ namespace GWIN
         float aspect = renderer->getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
-        camera.updateFrustumPlanes();
+        if (frameInfo.flags.frustumCulling)
+            camera.updateFrustumPlanes();
     }
 
     void MasterRenderSystem::loadNewScene(const std::string pathToFile)
@@ -298,7 +302,7 @@ namespace GWIN
                 sphere.Textures[0] = 0;
                 sphere.transform.translation.x = x * 1.25;
                 sphere.transform.translation.z = z * 1.25;
-                sphere.transform.scale = .5f;
+                sphere.transform.scale = glm::vec3{ .5f };
 
                 sphere.Material = materialHandler->createMaterial(
                     1.0f / (x + 1), 

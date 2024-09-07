@@ -27,14 +27,21 @@ namespace GWIN
     struct TransformComponent
     {
         glm::vec3 translation{0}; // (position offset)
-        float scale{1.f};
+        glm::vec3 scale{1.f};
         glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
 
-        void rotate(glm::vec3 axis, float angle)
+        void rotate(glm::vec3 newRotation)
         {
-            glm::quat deltaRotation = glm::angleAxis(glm::radians(angle), glm::normalize(axis));
+            glm::vec3 axis = newRotation - getRotation();
+            float angle = glm::length(axis);
 
-            rotation = glm::normalize(deltaRotation * rotation); // Normalize the quaternion to avoid drift
+            if (angle > glm::epsilon<float>())
+            {
+                axis = glm::normalize(axis);
+                glm::quat deltaRotation = glm::angleAxis(glm::radians(angle), glm::normalize(axis));
+
+                rotation = glm::normalize(deltaRotation * rotation); // Normalize the quaternion to avoid drift
+            }
         }
 
         void rotateEuler(glm::vec3 angles)

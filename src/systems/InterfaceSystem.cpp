@@ -114,6 +114,8 @@ namespace GWIN
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist(drawList);
 
+            //DebugVisuals::setDrawList(drawList);
+
             GWGameObject &gameObject = frameInfo.currentInfo.gameObjects.at(selectedObject);
 
             glm::mat4 transformMatrix = gameObject.transform.mat4();
@@ -148,9 +150,7 @@ namespace GWIN
 
                 if (mCurrentGizmoOperation == ImGuizmo::SCALE)
                 {
-                    float uniformScale = (scale.x + scale.y + scale.z) / 3.0f;
-                    gameObject.transform.scale = uniformScale;
-                    scale = glm::vec3(uniformScale);
+                    gameObject.transform.scale = scale;
                 }
             }
         }
@@ -326,6 +326,7 @@ namespace GWIN
 
             drawSceneSettings();
             drawImGuizmo(frameInfo, drawList);
+            //debugVisuals.draw(frameInfo);
 
             if (ImGuiFileDialog::Instance()->Display("SaveProjectDialog", ImGuiWindowFlags_NoCollapse, ImVec2(600, 400)))
             {

@@ -57,6 +57,8 @@ namespace GWIN
         bool isNewAssetSelected() { return hasNewAssetBeenSelected; }
         void setDisable(bool isDisabled) { selectedDisable = isDisabled; }
 
+        void deselect() { selectedAsset = -1; }
+
         std::unique_ptr<GWTextureHandler>& getTextureHandler() { return imageLoader; }
     private:
 

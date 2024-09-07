@@ -21,6 +21,7 @@
 #include "imguifiledialog/ImGuiFileDialog.h"
 
 #include <imguizmo/ImGuizmo.h>
+#include "./interface/DebugVisuals.hpp"
 
 // pre-made interfaces
 #include "./interface/Console.hpp"
@@ -52,6 +53,7 @@ namespace GWIN
         void setRemoveMeshCallback(std::function<void(uint32_t id)> callback) { removeMeshCallback = callback; objectList.setRemoveMeshCallback(callback); };
 
         void setCreateObjectCallback(std::function<void(GameObjectType type)> callback) { createObjectCallback = callback; objectList.setCreateObjectCallback(callback); };
+        void setDeleteObjectCallback(std::function<void(uint32_t id)> callback) { removeObjectCallback = callback; objectList.setDeleteObjectCallback(callback); };
 
         GWConsole getConsole() const { return console; }
 
@@ -69,6 +71,7 @@ namespace GWIN
         std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> createMeshCallback;
         std::function<void(uint32_t id)> removeMeshCallback;
         std::function<void(GameObjectType type)> createObjectCallback;
+        std::function<void(uint32_t id)> removeObjectCallback;
 
         std::unique_ptr<GWTextureHandler>& textureHandler;
         std::unique_ptr<GWMaterialHandler>& materialHandler;
@@ -83,6 +86,7 @@ namespace GWIN
         void drawFileDialog();
 
         ImGuizmo::OPERATION mCurrentGizmoOperation{ImGuizmo::TRANSLATE};
+        //DebugVisuals debugVisuals{};
 
         //values
         float DirectionalLightingIntensity = 1.f;
