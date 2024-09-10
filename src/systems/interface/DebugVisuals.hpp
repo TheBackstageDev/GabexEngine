@@ -5,7 +5,10 @@
 #include <GWFrameInfo.hpp>
 
 #include <unordered_map>
+#include <algorithm>
 #include <array>
+#include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace GWIN
 {
@@ -15,47 +18,49 @@ namespace GWIN
         ImVec4 color{1.0f, 1.0f, 1.0f, 1.0f};
     };
 
-    struct DebugElementInfo
-    {
-        glm::vec3 wPosition; // World Position
-        glm::quat rotation; // Rotation Quaternion
-        glm::vec3 scale;
-    };
-
     // the Object that will be rendered on the Imgui Screen
     class DebugElement 
     {
     public:
-        DebugElement(std::vector<DebugVertex>& vertices, uint32_t& id);
+        DebugElement(std::vector<glm::vec3> verticesPositions, const std::vector<uint32_t> indices, uint32_t id);
 
-        void drawElement(DebugElementInfo& newInfo);
+        void drawElement(FrameInfo &frameInfo);
+
     private:
-        TransformComponent transform{};
+        void calcVerticesPos(FrameInfo& frameInfo); // Calculates to Screen-space
+        void drawLines();
 
-        void calcVerticesPos(); //Calculates to Screen-space
-
-        std::vector<DebugVertex>& vertices;
-        uint32_t& id;
+        std::vector<DebugVertex> vertices;
+        const std::vector<glm::vec3> verticesPositions;
+        const std::vector<uint32_t> indices;
+        uint32_t id;
     };
 
     class DebugVisuals
     {
     public:
-        DebugVisuals() {}
+        DebugVisuals();
 
         void draw(FrameInfo& frameInfo);
 
+        static void setRect(float x, float y, float width, float height) { rectBounds = ImVec4(x, y, width, height); };
         static void setDrawList(ImDrawList *newDrawList) { drawList = newDrawList; };
         static ImDrawList *getDrawList() { return drawList; };
+        static ImVec4 getRect() { return rectBounds; }
 
     private:
+        friend class DebugElement;
         //Shapes creation
-        void createSphere(GWGameObject &gameObject);
-        void createCone(GWGameObject &gameObject);
-        void createParalelepiped(GWGameObject &gameObject);
+        void createFrustum(uint32_t id, const GWIN::GWCamera &camera);
+        void createSphere(uint32_t id);
+        void createCone(uint32_t id);
+        void createParalelepiped(uint32_t id);
 
         std::unordered_map<uint32_t, DebugElement> debugMeshes;
 
+        std::unordered_map<uint32_t, uint32_t> processedIds;
+
         static ImDrawList* drawList;
+        static ImVec4 rectBounds;
     };
 }

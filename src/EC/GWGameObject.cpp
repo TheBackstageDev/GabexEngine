@@ -17,7 +17,6 @@ namespace GWIN
     {
         GWGameObject gameObject = GWGameObject::createGameObject("PointLight");
         gameObject.color = color;
-        gameObject.transform.scale.x = radius;
         gameObject.light = std::make_unique<LightComponent>();
         gameObject.light->lightIntensity = intensity;
         return gameObject;
@@ -27,7 +26,6 @@ namespace GWIN
     {
         GWGameObject gameObject = GWGameObject::createGameObject("SpotLight");
         gameObject.color = color;
-        gameObject.transform.scale.x = radius;
         gameObject.light = std::make_unique<LightComponent>();
         gameObject.light->lightIntensity = intensity;
         gameObject.light->cutOffAngle = cutOffAngle;

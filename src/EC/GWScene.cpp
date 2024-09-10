@@ -206,6 +206,11 @@ namespace GWIN
             obj = GWGameObject::createLight(1.f, 0.1f, glm::vec3(1.0f, 1.0f, 1.0f), 35.f);
             break;
         }
+        case GameObjectType::Camera:
+        {
+            createCamera();
+            break;
+        }
         default:
             throw std::invalid_argument("Unknown GameObjectType");
         }

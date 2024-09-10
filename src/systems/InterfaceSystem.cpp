@@ -113,8 +113,7 @@ namespace GWIN
 
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetDrawlist(drawList);
-
-            //DebugVisuals::setDrawList(drawList);
+            ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 
             GWGameObject &gameObject = frameInfo.currentInfo.gameObjects.at(selectedObject);
 
@@ -281,9 +280,10 @@ namespace GWIN
 
         ImDrawList* drawList;
 
-        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus))
+        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar))
         {
             drawList = ImGui::GetWindowDrawList();
+            DebugVisuals::setDrawList(drawList);
 
             auto& images = assets->getImages();
 
@@ -319,6 +319,7 @@ namespace GWIN
                 
                 ImVec2 windowPos = ImGui::GetWindowPos();
                 ImGuizmo::SetRect(windowPos.x, windowPos.y + buttonSize, windowSize.x, windowSize.y + buttonSize);
+                DebugVisuals::setRect(windowPos.x, windowPos.y + buttonSize, windowSize.x, windowSize.y + buttonSize);
             }
 
             ImGui::End();
@@ -326,7 +327,7 @@ namespace GWIN
 
             drawSceneSettings();
             drawImGuizmo(frameInfo, drawList);
-            //debugVisuals.draw(frameInfo);
+            debugVisuals.draw(frameInfo);
 
             if (ImGuiFileDialog::Instance()->Display("SaveProjectDialog", ImGuiWindowFlags_NoCollapse, ImVec2(600, 400)))
             {

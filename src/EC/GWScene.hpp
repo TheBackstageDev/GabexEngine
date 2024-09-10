@@ -76,6 +76,7 @@ namespace GWIN
 
         GWGameObject::map& getGameObjects() { return gameObjects; }
         GWModel::map& getMeshes() { return meshes; }
+        std::unordered_map<uint32_t, GWCamera>& getCameras() { return cameras; }
         std::vector<VkDescriptorSet>& getTextures() { return textures; }
 
     private:

@@ -86,7 +86,7 @@ namespace GWIN
         void drawFileDialog();
 
         ImGuizmo::OPERATION mCurrentGizmoOperation{ImGuizmo::TRANSLATE};
-        //DebugVisuals debugVisuals{};
+        DebugVisuals debugVisuals{};
 
         //values
         float DirectionalLightingIntensity = 1.f;

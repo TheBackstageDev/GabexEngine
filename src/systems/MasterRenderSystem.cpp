@@ -131,8 +131,7 @@ namespace GWIN
         float aspect = renderer->getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
-        if (frameInfo.flags.frustumCulling)
-            camera.updateFrustumPlanes();
+        camera.updateFrustumPlanes();
     }
 
     void MasterRenderSystem::loadNewScene(const std::string pathToFile)
@@ -232,7 +231,7 @@ namespace GWIN
                     renderSystem->renderGameObjects(frameInfo);
                 }
 
-                pointLightSystem->render(frameInfo);
+                //pointLightSystem->render(frameInfo);
 
                 if (isLoading)
                 {

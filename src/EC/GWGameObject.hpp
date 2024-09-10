@@ -21,7 +21,8 @@ namespace GWIN
     {
         BasicObject,
         SpotLight,
-        PointLight
+        PointLight,
+        Camera
     };
 
     struct TransformComponent

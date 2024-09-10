@@ -33,6 +33,7 @@ namespace GWIN
 
         nearPlane = near;
         farPlane = far;
+        this->fovy = fovy;
     }
 
     void GWCamera::setViewDirection(glm::vec3 position, glm::vec3 direction, glm::vec3 up)

@@ -29,6 +29,9 @@ namespace GWIN
     const glm::mat4& getProjection() const { return projectionMatrix; };
     const glm::mat4& getView() const { return viewMatrix; };
     const glm::mat4& getInverseView() const { return inverseViewMatrix; };
+    const float getNearClip() const { return nearPlane; }
+    const float getFarClip() const { return nearPlane; }
+    const float getFovy() const { return fovy; }
 
     uint32_t getId() { return id; }
 
@@ -45,6 +48,7 @@ namespace GWIN
 
         float nearPlane;
         float farPlane;
+        float fovy;
 
         uint32_t viewerObject = 0; //None
         uint32_t id{0};
