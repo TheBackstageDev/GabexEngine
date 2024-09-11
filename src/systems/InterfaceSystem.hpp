@@ -34,6 +34,8 @@ namespace GWIN
     {
         bool showShadows{true};
         bool frustumCulling{false};
+        bool debugElements{true};
+        bool debugHandles{true};
     };
 
     class GWInterface

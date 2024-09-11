@@ -38,9 +38,22 @@ namespace GWIN
         {
             glm::vec4 clipPos = mvpMatrix * glm::vec4(verticesPositions[i], 1.0f);
             glm::vec3 ndcPos = glm::vec3(clipPos) / clipPos.w;
-            glm::vec2 screenPos = ((glm::vec2(ndcPos) + 1.0f) * 0.5f) * glm::vec2(rectBounds.z, rectBounds.w); 
 
-            vertices[i].position = ImVec2(screenPos.x + rectBounds.x, screenPos.y + rectBounds.y);
+            if (ndcPos.z < -1.0f || ndcPos.z > 1.0f)
+                continue;
+
+            glm::vec2 screenPos = ((glm::vec2(ndcPos) + 1.0f) * 0.5f) * glm::vec2(rectBounds.z, rectBounds.w);
+
+            screenPos.x += rectBounds.x;
+            screenPos.y += rectBounds.y;
+
+            if (screenPos.x >= rectBounds.x && screenPos.x <= rectBounds.x + rectBounds.z &&
+                screenPos.y >= rectBounds.y && screenPos.y <= rectBounds.y + rectBounds.w)
+            {
+                vertices[i].position = ImVec2(screenPos.x, screenPos.y);
+            } else {
+                vertices[i].position = ImVec2(0, 0);
+            }
         }
     }
 
@@ -54,6 +67,9 @@ namespace GWIN
         {
             const DebugVertex &v0 = vertices[indices[i]];
             const DebugVertex &v1 = vertices[indices[i + 1]];
+
+            if (v0.position.x == 0.f || v0.position.y == 0.f || v1.position.x == 0.f || v1.position.y == 0.f)
+                continue;
 
             drawList->AddLine(v0.position, v1.position, color, .5f);
         }

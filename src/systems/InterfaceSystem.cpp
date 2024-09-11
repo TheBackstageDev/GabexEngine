@@ -128,7 +128,7 @@ namespace GWIN
             ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(projection),
                                 mCurrentGizmoOperation, ImGuizmo::MODE::WORLD,
                                 glm::value_ptr(transformMatrix));
-
+                                
             if (ImGuizmo::IsUsing())
             {
                 glm::vec3 translation, rotation, scale;
@@ -159,6 +159,12 @@ namespace GWIN
     {
         if (ImGui::Begin("Scene Settings", nullptr))
         {
+            if (ImGui::CollapsingHeader("Editor Settings"))
+            {
+                ImGui::Checkbox("Render Debug Elements", &flags.debugElements);
+                ImGui::Checkbox("Render Debug Guizmos", &flags.debugHandles);
+            }
+
             if (ImGui::CollapsingHeader("Light Settings"))
             {
                 ImGui::DragFloat("LightIntensity", &DirectionalLightingIntensity, .1f, 0.f, 10.f);
@@ -194,6 +200,8 @@ namespace GWIN
         ImGui::Begin("DockSpace", nullptr, windowFlags);
         ImGui::PopStyleVar(2);
         ImGui::DockSpace(ImGui::GetID("DockSpace"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+
+        ImGui::DockSpaceOverViewport(ImGui::GetID("##Dockspace"), ImGui::GetMainViewport());
 
         //Top Menu
         if (ImGui::BeginMainMenuBar())
@@ -272,22 +280,11 @@ namespace GWIN
             ImGui::EndMainMenuBar();
         }
 
-        ImGui::End();
-
-        objectList.Draw(frameInfo);
-        console.draw(frameInfo);
-        assets->draw(frameInfo);
-
-        ImDrawList* drawList;
-
-        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar))
+        if (ImGui::Begin("MenuActions", nullptr, ImGuiWindowFlags_NoTitleBar))
         {
-            drawList = ImGui::GetWindowDrawList();
-            DebugVisuals::setDrawList(drawList);
+            auto &images = assets->getImages();
 
-            auto& images = assets->getImages();
-
-            int16_t buttonSize = 32;
+            int32_t buttonSize = 32;
 
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));           // Darker background
@@ -311,23 +308,43 @@ namespace GWIN
 
             ImGui::PopStyleColor(3);
             ImGui::PopStyleVar();
+            ImGui::End();
+        }
 
-            ImVec2 windowSize = ImGui::GetContentRegionAvail();
+        ImGui::End();
+
+        objectList.Draw(frameInfo);
+        console.draw(frameInfo);
+        assets->draw(frameInfo);
+
+        ImDrawList* drawList;
+
+        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar))
+        {
+            ImVec2 viewportPos = ImGui::GetWindowPos();   
+            ImVec2 viewportSize = ImGui::GetWindowSize(); 
+            drawList = ImGui::GetWindowDrawList();      
+
+            ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
+
             if (frameInfo.currentFrameSet)
             {
-                ImGui::Image((ImTextureID)frameInfo.currentFrameSet, windowSize);
-                
-                ImVec2 windowPos = ImGui::GetWindowPos();
-                ImGuizmo::SetRect(windowPos.x, windowPos.y + buttonSize, windowSize.x, windowSize.y + buttonSize);
-                DebugVisuals::setRect(windowPos.x, windowPos.y + buttonSize, windowSize.x, windowSize.y + buttonSize);
+                ImGui::Image((ImTextureID)frameInfo.currentFrameSet, viewportSize);
+
+                DebugVisuals::setDrawList(drawList);
+
+                DebugVisuals::setRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
             }
 
             ImGui::End();
         }
-
             drawSceneSettings();
-            drawImGuizmo(frameInfo, drawList);
-            debugVisuals.draw(frameInfo);
+
+            if (flags.debugHandles)
+                drawImGuizmo(frameInfo, drawList);
+
+            if (flags.debugElements)
+                debugVisuals.draw(frameInfo);
 
             if (ImGuiFileDialog::Instance()->Display("SaveProjectDialog", ImGuiWindowFlags_NoCollapse, ImVec2(600, 400)))
             {
