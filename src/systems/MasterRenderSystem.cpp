@@ -268,19 +268,19 @@ namespace GWIN
     void MasterRenderSystem::loadGameObjects()
     {
         CubeMapInfo info{};
-        info.negX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/nx.png";
-        info.posX = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/px.png";
-        info.negY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/ny.png";
-        info.posY = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/py.png"; 
-        info.negZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/nz.png";
-        info.posZ = "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/cubeMap/pz.png";
+        info.negX = "../src/textures/cubeMap/nx.png";
+        info.posX = "../src/textures/cubeMap/px.png";
+        info.negY = "../src/textures/cubeMap/ny.png";
+        info.posY = "../src/textures/cubeMap/py.png"; 
+        info.negZ = "../src/textures/cubeMap/nz.png";
+        info.posZ = "../src/textures/cubeMap/pz.png";
         VkDescriptorSet skyboxSet;
         CubeMap cubeMap = cubemapHandler->createCubeMap(info);
         Texture texture2{};
         texture2.textureImage = cubeMap.Cubeimage;
         textureHandler->createSampler(0, texture2.textureSampler);
 
-        Texture no_texture = textureHandler->createTexture(std::string("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/textures/no_texture.png"), true);
+        Texture no_texture = textureHandler->createTexture(std::string("../src/textures/no_texture.png"), true);
 
         VkDescriptorSet no_texture_set;
 
@@ -289,7 +289,7 @@ namespace GWIN
         currentScene->createSet(skyboxSet, texture2);
         skyboxSystem->setSkybox(skyboxSet, texture2.id);
 
-        uint32_t model = currentScene->createMesh("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/sphere.obj", std::nullopt);
+        uint32_t model = currentScene->createMesh("../src/models/sphere.obj", std::nullopt);
 
         int index = 0;
         for (uint32_t x = 0; x < 3; x++)

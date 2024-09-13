@@ -70,8 +70,8 @@ namespace GWIN
 
         pipeline = std::make_unique<GPipeLine>(
             device,
-            "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/skybox.vert.spv",
-            "C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/shaders/skybox.frag.spv",
+            "../src/shaders/skybox.vert.spv",
+            "../src/shaders/skybox.frag.spv",
             pipelineConfig);
 
         if (!pipeline)
