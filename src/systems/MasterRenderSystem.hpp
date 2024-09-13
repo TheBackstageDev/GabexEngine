@@ -1,13 +1,10 @@
 #pragma once
 
-#include "../EC/GWGameObject.hpp"
 #include "../EC/GWRenderer.hpp"
 #include "../EC/GWDescriptors.hpp"
-#include "../EC/GWFrameInfo.hpp"
 #include "../EC/keyboard_movement_controller.hpp"
-#include "../EC/GWModelLoader.hpp"
 #include "RenderSystem.hpp"
-#include "PointLightSystem.hpp"
+#include "lightSystem.hpp"
 #include "InterfaceSystem.hpp"
 #include "GWTextureHandler.hpp"
 #include "GWMaterialHandler.hpp"
@@ -16,8 +13,6 @@
 
 #include "GWOffscreenRenderer.hpp"
 
-#include <memory>
-#include <vector>
 #include <stdexcept>
 #include <chrono>
 
@@ -52,7 +47,7 @@ namespace GWIN
         //Render Systems
         std::unique_ptr<RenderSystem> renderSystem;
         std::unique_ptr<RenderSystem> wireframeRenderSystem;
-        std::unique_ptr<PointLightSystem> pointLightSystem;
+        std::unique_ptr<LightSystem> lightSystem;
         std::unique_ptr<SkyboxSystem> skyboxSystem;
         std::unique_ptr<GWInterface> interfaceSystem;
 

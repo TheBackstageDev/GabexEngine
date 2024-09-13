@@ -23,7 +23,7 @@ struct Material
 struct LightInfo {
     vec3 directionToLight;
     float distance;
-    vec3 surfaceNormal;
+    vec3 fragNormalWorld;
     vec3 viewDirection;
     Material material;
 };
@@ -46,48 +46,37 @@ layout(push_constant) uniform Push {
     uint materialIndex;
 } push;
 
-void calculatePointLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseLight, inout vec3 specularLight) {
-    float attenuation = 1.0 / (lightInfo.distance * lightInfo.distance);
+void computeLighting(LightInfo lightInfo, vec3 intensity, inout vec3 diffuseLight, inout vec3 specularLight) {
+  float cosAngIncidence = max(dot(lightInfo.fragNormalWorld, lightInfo.directionToLight), 0.0);
+  vec3 diffuse = intensity * cosAngIncidence * (1.0 - lightInfo.material.data.x);
 
-    float cosAngIncidence = max(dot(lightInfo.surfaceNormal, lightInfo.directionToLight), 0);
-    vec3 intensity = currentLight.color.xyz * currentLight.color.w * attenuation;
+  vec3 halfAngle = normalize(lightInfo.directionToLight + lightInfo.viewDirection);
+  float blinnTerm = max(dot(lightInfo.fragNormalWorld, halfAngle), 0.0);
+  blinnTerm = pow(blinnTerm, mix(50.0, 4.0, lightInfo.material.data.y));
 
-    vec3 diffuse = intensity * cosAngIncidence * (1.0 - lightInfo.material.data.x);
+  vec3 specular = intensity * blinnTerm * mix(0.04, 1.0, lightInfo.material.data.x);
 
-    vec3 halfAngle = normalize(lightInfo.directionToLight + lightInfo.viewDirection);
-    float blinnTerm = max(dot(lightInfo.surfaceNormal, halfAngle), 0.0);
-    blinnTerm = pow(blinnTerm, mix(50.0, 4.0, lightInfo.material.data.y));
-
-    vec3 specular = intensity * blinnTerm * mix(0.04, 1.0, lightInfo.material.data.x) * attenuation;
-    
-    diffuseLight += diffuse;
-    specularLight += specular;
+  diffuseLight += diffuse;
+  specularLight += specular;
 }
 
-void calculateSpotLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseLight, inout vec3 specularLight)
-{
+void calculateLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseLight, inout vec3 specularLight) {
+  vec3 intensity = currentLight.color.xyz * currentLight.color.w;
+
+  if (currentLight.position.w == 0.0) { // Point light
+    intensity /= (lightInfo.distance * lightInfo.distance);
+    computeLighting(lightInfo, intensity, diffuseLight, specularLight);
+  } else if (currentLight.position.w == 1.0) { // Spot light
     currentLight.direction.xyz = normalize(currentLight.direction.xyz);
     float cosTheta = dot(lightInfo.directionToLight, currentLight.direction.xyz);
 
     if (cosTheta > currentLight.direction.w) {
-        float attenuation = 1.0 / (lightInfo.distance * lightInfo.distance);
-
-        float smoothFactor = 0.01;
-        float spotEffect = smoothstep(currentLight.direction.w, currentLight.direction.w + smoothFactor, cosTheta);
-        vec3 intensity = currentLight.color.xyz * currentLight.color.w * attenuation * spotEffect;
-
-        float cosAngIncidence = max(dot(lightInfo.surfaceNormal, lightInfo.directionToLight), 0.0);
-        vec3 diffuse = intensity * cosAngIncidence * (1.0 - lightInfo.material.data.x);
-
-        vec3 halfAngle = normalize(lightInfo.directionToLight + lightInfo.viewDirection); 
-        float blinnTerm = max(dot(lightInfo.surfaceNormal, halfAngle), 0.0);
-        blinnTerm = pow(blinnTerm, mix(20.0, 2.0, lightInfo.material.data.y)); 
-
-        vec3 specular = intensity * blinnTerm * mix(0.04, 1.0, lightInfo.material.data.x);
-
-        diffuseLight += diffuse;
-        specularLight += specular;
+      float smoothFactor = 0.01;
+      float spotEffect = smoothstep(currentLight.direction.w, currentLight.direction.w + smoothFactor, cosTheta);
+      intensity *= spotEffect / lightInfo.distance;
+      computeLighting(lightInfo, intensity, diffuseLight, specularLight);
     }
+  }
 }
 
 void main() {
@@ -95,7 +84,6 @@ void main() {
 
     vec3 diffuseLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
     vec3 specularLight = vec3(0.0);
-    vec3 surfaceNormal = normalize(fragNormalWorld);
 
     vec3 cameraPosWorld = ubo.invView[3].xyz;
     vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
@@ -104,12 +92,12 @@ void main() {
     {
       vec3 sunDirection = normalize(ubo.sunLight.xyz);
 
-      float cosAngSunIncidence = max(dot(surfaceNormal, sunDirection), 0);
+      float cosAngSunIncidence = max(dot(fragNormalWorld, sunDirection), 0);
       diffuseLight += cosAngSunIncidence * ubo.sunLight.w;
 
               // Sunlight Specular Contribution
       vec3 sunHalfAngle = normalize(sunDirection + viewDirection);
-      float sunBlinnTerm = max(dot(surfaceNormal, sunHalfAngle), 0.0);
+      float sunBlinnTerm = max(dot(fragNormalWorld, sunHalfAngle), 0.0);
       sunBlinnTerm = pow(sunBlinnTerm, mix(50.0, 4.0, material.data.y)); 
 
       specularLight += 0.1 * ubo.sunLight.w * sunBlinnTerm * mix(0.04, 1.0, material.data.x); 
@@ -124,24 +112,22 @@ void main() {
         float distance = length(directionToLight);
 
         if (distance <= lightRadius) {
-            directionToLight = normalize(directionToLight);
+          directionToLight = normalize(directionToLight);
 
-            LightInfo lightInfo;
-            lightInfo.directionToLight = directionToLight;
-            lightInfo.distance = distance;
-            lightInfo.surfaceNormal = surfaceNormal;
-            lightInfo.viewDirection = viewDirection;
-            lightInfo.material = material;
+          LightInfo lightInfo;
+          lightInfo.directionToLight = directionToLight;
+          lightInfo.distance = distance;
+          lightInfo.fragNormalWorld = fragNormalWorld;
+          lightInfo.viewDirection = viewDirection;
+          lightInfo.material = material;
 
-            if (light.position.w == 0.0)
-            {
-               calculatePointLight(light, lightInfo, diffuseLight, specularLight);
-            } else if (light.position.w == 1.0) {
-              calculateSpotLight(light, lightInfo, diffuseLight, specularLight);
-            }
+          calculateLight(light, lightInfo, diffuseLight, specularLight);
         }
     }
 
-  vec4 sampledColor = texture(texSampler, fragUv);
-  outColor = vec4((diffuseLight + specularLight) * fragColor * material.color.rgb * sampledColor.rgb, 1.0); 
+    vec4 sampledColor = texture(texSampler, fragUv);
+    vec3 finalColor = (diffuseLight + specularLight) * fragColor * material.color.rgb * sampledColor.rgb;
+
+    // Gamma correction
+    outColor = vec4(pow(finalColor, vec3(1.0 / 2.2)), 1.0);
 }

@@ -121,6 +121,29 @@ namespace GWIN
         }
     }
 
+    float cutOffAngleBuffer = 0.0f;
+    void GWObjectList::inputLight(GWGameObject &selectedObject)
+    {
+        if (ImGui::CollapsingHeader("Light", nullptr))
+        {
+            if (selectedObject.light->cutOffAngle != 0.0f)
+            {
+                cutOffAngleBuffer = glm::degrees(selectedObject.light->cutOffAngle);
+                
+                ImGui::Text("Type: Spotlight");
+                ImGui::DragFloat("CutOff Angle: ", &cutOffAngleBuffer, .1f, 0.1f, 90.f, "%.1f");
+
+                selectedObject.light->cutOffAngle = glm::radians(cutOffAngleBuffer);
+            }
+            else
+            {
+                ImGui::Text("Type: Pointlight");
+            }
+
+            ImGui::DragFloat("Intensity: ", &selectedObject.light->lightIntensity, .1f, 0.f, FLT_MAX, "%.1f");
+        }
+    }
+
     void GWObjectList::inspectorGuis(GWGameObject &selectedObject)
     {
         if (ImGui::CollapsingHeader("Transform", nullptr))
@@ -147,19 +170,10 @@ namespace GWIN
             inputModel(selectedObject);
             inputTexture(selectedObject);
             inputMaterial(selectedObject);
-        } else {
-            if (ImGui::CollapsingHeader("Light", nullptr))
-            {
-                if (selectedObject.light->cutOffAngle != 0.0f)
-                {
-                    ImGui::Text("Type: Spotlight");
-                    ImGui::DragFloat("CutOff Angle: ", &selectedObject.light->cutOffAngle, .1f, 0.f, 90.f, "%.1f");
-                } else {
-                    ImGui::Text("Type: Pointlight");
-                }
-
-                ImGui::DragFloat("Intensity: ", &selectedObject.light->lightIntensity, .1f, 0.f, FLT_MAX, "%.1f");
-            }
+        }
+        else
+        {
+            inputLight(selectedObject);
         }
     }
 
@@ -374,10 +388,10 @@ namespace GWIN
         }
     }
 
-    void GWObjectList::createComponentAsset(const Asset& selectedAsset, FrameInfo& frameInfo)
+/*  void GWObjectList::createComponentAsset(const Asset& selectedAsset, FrameInfo& frameInfo)
     {
         ImGui::Text(selectedAsset.name.c_str());
-    }
+    } */
 
     void GWObjectList::addComponent(FrameInfo& frameInfo)
     {

@@ -14,14 +14,14 @@
 
 namespace GWIN
 {
-    class PointLightSystem
+    class LightSystem
     {
     public:
-        PointLightSystem(GWinDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout );
-        ~PointLightSystem();
+        LightSystem(GWinDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout );
+        ~LightSystem();
 
-        PointLightSystem(const PointLightSystem &) = delete;
-        PointLightSystem &operator=(const PointLightSystem &) = delete;
+        LightSystem(const LightSystem &) = delete;
+        LightSystem &operator=(const LightSystem &) = delete;
 
         void update(FrameInfo& frameInfo, GlobalUbo& Ubo);
         void render(FrameInfo& frameInfo);

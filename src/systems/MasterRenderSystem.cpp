@@ -117,7 +117,7 @@ namespace GWIN
 
         renderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), false, setLayouts);
         wireframeRenderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), true, setLayouts);
-        pointLightSystem = std::make_unique<PointLightSystem>(device, offscreenRenderer->getRenderPass(), globalSetLayout->getDescriptorSetLayout());
+        lightSystem = std::make_unique<LightSystem>(device, offscreenRenderer->getRenderPass(), globalSetLayout->getDescriptorSetLayout());
         skyboxSystem = std::make_unique<SkyboxSystem>(device, offscreenRenderer->getRenderPass(), setLayouts);
     }
 
@@ -131,7 +131,8 @@ namespace GWIN
         float aspect = renderer->getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
-        camera.updateFrustumPlanes();
+        if (frameInfo.flags.frustumCulling)
+            camera.updateFrustumPlanes();
     }
 
     void MasterRenderSystem::loadNewScene(const std::string pathToFile)
@@ -205,7 +206,7 @@ namespace GWIN
                 ubo.view = frameInfo.currentInfo.currentCamera.getView();
                 ubo.inverseView = frameInfo.currentInfo.currentCamera.getInverseView();
                 ubo.sunLight = interfaceSystem->getLightDirection(frameInfo.currentInfo.gameObjects.at(1));
-                pointLightSystem->update(frameInfo, ubo);
+                lightSystem->update(frameInfo, ubo);
                 materialHandler->setMaterials(ubo);
                 globalUboBuffer->writeToIndex(&ubo, frameIndex);
                 globalUboBuffer->flushIndex(frameIndex);
@@ -231,7 +232,7 @@ namespace GWIN
                     renderSystem->renderGameObjects(frameInfo);
                 }
 
-                //pointLightSystem->render(frameInfo);
+                //lightSystem->render(frameInfo);
 
                 if (isLoading)
                 {

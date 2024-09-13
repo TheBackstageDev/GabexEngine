@@ -122,12 +122,8 @@ namespace GWIN
             }
             else
             {
-                if (currentInfo.currentCamera.isPointInFrustum(currentInfo.gameObjects.at(id).transform.translation))
-                {
-                    element.drawElement(frameInfo);
-                }
-
-                ++it;
+                element.drawElement(frameInfo);
+                it++;
             }
         }
     }
@@ -156,7 +152,7 @@ namespace GWIN
 
             float x = radius * cosf(theta);
             float z = radius * sinf(theta);
-            float y = -height; // Base is at y = 0
+            float y = height; // Base is at y = 0
 
             vertices.push_back(glm::vec3(x, y, z));
 

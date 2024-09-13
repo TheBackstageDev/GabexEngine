@@ -28,8 +28,8 @@ namespace GWIN
         glm::mat4 projection{1.f};
         glm::mat4 view{1.f};
         glm::mat4 inverseView{1.f};
-        glm::vec4 sunLight{0.f, glm::radians(45.f), 0.f, .5f};  // w is intensity
-        glm::vec4 ambientLightColor{1.f, 1.f, 1.f, 0.5f}; //w is intensity
+        glm::vec4 sunLight{0.f, 0.f, 0.f, .5f};  // w is intensity
+        glm::vec4 ambientLightColor{1.f, 1.f, 1.f, 0.3f}; //w is intensity
         Light lights[MAX_LIGHTS];
         Material materials[MAX_MATERIALS];
         int numLights;

@@ -56,6 +56,7 @@ namespace GWIN
         void inputTexture(GWGameObject& selectedObject);
         void inputMaterial(GWGameObject& selectedObject);
 
+        void inputLight(GWGameObject &selectedObject); 
         void inputRotation(GWGameObject &selectedObject);
         void inputPosition(GWGameObject &selectedObject);
         void inspectorGuis(GWGameObject &selectedObject);

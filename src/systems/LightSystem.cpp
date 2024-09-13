@@ -1,4 +1,4 @@
-#include "PointLightSystem.hpp"
+#include "LightSystem.hpp"
 
 #include <glm/gtc/constants.hpp>
 #include <iostream>
@@ -11,18 +11,18 @@ namespace GWIN
         float radius;
     };
 
-    PointLightSystem::PointLightSystem(GWinDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout ) : GDevice(device)
+    LightSystem::LightSystem(GWinDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout ) : GDevice(device)
     {
         createPipelineLayout(globalSetLayout);
         createPipeline(renderPass);
     }
 
-    PointLightSystem::~PointLightSystem()
+    LightSystem::~LightSystem()
     {
         vkDestroyPipelineLayout(GDevice.device(), pipelineLayout, nullptr);
     }
 
-    void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout)
+    void LightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout)
     {
         VkPushConstantRange pushConstant{};
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -43,7 +43,7 @@ namespace GWIN
         }
     }
 
-    void PointLightSystem::createPipeline(VkRenderPass renderPass)
+    void LightSystem::createPipeline(VkRenderPass renderPass)
     {
         assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
@@ -61,7 +61,7 @@ namespace GWIN
             pipelineConfig);
     }
 
-    void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
+    void LightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
         int lightIndex = 0;
         for (auto& kv : frameInfo.currentInfo.gameObjects) {
             auto& obj = kv.second;
@@ -85,7 +85,7 @@ namespace GWIN
         ubo.numLights = lightIndex;
     }
 
-    void PointLightSystem::render(FrameInfo& frameInfo)
+    void LightSystem::render(FrameInfo& frameInfo)
     {
         // render
         Pipeline->bind(frameInfo.commandBuffer);
