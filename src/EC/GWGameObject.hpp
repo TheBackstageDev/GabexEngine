@@ -95,10 +95,6 @@ namespace GWIN
         glm::vec3 color{};
         TransformComponent transform{};
 
-        //opitional components
-        std::array<uint32_t, 6> Textures; // ID of the textures
-        uint32_t Material = 0; //ID of the material
-
         int32_t model = -1; //ID of the mesh
         std::unique_ptr<LightComponent> light = nullptr;
 

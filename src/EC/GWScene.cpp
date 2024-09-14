@@ -18,7 +18,7 @@ namespace GWIN
         if (createInfo.sceneJson == "")
         {
             auto skybox = GWGameObject::createGameObject("Skybox");
-            skybox.model = createMesh("C:/Users/cleve/OneDrive/Documents/GitHub/GabexEngine/src/models/cube.obj", std::nullopt);
+            skybox.model = createMesh("../src/models/cube.obj", std::nullopt, std::nullopt);
 
             auto directionalLight = GWGameObject::createGameObject("Directional Light");
             directionalLight.transform.rotation.y = -.25f * glm::two_pi<float>();
@@ -64,24 +64,18 @@ namespace GWIN
                     gameObject.transform.rotation = rotation;
                     gameObject.transform.translation = translation;
 
-                    if (obj.contains("textures"))
-                    {
-                        auto textures = obj["textures"].get<std::vector<uint32_t>>();
-                        for (size_t i = 0; i < textures.size(); ++i)
-                        {
-                            gameObject.Textures[i] = textures[i];
-                        }
-                    }
-
-                    if (obj.contains("material"))
-                    {
-                        gameObject.Material = obj["material"].get<uint32_t>();
-                    }
-
                     if (obj.contains("model"))
                     {
                         gameObject.model = obj["model"].get<uint32_t>();
-                    } 
+                    }
+
+                    if (obj.contains("light"))
+                    {
+                        auto light = std::make_unique<LightComponent>();
+                        light->lightIntensity = obj["light"]["lightIntensity"].get<float>();
+                        light->cutOffAngle = obj["light"]["cutOffAngle"].get<float>();
+                        gameObject.light = std::move(light);
+                    }
                     
                     gameObjects.emplace(gameObject.getId(), std::move(gameObject));
                 } 
@@ -119,8 +113,7 @@ namespace GWIN
                 {
                     Texture texture = textureHandler->createTexture(textureData["path"].get<std::string>(), true);
 
-                    VkDescriptorSet newSet;
-                    createSet(newSet, texture);
+                    createSet(texture);
                 }
             }
 
@@ -151,8 +144,10 @@ namespace GWIN
 
     GWScene::~GWScene() {};
 
-    void GWScene::createSet(VkDescriptorSet &set, Texture &texture, bool replace)
+    void GWScene::createSet(Texture &texture, bool replace)
     {
+        VkDescriptorSet set;
+
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = texture.textureImage.layout;
         imageInfo.imageView = texture.textureImage.imageView;
@@ -216,7 +211,6 @@ namespace GWIN
         }
 
         obj.transform.translation = dPos;
-        obj.Textures[0] = 0;
 
         createGameObject(obj);
     }
@@ -231,7 +225,7 @@ namespace GWIN
         gameObjects.erase(id);
     }
 
-    uint32_t GWScene::createMesh(const std::string &pathToFile, std::optional<uint32_t> replaceId = std::nullopt)
+    uint32_t GWScene::createMesh(const std::string &pathToFile, std::optional<uint32_t> replaceId, std::optional<std::string> info)
     {
         modelLoader.importFile(pathToFile, model);
 
@@ -243,7 +237,20 @@ namespace GWIN
         }
         else
         {
-            meshes[++lastMeshID] = std::move(model);
+            uint32_t newMeshID = ++lastMeshID;
+
+            if (info.has_value())
+            {
+                nlohmann::json jsonData = nlohmann::json::parse(info.value());
+
+                if (jsonData.contains("material"))
+                {
+                    uint32_t materialId = jsonData["material"].get<uint32_t>();
+                    model->Material = materialId;
+                }
+            }
+
+            meshes[newMeshID] = std::move(model);
 
             return lastMeshID;
         }
@@ -268,7 +275,7 @@ namespace GWIN
 
         for (const auto& mesh : meshes)
         {
-            jsonObject["meshes"].push_back(nlohmann::json::parse(mesh.second->getPath()));
+            jsonObject["meshes"].push_back(nlohmann::json::parse(mesh.second->toJson()));
         }
 
         for (const auto &camera : cameras)

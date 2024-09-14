@@ -56,8 +56,6 @@ namespace GWIN
         {
             jsonObject["model"] = model;
         }
-        jsonObject["textures"] = Textures;
-        jsonObject["material"] = Material;
 
         return jsonObject.dump();
     }

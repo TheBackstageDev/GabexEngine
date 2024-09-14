@@ -25,6 +25,9 @@ namespace GWIN
 
         void update(FrameInfo& frameInfo, GlobalUbo& Ubo);
         void render(FrameInfo& frameInfo);
+
+        void calculateLightMatrix(std::array<glm::mat4, 6> &matrix, float aspect, float Near, float Far);
+        void calculateDirectionalLightMatrix(glm::mat4& matrix, float Near, float Far);
     private:
         void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
         void createPipeline(VkRenderPass renderPass);

@@ -18,7 +18,8 @@ namespace GWIN
         : window(window), device(device)
     {
         renderer = std::make_unique<GWRenderer>(window, device);
-        offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount());
+        offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount(), false);
+        shadowMapRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount(), true);
         cubemapHandler = std::make_unique<GWCubemapHandler>(device);
         materialHandler = std::make_unique<GWMaterialHandler>(device);
 
@@ -28,8 +29,8 @@ namespace GWIN
         //Initializes GUI
         interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat(), textureHandler, materialHandler);
 
-        interfaceSystem->setCreateTextureCallback([this](VkDescriptorSet& set, Texture& texture, bool replace = false) {
-            currentScene->createSet(set, texture, replace);
+        interfaceSystem->setCreateTextureCallback([this](Texture& texture, bool replace = false) {
+            currentScene->createSet(texture, replace);
         });
 
         interfaceSystem->setSaveSceneCallback([this](const std::string path) {
@@ -102,6 +103,9 @@ namespace GWIN
         globalDescriptorSets.resize(GWinSwapChain::MAX_FRAMES_IN_FLIGHT);
 
         textureHandler = std::make_unique<GWTextureHandler>(imageLoader, device);
+
+        modelLoader.setCreateTextureCallback([this](Texture &texture, bool replace = false)
+                                             { currentScene->createSet(texture, replace); });
 
         for (int i = 0; i < globalDescriptorSets.size(); ++i)
         {
@@ -182,9 +186,10 @@ namespace GWIN
                 // update
 
                 auto& interfaceFlags = interfaceSystem->getFlags();
+                auto& currentCam = currentScene->getCurrentCamera();
 
                 SceneInfo currentInfo{
-                    currentScene->getCurrentCamera(),
+                    currentCam,
                     currentScene->getGameObjects(),
                     currentScene->getMeshes(),
                     currentScene->getTextures()};
@@ -207,6 +212,7 @@ namespace GWIN
                 ubo.inverseView = frameInfo.currentInfo.currentCamera.getInverseView();
                 ubo.sunLight = interfaceSystem->getLightDirection(frameInfo.currentInfo.gameObjects.at(1));
                 lightSystem->update(frameInfo, ubo);
+                lightSystem->calculateDirectionalLightMatrix(ubo.sunLightSpaceMatrix, currentCam.getNearClip(), currentCam.getFarClip());
                 materialHandler->setMaterials(ubo);
                 globalUboBuffer->writeToIndex(&ubo, frameIndex);
                 globalUboBuffer->flushIndex(frameIndex);
@@ -267,6 +273,8 @@ namespace GWIN
 
     void MasterRenderSystem::loadGameObjects()
     {
+        Texture no_texture = textureHandler->createTexture(std::string("../src/textures/no_texture.png"), true);
+
         CubeMapInfo info{};
         info.negX = "../src/textures/cubeMap/nx.png";
         info.posX = "../src/textures/cubeMap/px.png";
@@ -274,49 +282,28 @@ namespace GWIN
         info.posY = "../src/textures/cubeMap/py.png"; 
         info.negZ = "../src/textures/cubeMap/nz.png";
         info.posZ = "../src/textures/cubeMap/pz.png";
-        VkDescriptorSet skyboxSet;
         CubeMap cubeMap = cubemapHandler->createCubeMap(info);
         Texture texture2{};
         texture2.textureImage = cubeMap.Cubeimage;
         textureHandler->createSampler(0, texture2.textureSampler);
 
-        Texture no_texture = textureHandler->createTexture(std::string("../src/textures/no_texture.png"), true);
+        currentScene->createSet(no_texture);
 
-        VkDescriptorSet no_texture_set;
+        currentScene->createSet(texture2);
+        skyboxSystem->setSkybox(currentScene->getTextures().at(1), texture2.id);
 
-        currentScene->createSet(no_texture_set, no_texture);
+        uint32_t model = currentScene->createMesh("../src/models/Sponza/sponza.obj", std::nullopt);
+        GWGameObject& obj = GWGameObject::createGameObject("Sponza");
+        obj.model = model;
+        obj.transform.scale = glm::vec3{0.02f, 0.02f, 0.02f};
 
-        currentScene->createSet(skyboxSet, texture2);
-        skyboxSystem->setSkybox(skyboxSet, texture2.id);
+        auto& subModels = currentScene->getMeshes().at(model)->getSubModels();
+        std::vector<std::string> texturePaths = {
+            "../src/models/Sponza/textures/background.tga",
+            "../src/models/Sponza/textures/chain_texture.tga",
+            "../src/models/Sponza/textures/lion.tga",
+            "../src/models/Sponza/textures/spnza_bricks_a_diff.tga"};
 
-        uint32_t model = currentScene->createMesh("../src/models/sphere.obj", std::nullopt);
-
-        int index = 0;
-        for (uint32_t x = 0; x < 3; x++)
-        {
-            for (uint32_t z = 0; z < 3; z++)
-            {
-                index++;
-                auto sphere = GWGameObject::createGameObject("Sphere " + std::to_string(index));
-                sphere.model = model;
-                sphere.Textures[0] = 0;
-                sphere.transform.translation.x = x * 1.25;
-                sphere.transform.translation.z = z * 1.25;
-                sphere.transform.scale = glm::vec3{ .5f };
-
-                sphere.Material = materialHandler->createMaterial(
-                    1.0f / (x + 1), 
-                    1.0f / (z + 1), 
-                    { 
-                        (1.0f + cos(3.14159f * x / 5.0f)) * 0.5f,  // R component varies between 0 and 1
-                        (1.0f + cos(3.14159f * z / 5.0f)) * 0.5f,  // G component varies between 0 and 1
-                        (1.0f + sin(3.14159f * (x + z) / 10.0f)) * 0.5f, // B component varies between 0 and 1
-                        1.0f
-                    }, std::string("Material " + std::to_string(index))
-                );
-                
-                currentScene->createGameObject(sphere);
-            }
-        }
+        currentScene->createGameObject(obj);
     }
 }

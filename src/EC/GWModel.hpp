@@ -11,6 +11,8 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
+#include "../JSONHandler.hpp"
+
 namespace GWIN
 {
     class GWModel
@@ -48,10 +50,28 @@ namespace GWIN
         void addSubModel(std::shared_ptr<GWModel>& model) { subModels.push_back(std::move(model)); }
         bool hasSubModels() { return subModels.size() > 0; }
 
+        std::vector<std::shared_ptr<GWModel>>& getSubModels() { return subModels; }
+
         std::string getPath() const { return pathToModel; }
+
+        std::string toJson() const
+        {
+            nlohmann::json jsonObject;
+
+            jsonObject["pathToModel"] = pathToModel;
+
+            jsonObject["textures"] = Textures;
+            jsonObject["material"] = Material;
+
+            return jsonObject.dump(4); 
+        }
+
         void setPath(const std::string path) { pathToModel = path; }
 
         uint32_t numVertices() { return vertexCount; }
+
+        std::array<uint32_t, 6> Textures{0, 0, 0, 0, 0, 0}; // ID of the textures
+        uint32_t Material = 0; //ID of the material
     private:
         void createVertexBuffers(const std::vector<Vertex> &vertices);
         void createIndexBuffers(const std::vector<uint32_t> &indices);

@@ -17,7 +17,7 @@ namespace GWIN
             return false;
         }
 
-        std::vector<std::shared_ptr<GWModel>> objects = processScene(scene);
+        std::vector<std::shared_ptr<GWModel>> objects = processScene(scene, pfile);
 
         if (objects.size() > 1)
         {
@@ -38,7 +38,7 @@ namespace GWIN
         return true;
     }
 
-    std::vector<std::shared_ptr<GWModel>> GWModelLoader::processScene(const aiScene* scene)
+    std::vector<std::shared_ptr<GWModel>> GWModelLoader::processScene(const aiScene *scene, const std::string &pfile)
     {
         assert(scene->HasMeshes() && "Scene needs Meshes!");
 
@@ -46,23 +46,25 @@ namespace GWIN
 
         for (unsigned short i = 0; i < scene->mNumMeshes; ++i)
         {
-            processedModels.push_back(processMesh(scene->mMeshes[i]));
+            aiMesh *mesh = scene->mMeshes[i];
+            aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+            processedModels.push_back(processMesh(mesh, material, pfile));
         }
 
         return processedModels;
     }
 
-    std::shared_ptr<GWModel> GWModelLoader::processMesh(aiMesh* mesh)
+    std::shared_ptr<GWModel> GWModelLoader::processMesh(aiMesh *mesh, aiMaterial *material, const std::string &pfile)
     {
-        assert(mesh->mNumVertices >= 3 && "Mesh needs atleast 3 Vertices!");
+        assert(mesh->mNumVertices >= 3 && "Mesh needs at least 3 Vertices!");
 
-        //Processes Vertices
+        // Process Vertices
         std::vector<GWModel::Vertex> vertices{mesh->mNumVertices};
         for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
         {
-            glm::vec2 vertexUv = { 0.0f, 0.0f };
+            glm::vec2 vertexUv = {0.0f, 0.0f};
             glm::vec3 vertexTangent = {0.0f, 0.0f, 0.0f};
-            if (mesh->mTextureCoords[0]) 
+            if (mesh->mTextureCoords[0])
             {
                 vertexUv.x = mesh->mTextureCoords[0][i].x;
                 vertexUv.y = 1 - mesh->mTextureCoords[0][i].y;
@@ -74,7 +76,9 @@ namespace GWIN
             {
                 glm::vec3 vertexColor = {mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b};
                 vertex.color = vertexColor;
-            } else {
+            }
+            else
+            {
                 vertex.color = {.5f, .5f, .5f};
             }
             if (mesh->HasNormals())
@@ -92,22 +96,62 @@ namespace GWIN
             vertices[i] = vertex;
         }
 
-        //Processes Indices
+        // Process Indices
         std::vector<unsigned int> indices;
-        for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
-            const aiFace& Face = mesh->mFaces[i];
-            if(Face.mNumIndices == 3) {
-                indices.push_back(Face.mIndices[0]);
-                indices.push_back(Face.mIndices[1]);
-                indices.push_back(Face.mIndices[2]);
+        for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
+        {
+            const aiFace &face = mesh->mFaces[i];
+            if (face.mNumIndices == 3)
+            {
+                indices.push_back(face.mIndices[0]);
+                indices.push_back(face.mIndices[1]);
+                indices.push_back(face.mIndices[2]);
             }
         }
 
         const GWModel::Builder builder{vertices, indices};
 
-        std::shared_ptr<GWModel> model;
-        model = std::make_shared<GWModel>(device, builder);
+        std::shared_ptr<GWModel> model = std::make_shared<GWModel>(device, builder);
+
+        processMaterialTextures(model, material, pfile);
 
         return model;
+    }
+
+    std::unordered_map<std::string, Texture> textureCache;
+
+    void GWModelLoader::processMaterialTextures(std::shared_ptr<GWModel> &model, aiMaterial *material, const std::string &pfile)
+    {
+        auto loadTexture = [&](aiTextureType type, const uint32_t textureType)
+        {
+            if (material->GetTextureCount(type) > 0)
+            {
+                aiString path;
+                if (material->GetTexture(type, 0, &path) == AI_SUCCESS)
+                {
+                    std::string texturePath = std::string(path.C_Str());
+
+                    std::string baseDir = pfile.substr(0, pfile.find_last_of('/') + 1);
+                    std::string fullPath = baseDir + texturePath;
+
+                    if (textureCache.find(fullPath) != textureCache.end())
+                    {
+                        Texture& cachedTexture = textureCache[fullPath];
+                        model->Textures[textureType] = cachedTexture.id;
+                    }
+                    else
+                    {
+                        Texture tex = textureHandler->createTexture(fullPath, true);
+                        model->Textures[textureType] = tex.id;
+
+                        textureCache[fullPath] = tex;
+
+                        createTextureCallback(tex, false);
+                    }
+                }
+            }
+        };
+
+        loadTexture(aiTextureType_DIFFUSE, TEXTURE_TYPE_DIFFUSE);
     }
 }

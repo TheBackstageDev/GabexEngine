@@ -43,6 +43,7 @@ namespace GWIN
 
         std::unique_ptr<GWRenderer> renderer;
         std::unique_ptr<GWOffscreenRenderer> offscreenRenderer;
+        std::unique_ptr<GWOffscreenRenderer> shadowMapRenderer;
 
         //Render Systems
         std::unique_ptr<RenderSystem> renderSystem;
@@ -57,11 +58,12 @@ namespace GWIN
         std::unique_ptr<GWDescriptorPool> texturePool{};
         std::unique_ptr<GWDescriptorSetLayout> textureSetLayout;
 
-        GWModelLoader modelLoader{device};
         GWImageLoader imageLoader{device};
         std::unique_ptr<GWTextureHandler> textureHandler;
         std::unique_ptr<GWCubemapHandler> cubemapHandler;
         std::unique_ptr<GWMaterialHandler> materialHandler;
+        
+        GWModelLoader modelLoader{device, textureHandler};
 
         JSONHandler jsonHandler{};
 

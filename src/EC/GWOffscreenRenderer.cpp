@@ -5,9 +5,10 @@
 
 namespace GWIN
 {
-    GWOffscreenRenderer::GWOffscreenRenderer(GWindow& window, GWinDevice& device, VkFormat depthFormat, float imageCount) : window(window), device(device), depthFormat(depthFormat)
+    GWOffscreenRenderer::GWOffscreenRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, float imageCount, bool isShadowMap) : window(window), device(device), depthFormat(depthFormat)
     {
-        init(imageCount);
+        this->isShadowMap = isShadowMap;
+        init(imageCount, isShadowMap);
     }
 
     GWOffscreenRenderer::~GWOffscreenRenderer()
@@ -36,13 +37,16 @@ namespace GWIN
         vkDestroyRenderPass(device.device(), renderPass, nullptr);
     }
 
-    void GWOffscreenRenderer::init(float imageCount)
+    void GWOffscreenRenderer::init(float imageCount, bool isShadowMap)
     {
         createImageSampler();
-        createImages(imageCount);
-        createImageViews();
-        createRenderPass();
-        createDepthResources();
+        if (!isShadowMap)
+        {
+            createImages(imageCount);
+            createImageViews();
+        }
+        createRenderPass(isShadowMap);
+        createDepthResources(imageCount);
         createFramebuffers();
     }
 
@@ -76,78 +80,93 @@ namespace GWIN
     {
         if (imageIndex >= images.size() - 1)
         {
-            for (size_t i = 0; i < images.size(); ++i)
-            {
-                if (frameBuffers[i] != VK_NULL_HANDLE)
+                for (size_t i = 0; i < images.size(); ++i)
                 {
-                    vkDestroyFramebuffer(device.device(), frameBuffers[i], nullptr);
-                    frameBuffers[i] = VK_NULL_HANDLE;
+                    if (frameBuffers[i] != VK_NULL_HANDLE)
+                    {
+                        vkDestroyFramebuffer(device.device(), frameBuffers[i], nullptr);
+                        frameBuffers[i] = VK_NULL_HANDLE;
+                    }
+
+                    if (!isShadowMap)
+                    {
+                        if (imageViews[i] != VK_NULL_HANDLE)
+                        {
+                            vkDestroyImageView(device.device(), imageViews[i], nullptr);
+                            imageViews[i] = VK_NULL_HANDLE;
+                        }
+
+                        if (images[i] != VK_NULL_HANDLE)
+                        {
+                            vmaDestroyImage(device.getAllocator(), images[i], imageAllocations[i]);
+                            images[i] = VK_NULL_HANDLE;
+                            imageAllocations[i] = VK_NULL_HANDLE;
+                        }
+                    }
                 }
 
-                if (imageViews[i] != VK_NULL_HANDLE)
+                if (!isShadowMap)
                 {
-                    vkDestroyImageView(device.device(), imageViews[i], nullptr);
-                    imageViews[i] = VK_NULL_HANDLE;
+
+                    for (size_t i = 0; i < images.size(); ++i)
+                    {
+                        VkImageCreateInfo imageInfo{};
+                        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+                        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+                        imageInfo.extent.width = window.getExtent().width;
+                        imageInfo.extent.height = window.getExtent().height;
+                        imageInfo.extent.depth = 1;
+                        imageInfo.mipLevels = 1;
+                        imageInfo.arrayLayers = 1;
+                        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+                        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+                        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+                        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+                        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+                        VmaAllocationCreateInfo allocInfo{};
+                        allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+                        if (vmaCreateImage(device.getAllocator(), &imageInfo, &allocInfo, &images[i], &imageAllocations[i], nullptr) != VK_SUCCESS)
+                        {
+                            throw std::runtime_error("Failed to create offscreen image!");
+                        }
+                    }
+
+                    for (size_t i = 0; i < imageViews.size(); i++)
+                    {
+                        VkImageViewCreateInfo viewInfo{};
+                        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+                        viewInfo.image = images[i];
+                        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                        viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+                        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                        viewInfo.subresourceRange.baseMipLevel = 0;
+                        viewInfo.subresourceRange.levelCount = 1;
+                        viewInfo.subresourceRange.baseArrayLayer = 0;
+                        viewInfo.subresourceRange.layerCount = 1;
+
+                        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &imageViews[i]) != VK_SUCCESS)
+                        {
+                            throw std::runtime_error("Failed to create offscreen image views!");
+                        }
+                    }
                 }
-
-                if (images[i] != VK_NULL_HANDLE)
-                {
-                    vmaDestroyImage(device.getAllocator(), images[i], imageAllocations[i]);
-                    images[i] = VK_NULL_HANDLE;
-                    imageAllocations[i] = VK_NULL_HANDLE;
-                }
-            }
-
-            for (size_t i = 0; i < images.size(); ++i)
-            {
-                VkImageCreateInfo imageInfo{};
-                imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-                imageInfo.imageType = VK_IMAGE_TYPE_2D;
-                imageInfo.extent.width = window.getExtent().width;
-                imageInfo.extent.height = window.getExtent().height;
-                imageInfo.extent.depth = 1;
-                imageInfo.mipLevels = 1;
-                imageInfo.arrayLayers = 1;
-                imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-                imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-                imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-                imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-                imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-                imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-                VmaAllocationCreateInfo allocInfo{};
-                allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-                if (vmaCreateImage(device.getAllocator(), &imageInfo, &allocInfo, &images[i], &imageAllocations[i], nullptr) != VK_SUCCESS)
-                {
-                    throw std::runtime_error("Failed to create offscreen image!");
-                }
-            }
-
-            for (size_t i = 0; i < imageViews.size(); i++)
-            {
-                VkImageViewCreateInfo viewInfo{};
-                viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-                viewInfo.image = images[i];
-                viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-                viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-                viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                viewInfo.subresourceRange.baseMipLevel = 0;
-                viewInfo.subresourceRange.levelCount = 1;
-                viewInfo.subresourceRange.baseArrayLayer = 0;
-                viewInfo.subresourceRange.layerCount = 1;
-
-                if (vkCreateImageView(device.device(), &viewInfo, nullptr, &imageViews[i]) != VK_SUCCESS)
-                {
-                    throw std::runtime_error("Failed to create offscreen image views!");
-                }
-            }
 
             for (size_t i = 0; i < frameBuffers.size(); i++)
             {
-                std::array<VkImageView, 2> attachments = {
-                    imageViews[i],
-                    depthImageViews[i]};
+                std::array<VkImageView, 2> attachments;
+
+                if (!isShadowMap)
+                {
+                    attachments = {
+                        imageViews[i],
+                        depthImageViews[i]
+                    };
+                } else {
+                    attachments = {depthImageViews[i]};
+                }
 
                 VkFramebufferCreateInfo framebufferInfo{};
                 framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -253,11 +272,11 @@ namespace GWIN
         }
     }
 
-    void GWOffscreenRenderer::createDepthResources()
+    void GWOffscreenRenderer::createDepthResources(float imageCount)
     {
-        depthImages.resize(imageViews.size());
-        depthImagesAllocation.resize(imageViews.size());
-        depthImageViews.resize(imageViews.size());
+        depthImages.resize(imageCount);
+        depthImagesAllocation.resize(imageCount);
+        depthImageViews.resize(imageCount);
 
         for (size_t i = 0; i < depthImages.size(); i++)
         {
@@ -296,27 +315,32 @@ namespace GWIN
         }
     }
 
-    void GWOffscreenRenderer::createRenderPass()
+    void GWOffscreenRenderer::createRenderPass(bool isShadowMap)
     {
-        VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = VK_FORMAT_R8G8B8A8_SRGB;
-        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        std::array<VkAttachmentDescription, 2> attachments = {};
 
-        VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = depthFormat;
-        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        // Color attachment
+        if (!isShadowMap)
+        {
+            attachments[0].format = VK_FORMAT_R8G8B8A8_SRGB;
+            attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+            attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            attachments[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        }
+
+        // Depth attachment
+        attachments[1].format = depthFormat;
+        attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference colorAttachmentRef{};
         colorAttachmentRef.attachment = 0;
@@ -328,21 +352,33 @@ namespace GWIN
 
         VkSubpassDescription subpass{};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
+        if (!isShadowMap)
+        {
+            subpass.colorAttachmentCount = 1;
+            subpass.pColorAttachments = &colorAttachmentRef;
+        }
         subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
-        std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+        VkSubpassDependency dependency{};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
         VkRenderPassCreateInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         renderPassInfo.pAttachments = attachments.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &dependency;
 
         if (vkCreateRenderPass(device.device(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
         {
-            throw std::runtime_error("Failed to create Offscreen render pass!");
+            throw std::runtime_error("Failed to create offscreen render pass!");
         }
     }
 

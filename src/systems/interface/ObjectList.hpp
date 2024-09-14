@@ -21,7 +21,7 @@ namespace GWIN
         uint32_t getSelectedObject() { return selectedItem; }
         bool isAssetSelected() { return AssetSelected; }
 
-        void setCreateTextureCallback(std::function<void(VkDescriptorSet &, Texture &texture, bool replace)> callback) { createTextureCallback = callback; };
+        void setCreateTextureCallback(std::function<void(Texture &texture, bool replace)> callback) { createTextureCallback = callback; };
         void setCreateMeshCallback(std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> callback) { createMeshCallback = callback; };
         void setRemoveMeshCallback(std::function<void(uint32_t id)> callback) { removeMeshCallback = callback; };
         void setCreateObjectCallback(std::function<void(GameObjectType type)> callback) { createObjectCallback = callback; };
@@ -43,7 +43,7 @@ namespace GWIN
         glm::vec3 scaleBuffer = { 1.0f, 1.0f, 1.0f };
 
         std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> createMeshCallback;
-        std::function<void(VkDescriptorSet &, Texture &texture, bool replace)> createTextureCallback; 
+        std::function<void(Texture &texture, bool replace)> createTextureCallback; 
         std::function<void(uint32_t id)> removeMeshCallback;
         std::function<void(GameObjectType type)> createObjectCallback;
         std::function<void(uint32_t id)> removeObjectCallback;
@@ -53,13 +53,13 @@ namespace GWIN
         std::unique_ptr<AssetsWindow>& assets;
 
         void inputModel(GWGameObject &selectedObject);
-        void inputTexture(GWGameObject& selectedObject);
-        void inputMaterial(GWGameObject& selectedObject);
+        void inputTexture(std::shared_ptr<GWModel> &selectedObject);
+        void inputMaterial(std::shared_ptr<GWModel> &selectedObject);
 
         void inputLight(GWGameObject &selectedObject); 
         void inputRotation(GWGameObject &selectedObject);
         void inputPosition(GWGameObject &selectedObject);
-        void inspectorGuis(GWGameObject &selectedObject);
+        void inspectorGuis(GWGameObject &selectedObject, FrameInfo &frameInfo);
 
         //Asset-Type specific options
         void materialEditor(Asset& selectedAsset);

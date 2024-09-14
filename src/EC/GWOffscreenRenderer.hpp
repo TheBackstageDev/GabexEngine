@@ -14,12 +14,12 @@ namespace GWIN
     class GWOffscreenRenderer
     {
     public:
-        GWOffscreenRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, float imageCount);
+        GWOffscreenRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, float imageCount, bool isShadowMap);
         ~GWOffscreenRenderer();
 
         VkRenderPass getRenderPass() const { return renderPass; }
-        VkImage getCurrentImage() const { return images[imageIndex]; }
-        VkImageView getCurrentImageView() const { return imageViews[imageIndex]; }
+        VkImage getCurrentImage() const { if (!isShadowMap) { return images[imageIndex]; } else { return depthImages[imageIndex]; }; }
+        VkImageView getCurrentImageView() const { if (!isShadowMap) { return imageViews[imageIndex]; } else { return depthImageViews[imageIndex]; }; }
 
         void startOffscreenRenderPass(VkCommandBuffer commandBuffer);
         void endOffscreenRenderPass(VkCommandBuffer commandBuffer);
@@ -31,14 +31,14 @@ namespace GWIN
         GWindow &window;
         GWinDevice &device;
 
-        void init(float imageCount);
+        void init(float imageCount, bool isShadowMap);
         void createImageSampler();
 
         void createImages(float imageCount);
         void createImageViews();
-        void createDepthResources();
+        void createDepthResources(float imageCount);
 
-        void createRenderPass();
+        void createRenderPass(bool isShadowMap);
         void createFramebuffers();
 
         std::vector<VkImage> images;
@@ -57,5 +57,7 @@ namespace GWIN
         VkRenderPass renderPass;
 
         uint32_t imageIndex{0};
+
+        bool isShadowMap{false};
     };
 }

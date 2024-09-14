@@ -48,7 +48,7 @@ namespace GWIN
         void newFrame(FrameInfo& frameInfo);
         void render(VkCommandBuffer commandBuffer);
 
-        void setCreateTextureCallback(std::function<void(VkDescriptorSet &, Texture &texture, bool replace)> callback) { createTextureCallback = callback; objectList.setCreateTextureCallback(callback); };
+        void setCreateTextureCallback(std::function<void(Texture &texture, bool replace)> callback) { createTextureCallback = callback; objectList.setCreateTextureCallback(callback); };
         void setSaveSceneCallback(std::function<void(const std::string path)> callback) { SaveSceneCallback = callback;  };
         void setLoadSceneCallback(std::function<void(const std::string path)> callback) { LoadSceneCallback = callback; };
         void setCreateMeshCallback(std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> callback) { createMeshCallback = callback; objectList.setCreateMeshCallback(callback); };
@@ -67,7 +67,7 @@ namespace GWIN
         GWindow& window;
         GWinDevice& device;
 
-        std::function<void(VkDescriptorSet &, Texture &texture, bool replace)> createTextureCallback;
+        std::function<void(Texture &texture, bool replace)> createTextureCallback;
         std::function<void(const std::string path)> SaveSceneCallback;
         std::function<void(const std::string path)> LoadSceneCallback;
         std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> createMeshCallback;

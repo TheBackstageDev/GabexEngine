@@ -81,9 +81,9 @@ namespace GWIN
         }
     }
 
-    void GWObjectList::inputTexture(GWGameObject &selectedObject)
+    void GWObjectList::inputTexture(std::shared_ptr<GWModel> &selectedObject)
     {
-        if (selectedObject.Textures[0] == 0)
+        if (selectedObject->Textures[0] == 0)
             return;
 
         if (ImGui::CollapsingHeader("Texture", nullptr))
@@ -91,7 +91,7 @@ namespace GWIN
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.0f, 0.0f, 0.6f));
             if (ImGui::Button("Remove Texture"))
             {
-                selectedObject.Textures[0] = 0;
+                selectedObject->Textures[0] = 0;
                 GWConsole::addLog("Texture removed from the selected object.");
             }
             ImGui::PopStyleColor();
@@ -101,17 +101,17 @@ namespace GWIN
         }
     }
 
-    void GWObjectList::inputMaterial(GWGameObject &selectedObject)
+    void GWObjectList::inputMaterial(std::shared_ptr<GWModel> &selectedObject)
     {
-        if (selectedObject.Material == 0)
+        if (selectedObject->Material == 0)
             return;
 
         if (ImGui::CollapsingHeader("Material", nullptr))
         {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.0f, 0.0f, 0.6f));
-            if (ImGui::Button("Remove Naterial"))
+            if (ImGui::Button("Remove Material"))
             {
-                selectedObject.Material = 0; 
+                selectedObject->Material = 0; 
                 GWConsole::addLog("Material removed from the selected object.");
             }
             ImGui::PopStyleColor();
@@ -144,7 +144,7 @@ namespace GWIN
         }
     }
 
-    void GWObjectList::inspectorGuis(GWGameObject &selectedObject)
+    void GWObjectList::inspectorGuis(GWGameObject &selectedObject, FrameInfo& frameInfo)
     {
         if (ImGui::CollapsingHeader("Transform", nullptr))
         {
@@ -167,9 +167,13 @@ namespace GWIN
 
         if (selectedObject.light == nullptr)
         {
-            inputModel(selectedObject);
-            inputTexture(selectedObject);
-            inputMaterial(selectedObject);
+            if (selectedObject.model != -1)
+            {
+                auto &model = frameInfo.currentInfo.meshes.at(selectedObject.model);
+                inputModel(selectedObject);
+                inputTexture(model);
+                inputMaterial(model);
+            }
         }
         else
         {
@@ -324,13 +328,12 @@ namespace GWIN
                 }
 
                 Texture newTexture;
-                VkDescriptorSet textureSet = VK_NULL_HANDLE;
 
                 if (selectedAsset.info.index == 0)
                 {
                     newTexture = assets->getTextureHandler()->createTexture(fullPath, true);
 
-                    createTextureCallback(textureSet, newTexture, false);
+                    createTextureCallback(newTexture, false);
 
                     selectedAsset.info.index = newTexture.id;
                 } else {
@@ -341,7 +344,7 @@ namespace GWIN
 
                     assets->getTextureHandler()->decreaseLastTextureID();
 
-                    createTextureCallback(textureSet, newTexture, true);
+                    createTextureCallback(newTexture, true);
                 }
             }
             ImGuiFileDialog::Instance()->Close();
@@ -455,19 +458,20 @@ namespace GWIN
 
             if (ImGui::BeginCombo("##TextureCombo", "Select Texture"))
             {
-                if (textureAssets.empty())
+                if (textureAssets.empty() || currentObject.model == -1)
                 {
                     ImGui::Text("No Textures Created!");
                 }
                 else
                 {
+                    auto &currentModel = frameInfo.currentInfo.meshes.at(currentObject.model);
                     for (const auto &asset : textureAssets)
                     {
-                        bool isSelected = (asset.info.index == currentObject.Textures[0]);
+                        bool isSelected = (asset.info.index == currentModel->Textures[0]);
                         if (ImGui::Selectable(asset.name.c_str(), isSelected))
                         {
-                            currentObject.Textures[0] = asset.info.index;
-                            ImGui::CloseCurrentPopup(); 
+                            currentModel->Textures[0] = asset.info.index;
+                            ImGui::CloseCurrentPopup();
                         }
                     }
                 }
@@ -476,18 +480,19 @@ namespace GWIN
 
             if (ImGui::BeginCombo("##MaterialCombo", "Select Material"))
             {
-                if (materialAssets.empty())
+                if (materialAssets.empty() || currentObject.model == -1)
                 {
                     ImGui::Text("No Materials Created!");
                 }
                 else
                 {
+                    auto &currentModel = frameInfo.currentInfo.meshes.at(currentObject.model);
                     for (const auto &asset : materialAssets)
                     {
-                        bool isSelected = (asset.info.index == currentObject.Material);
+                        bool isSelected = (asset.info.index == currentModel->Material);
                         if (ImGui::Selectable(asset.name.c_str(), isSelected))
                         {
-                            currentObject.Material = asset.info.index;
+                            currentModel->Material = asset.info.index;
                             ImGui::CloseCurrentPopup();  
                         }
                     }
@@ -638,7 +643,7 @@ namespace GWIN
                         }
                     }
 
-                    inspectorGuis(selectedObject);
+                    inspectorGuis(selectedObject, frameInfo);
 
                     if (rotationChanged)
                     {

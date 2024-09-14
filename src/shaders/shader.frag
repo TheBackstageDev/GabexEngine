@@ -12,6 +12,7 @@ struct Light {
   vec4 position; //w is type; 0 - Point, 1 - Spot
   vec4 color; // W is itensity
   vec4 direction; //SpotLight direction, W is cutoffAngle
+  mat4 lightSpaceMatrix[6]; 
 };
 
 struct Material
@@ -33,6 +34,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 view;
   mat4 invView;
   vec4 sunLight;
+  mat4 sunLightSpaceMatrix;
   vec4 ambientLightColor; // w is intensity
   Light lights[20];
   Material materials[100];
@@ -40,32 +42,53 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 } ubo;
 
 layout(set = 1, binding = 0) uniform sampler2D texSampler;
+layout(set = 1, binding = 1) uniform sampler2DShadow shadowMap;
 
 layout(push_constant) uniform Push {
     mat4 modelMatrix;
     uint materialIndex;
 } push;
 
-void computeLighting(LightInfo lightInfo, vec3 intensity, inout vec3 diffuseLight, inout vec3 specularLight) {
+float calculateShadow(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
+{
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float closestDepth = texture(shadowMap, projCoords.xyz);
+
+    // Get current fragment depth in light space
+    float currentDepth = projCoords.z;
+
+    // Calculate shadow factor (1.0 means fully lit, 0.0 means fully shadowed)
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);  
+    float shadow = currentDepth > closestDepth + bias ? 0.5 : 1.0; 
+    
+    return shadow;
+}
+
+void computeLighting(LightInfo lightInfo, vec3 intensity, inout vec3 diffuseLight, inout vec3 specularLight, float shadowFactor) 
+{
   float cosAngIncidence = max(dot(lightInfo.fragNormalWorld, lightInfo.directionToLight), 0.0);
-  vec3 diffuse = intensity * cosAngIncidence * (1.0 - lightInfo.material.data.x);
+  vec3 diffuse = shadowFactor * intensity * cosAngIncidence * (1.0 - lightInfo.material.data.x);
 
   vec3 halfAngle = normalize(lightInfo.directionToLight + lightInfo.viewDirection);
   float blinnTerm = max(dot(lightInfo.fragNormalWorld, halfAngle), 0.0);
   blinnTerm = pow(blinnTerm, mix(50.0, 4.0, lightInfo.material.data.y));
 
-  vec3 specular = intensity * blinnTerm * mix(0.04, 1.0, lightInfo.material.data.x);
+  vec3 specular = shadowFactor * intensity * blinnTerm * mix(0.04, 1.0, lightInfo.material.data.x);
 
   diffuseLight += diffuse;
   specularLight += specular;
 }
 
-void calculateLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseLight, inout vec3 specularLight) {
+void calculateLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseLight, inout vec3 specularLight, vec4 fragPosLightSpace) {
   vec3 intensity = currentLight.color.xyz * currentLight.color.w;
-
+  
+  // Shadow factor (1.0 means fully lit, 0.0 means fully shadowed)
+  float shadowFactor = calculateShadow(fragPosLightSpace, lightInfo.fragNormalWorld, lightInfo.directionToLight);
+  
   if (currentLight.position.w == 0.0) { // Point light
     intensity /= (lightInfo.distance * lightInfo.distance);
-    computeLighting(lightInfo, intensity, diffuseLight, specularLight);
+    computeLighting(lightInfo, intensity, diffuseLight, specularLight, shadowFactor);
   } else if (currentLight.position.w == 1.0) { // Spot light
     currentLight.direction.xyz = normalize(currentLight.direction.xyz);
     float cosTheta = dot(lightInfo.directionToLight, currentLight.direction.xyz);
@@ -74,7 +97,7 @@ void calculateLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseL
       float smoothFactor = 0.01;
       float spotEffect = smoothstep(currentLight.direction.w, currentLight.direction.w + smoothFactor, cosTheta);
       intensity *= spotEffect / lightInfo.distance;
-      computeLighting(lightInfo, intensity, diffuseLight, specularLight);
+      computeLighting(lightInfo, intensity, diffuseLight, specularLight, shadowFactor);
     }
   }
 }
@@ -90,17 +113,20 @@ void main() {
 
     if (ubo.sunLight.w > 0.01)
     {
-      vec3 sunDirection = normalize(ubo.sunLight.xyz);
+        vec3 sunDirection = normalize(ubo.sunLight.xyz);
+        
+        vec4 fragPosLightSpace = ubo.sunLightSpaceMatrix * vec4(fragPosWorld, 1.0);
+        
+        float shadowFactor = calculateShadow(fragPosLightSpace, fragNormalWorld, sunDirection);
 
-      float cosAngSunIncidence = max(dot(fragNormalWorld, sunDirection), 0);
-      diffuseLight += cosAngSunIncidence * ubo.sunLight.w;
+        float cosAngSunIncidence = max(dot(fragNormalWorld, sunDirection), 0.0);
+        diffuseLight += shadowFactor * cosAngSunIncidence * ubo.sunLight.w;
 
-              // Sunlight Specular Contribution
-      vec3 sunHalfAngle = normalize(sunDirection + viewDirection);
-      float sunBlinnTerm = max(dot(fragNormalWorld, sunHalfAngle), 0.0);
-      sunBlinnTerm = pow(sunBlinnTerm, mix(50.0, 4.0, material.data.y)); 
+        vec3 sunHalfAngle = normalize(sunDirection + viewDirection);
+        float sunBlinnTerm = max(dot(fragNormalWorld, sunHalfAngle), 0.0);
+        sunBlinnTerm = pow(sunBlinnTerm, mix(50.0, 4.0, material.data.y)); 
 
-      specularLight += 0.1 * ubo.sunLight.w * sunBlinnTerm * mix(0.04, 1.0, material.data.x); 
+        specularLight += shadowFactor * 0.1 * ubo.sunLight.w * sunBlinnTerm * mix(0.04, 1.0, material.data.x);
     }
 
     // Light contributions
@@ -121,7 +147,9 @@ void main() {
           lightInfo.viewDirection = viewDirection;
           lightInfo.material = material;
 
-          calculateLight(light, lightInfo, diffuseLight, specularLight);
+          vec4 fragPosLightSpace = light.lightSpaceMatrix[0] * vec4(fragPosWorld, 1.0);
+
+          calculateLight(light, lightInfo, diffuseLight, specularLight, fragPosLightSpace);
         }
     }
 

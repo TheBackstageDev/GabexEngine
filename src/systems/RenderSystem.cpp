@@ -87,6 +87,8 @@ namespace GWIN
             0,
             nullptr);
 
+        std::unordered_map<uint32_t, VkDescriptorSet> textureBindings;
+
         for (auto &kv : frameInfo.currentInfo.gameObjects)
         {
             auto &obj = kv.second;
@@ -96,23 +98,27 @@ namespace GWIN
             if (frameInfo.flags.frustumCulling && !frameInfo.currentInfo.currentCamera.isPointInFrustum(obj.transform.translation))
                 continue;
 
-            uint32_t textureToBind = obj.Textures[0];
+            auto &model = frameInfo.currentInfo.meshes.at(obj.model);
+            uint32_t textureToBind = model->Textures[0];
 
-            if (frameInfo.currentInfo.textures[textureToBind] == nullptr)
-                textureToBind = 0;
+            if (textureBindings.find(textureToBind) == textureBindings.end())
+            {
+                VkDescriptorSet textureDescriptorSet = frameInfo.currentInfo.textures[textureToBind];
+                textureBindings[textureToBind] = textureDescriptorSet;
 
-            vkCmdBindDescriptorSets(
-                frameInfo.commandBuffer,
-                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pipelineLayout,
-                1, 1,
-                &frameInfo.currentInfo.textures[textureToBind],
-                0,
-                nullptr);
+                vkCmdBindDescriptorSets(
+                    frameInfo.commandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout,
+                    1, 1,
+                    &textureDescriptorSet,
+                    0,
+                    nullptr);
+            }
 
             SpushConstant push{};
             push.modelMatrix = obj.transform.mat4();
-            push.MaterialIndex = obj.Material;
+            push.MaterialIndex = model->Material;
 
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
@@ -122,7 +128,32 @@ namespace GWIN
                 sizeof(SpushConstant),
                 &push);
 
-            auto& model = frameInfo.currentInfo.meshes.at(obj.model);
+            if (model->hasSubModels())
+            {
+                for (auto &subModel : model->getSubModels())
+                {
+                    uint32_t subTextureToBind = subModel->Textures[0]; 
+
+                    if (textureBindings.find(subTextureToBind) == textureBindings.end())
+                    {
+                        VkDescriptorSet subTextureDescriptorSet = frameInfo.currentInfo.textures[subTextureToBind];
+                        textureBindings[subTextureToBind] = subTextureDescriptorSet;
+
+                        vkCmdBindDescriptorSets(
+                            frameInfo.commandBuffer,
+                            VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            pipelineLayout,
+                            1, 1,
+                            &subTextureDescriptorSet,
+                            0,
+                            nullptr);
+                    }
+
+                    subModel->bind(frameInfo.commandBuffer);
+                    subModel->draw(frameInfo.commandBuffer);
+                }
+            }
+
             model->bind(frameInfo.commandBuffer);
             model->draw(frameInfo.commandBuffer);
         }

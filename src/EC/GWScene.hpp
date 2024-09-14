@@ -62,10 +62,10 @@ namespace GWIN
         void createGameObject(GWGameObject& obj);
         void removeGameObject(uint32_t id);
 
-        uint32_t createMesh(const std::string &pathToFile, std::optional<uint32_t> replaceId);
+        uint32_t createMesh(const std::string &pathToFile, std::optional<uint32_t> replaceId = std::nullopt, std::optional<std::string> info = std::nullopt);
         void removeMesh(uint32_t id);
 
-        void createSet(VkDescriptorSet &set, Texture &texture, bool replace = false);
+        void createSet(Texture &texture, bool replace = false);
         void createSet(VkDescriptorSet& set, CubeMap &texture);
 
         void saveScene(const std::string path);
