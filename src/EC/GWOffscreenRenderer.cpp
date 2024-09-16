@@ -5,10 +5,9 @@
 
 namespace GWIN
 {
-    GWOffscreenRenderer::GWOffscreenRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, float imageCount, bool isShadowMap) : window(window), device(device), depthFormat(depthFormat)
+    GWOffscreenRenderer::GWOffscreenRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, float imageCount) : window(window), device(device), depthFormat(depthFormat)
     {
-        this->isShadowMap = isShadowMap;
-        init(imageCount, isShadowMap);
+        init(imageCount);
     }
 
     GWOffscreenRenderer::~GWOffscreenRenderer()
@@ -37,15 +36,12 @@ namespace GWIN
         vkDestroyRenderPass(device.device(), renderPass, nullptr);
     }
 
-    void GWOffscreenRenderer::init(float imageCount, bool isShadowMap)
+    void GWOffscreenRenderer::init(float imageCount)
     {
         createImageSampler();
-        if (!isShadowMap)
-        {
-            createImages(imageCount);
-            createImageViews();
-        }
-        createRenderPass(isShadowMap);
+        createImages(imageCount);
+        createImageViews();
+        createRenderPass();
         createDepthResources(imageCount);
         createFramebuffers();
     }
@@ -88,8 +84,6 @@ namespace GWIN
                         frameBuffers[i] = VK_NULL_HANDLE;
                     }
 
-                    if (!isShadowMap)
-                    {
                         if (imageViews[i] != VK_NULL_HANDLE)
                         {
                             vkDestroyImageView(device.device(), imageViews[i], nullptr);
@@ -102,11 +96,7 @@ namespace GWIN
                             images[i] = VK_NULL_HANDLE;
                             imageAllocations[i] = VK_NULL_HANDLE;
                         }
-                    }
                 }
-
-                if (!isShadowMap)
-                {
 
                     for (size_t i = 0; i < images.size(); ++i)
                     {
@@ -152,21 +142,13 @@ namespace GWIN
                             throw std::runtime_error("Failed to create offscreen image views!");
                         }
                     }
-                }
+                
 
             for (size_t i = 0; i < frameBuffers.size(); i++)
             {
-                std::array<VkImageView, 2> attachments;
-
-                if (!isShadowMap)
-                {
-                    attachments = {
-                        imageViews[i],
-                        depthImageViews[i]
-                    };
-                } else {
-                    attachments = {depthImageViews[i]};
-                }
+                std::array<VkImageView, 2> attachments = {
+                    imageViews[i],
+                    depthImageViews[i]};
 
                 VkFramebufferCreateInfo framebufferInfo{};
                 framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -315,22 +297,19 @@ namespace GWIN
         }
     }
 
-    void GWOffscreenRenderer::createRenderPass(bool isShadowMap)
+    void GWOffscreenRenderer::createRenderPass()
     {
-        std::array<VkAttachmentDescription, 2> attachments = {};
+        std::vector<VkAttachmentDescription> attachments(2);
 
         // Color attachment
-        if (!isShadowMap)
-        {
-            attachments[0].format = VK_FORMAT_R8G8B8A8_SRGB;
-            attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-            attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-            attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-            attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            attachments[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        }
+        attachments[0].format = VK_FORMAT_R8G8B8A8_SRGB;
+        attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         // Depth attachment
         attachments[1].format = depthFormat;
@@ -342,44 +321,7 @@ namespace GWIN
         attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentReference colorAttachmentRef{};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference depthAttachmentRef{};
-        depthAttachmentRef.attachment = 1;
-        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription subpass{};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        if (!isShadowMap)
-        {
-            subpass.colorAttachmentCount = 1;
-            subpass.pColorAttachments = &colorAttachmentRef;
-        }
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
-
-        VkSubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-        VkRenderPassCreateInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        renderPassInfo.pAttachments = attachments.data();
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
-
-        if (vkCreateRenderPass(device.device(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create offscreen render pass!");
-        }
+        GWIN::createRenderPass(device, renderPass, attachments, true, true);
     }
 
     void GWOffscreenRenderer::startOffscreenRenderPass(VkCommandBuffer commandBuffer)

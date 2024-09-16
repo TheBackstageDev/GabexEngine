@@ -11,6 +11,7 @@
 #include "SkyboxSystem.hpp"
 #include "GWScene.hpp"
 
+#include "GWRendererToolkit.hpp"
 #include "GWOffscreenRenderer.hpp"
 
 #include <stdexcept>
@@ -35,9 +36,7 @@ namespace GWIN
         void loadGameObjects();
 
         void loadNewScene(const std::string pathToFile);
-
-        void MasterRenderSystem::createSet(VkDescriptorSet &set, Texture &texture);
-
+        
         GWindow& window;
         GWinDevice& device;
 

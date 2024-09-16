@@ -44,6 +44,8 @@ namespace GWIN
         static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
         VkPipeline pipeline() const { return graphicsPipeline; }
 
+        static void enableAlphaBlending(PipelineConfigInfo &configInfo);
+
     private:
         static std::vector<char> readFile(const std::string &filepath);
 

@@ -18,8 +18,8 @@ namespace GWIN
         : window(window), device(device)
     {
         renderer = std::make_unique<GWRenderer>(window, device);
-        offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount(), false);
-        shadowMapRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount(), true);
+        offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount());
+        //shadowMapRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount(), true);
         cubemapHandler = std::make_unique<GWCubemapHandler>(device);
         materialHandler = std::make_unique<GWMaterialHandler>(device);
 
@@ -285,7 +285,7 @@ namespace GWIN
         CubeMap cubeMap = cubemapHandler->createCubeMap(info);
         Texture texture2{};
         texture2.textureImage = cubeMap.Cubeimage;
-        textureHandler->createSampler(0, texture2.textureSampler);
+        GWIN::createSampler(device, texture2.textureSampler, 0);
 
         currentScene->createSet(no_texture);
 

@@ -52,6 +52,7 @@ namespace GWIN
 
         PipelineConfigInfo pipelineConfig{};
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
+        //GPipeLine::enableAlphaBlending(pipelineConfig);
         pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
 
@@ -77,7 +78,6 @@ namespace GWIN
         assert(Pipeline && "Pipeline must be created before calling renderGameObjects");
 
         Pipeline->bind(frameInfo.commandBuffer);
-
         vkCmdBindDescriptorSets(
             frameInfo.commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -86,8 +86,6 @@ namespace GWIN
             &frameInfo.globalDescriptorSet,
             0,
             nullptr);
-
-        std::unordered_map<uint32_t, VkDescriptorSet> textureBindings;
 
         for (auto &kv : frameInfo.currentInfo.gameObjects)
         {
@@ -100,21 +98,22 @@ namespace GWIN
 
             auto &model = frameInfo.currentInfo.meshes.at(obj.model);
             uint32_t textureToBind = model->Textures[0];
+            uint32_t textureCount = static_cast<uint32_t>(model->Textures.size());
 
-            if (textureBindings.find(textureToBind) == textureBindings.end())
+            std::vector<VkDescriptorSet> textureDescriptorSets(textureCount);
+            for (uint32_t textureIndex = 0; textureIndex < textureCount; textureIndex++)
             {
-                VkDescriptorSet textureDescriptorSet = frameInfo.currentInfo.textures[textureToBind];
-                textureBindings[textureToBind] = textureDescriptorSet;
-
-                vkCmdBindDescriptorSets(
-                    frameInfo.commandBuffer,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    pipelineLayout,
-                    1, 1,
-                    &textureDescriptorSet,
-                    0,
-                    nullptr);
+                textureDescriptorSets.at(textureIndex) = frameInfo.currentInfo.textures[model->Textures[textureIndex]];
             }
+
+            vkCmdBindDescriptorSets(
+                frameInfo.commandBuffer,
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipelineLayout,
+                1, 1,
+                textureDescriptorSets.data(),
+                0,
+                nullptr);
 
             SpushConstant push{};
             push.modelMatrix = obj.transform.mat4();
@@ -132,22 +131,20 @@ namespace GWIN
             {
                 for (auto &subModel : model->getSubModels())
                 {
-                    uint32_t subTextureToBind = subModel->Textures[0]; 
-
-                    if (textureBindings.find(subTextureToBind) == textureBindings.end())
+                    std::vector<VkDescriptorSet> subTextureDescriptorSets(textureCount);
+                    for (uint32_t textureIndex = 0; textureIndex < textureCount; textureIndex++)
                     {
-                        VkDescriptorSet subTextureDescriptorSet = frameInfo.currentInfo.textures[subTextureToBind];
-                        textureBindings[subTextureToBind] = subTextureDescriptorSet;
-
-                        vkCmdBindDescriptorSets(
-                            frameInfo.commandBuffer,
-                            VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            pipelineLayout,
-                            1, 1,
-                            &subTextureDescriptorSet,
-                            0,
-                            nullptr);
+                        subTextureDescriptorSets.at(textureIndex) = frameInfo.currentInfo.textures[subModel->Textures[textureIndex]];
                     }
+
+                    vkCmdBindDescriptorSets(
+                        frameInfo.commandBuffer,
+                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        pipelineLayout,
+                        1, 1,           
+                        subTextureDescriptorSets.data(), 
+                        0,
+                        nullptr);
 
                     subModel->bind(frameInfo.commandBuffer);
                     subModel->draw(frameInfo.commandBuffer);

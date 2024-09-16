@@ -94,6 +94,7 @@ namespace GWIN
 
         glm::vec3 color{};
         TransformComponent transform{};
+        bool castShadow{true};
 
         int32_t model = -1; //ID of the mesh
         std::unique_ptr<LightComponent> light = nullptr;

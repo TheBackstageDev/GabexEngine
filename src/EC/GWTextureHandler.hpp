@@ -3,6 +3,7 @@
 #include "GWImageLoader.hpp"
 #include "GWDescriptors.hpp"
 #include "../GWBuffer.hpp"
+#include "GWRendererToolkit.hpp"
 
 #include <string>
 #include <memory>
@@ -47,7 +48,6 @@ namespace GWIN
         void changeImageLayout(Texture& texture, VkImageLayout newLayout);
 
         GWImageLoader getImageLoader() { return imageLoader; }
-        void createSampler(uint32_t mipLevels, VkSampler &sampler);
 
         std::vector<TextureInfo> getTextures() const;
         void resetTextures() { textures.clear(); lastTextureId = 0; };

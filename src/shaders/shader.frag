@@ -5,6 +5,7 @@ layout(location = 1) in vec3 fragPosWorld;
 layout(location = 2) in vec3 fragNormalWorld;
 layout(location = 3) in vec2 fragUv;
 layout(location = 4) in vec3 fragTangent;
+layout(location = 5) in vec3 fragBitangent;
 
 layout(location = 0) out vec4 outColor;
 
@@ -41,7 +42,10 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   int numLights;
 } ubo;
 
-layout(set = 1, binding = 0) uniform sampler2D texSampler;
+const uint DIFFUSE_TEX = 0;
+const uint NORMAL_TEX = 1;
+
+layout(set = 1, binding = 0) uniform sampler2D texSampler[6];
 layout(set = 1, binding = 1) uniform sampler2DShadow shadowMap;
 
 layout(push_constant) uniform Push {
@@ -111,6 +115,19 @@ void main() {
     vec3 cameraPosWorld = ubo.invView[3].xyz;
     vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
 
+    // --- Normal Mapping Setup ---
+    vec3 normalMap = texture(texSampler[NORMAL_TEX], fragUv).xyz;
+
+    if (length(normalMap) == 0.0) {
+        normalMap = vec3(0.5, 0.5, 1.0);
+    }
+
+    normalMap *= 2.0 - 1.0;
+
+    mat3 TBN = mat3(fragTangent, fragBitangent, fragNormalWorld);
+    vec3 fragNormalTangent = normalize(mix(fragNormalWorld, TBN * normalMap, 1.0));
+    // ---------------------------------
+
     if (ubo.sunLight.w > 0.01)
     {
         vec3 sunDirection = normalize(ubo.sunLight.xyz);
@@ -153,7 +170,7 @@ void main() {
         }
     }
 
-    vec4 sampledColor = texture(texSampler, fragUv);
+    vec4 sampledColor = texture(texSampler[DIFFUSE_TEX], fragUv);
     vec3 finalColor = (diffuseLight + specularLight) * fragColor * material.color.rgb * sampledColor.rgb;
 
     // Gamma correction
