@@ -59,8 +59,8 @@ namespace GWIN
 
         Pipeline = std::make_unique<GPipeLine>(
             GDevice,
-            "../src/shaders/point_light.vert.spv",
-            "../src/shaders/point_light.frag.spv",
+            "src/shaders/point_light.vert.spv",
+            "src/shaders/point_light.frag.spv",
             pipelineConfig);
     }
 

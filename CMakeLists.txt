@@ -64,7 +64,4 @@ target_link_libraries(GabexEngine PUBLIC ${LIBS})
 
 target_compile_definitions(GabexEngine PUBLIC DEBUG)
 
-# Set output directory
-set_target_properties(GabexEngine PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/"
-)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/DEBUG)

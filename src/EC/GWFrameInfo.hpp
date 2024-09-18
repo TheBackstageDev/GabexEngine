@@ -43,7 +43,7 @@ namespace GWIN
         GWCamera &currentCamera;
         GWGameObject::map &gameObjects;
         GWModel::map &meshes;
-        std::vector<VkDescriptorSet>& textures;
+        VkDescriptorSet& textures;
     };
 
     struct FrameFlags
@@ -59,6 +59,7 @@ namespace GWIN
         VkDescriptorSet globalDescriptorSet;
         SceneInfo& currentInfo;
         VkDescriptorSet currentFrameSet;
+        VkDescriptorSet shadowMapSet;
         FrameFlags flags;
     };
 }

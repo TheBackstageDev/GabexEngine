@@ -66,6 +66,7 @@ namespace GWIN
         void removeMesh(uint32_t id);
 
         void createSet(Texture &texture, bool replace = false);
+        void retcreateSet(VkImageLayout layout, VkImageView& imageView, VkSampler& sampler, uint32_t binding);
         void createSet(VkDescriptorSet& set, CubeMap &texture);
 
         void saveScene(const std::string path);
@@ -77,7 +78,7 @@ namespace GWIN
         GWGameObject::map& getGameObjects() { return gameObjects; }
         GWModel::map& getMeshes() { return meshes; }
         std::unordered_map<uint32_t, GWCamera>& getCameras() { return cameras; }
-        std::vector<VkDescriptorSet>& getTextures() { return textures; }
+        VkDescriptorSet& getTextures() { return textures; }
 
     private:
         uint32_t currentCamera{0};
@@ -88,7 +89,8 @@ namespace GWIN
         std::string name = "DefaultScene";
         GWGameObject::map gameObjects;
         GWModel::map meshes;
-        std::vector<VkDescriptorSet> textures;
+        std::vector<VkDescriptorImageInfo> texturesInfo;
+        VkDescriptorSet textures = VK_NULL_HANDLE;
         std::unordered_map<uint32_t, GWCamera> cameras;
 
         GWinDevice &device;

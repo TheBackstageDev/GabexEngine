@@ -17,8 +17,8 @@ namespace GWIN
     {
         for (const auto &image : imagesForDeletion)
         {
-            vmaDestroyImage(device.getAllocator(), image.image, image.allocation);
             vkDestroyImageView(device.device(), image.imageView, nullptr);
+            vmaDestroyImage(device.getAllocator(), image.image, image.allocation);
         }
     }
 
@@ -179,7 +179,7 @@ namespace GWIN
         image.layout = newLayout;
     }
 
-    void GWImageLoader::generateMipMaps(Image& image)
+    void GWImageLoader::generateMipMaps(Image &image)
     {
         VkCommandBuffer commandBuffer = device.beginSingleTimeCommands();
 
@@ -241,8 +241,10 @@ namespace GWIN
                                  0, nullptr,
                                  1, &barrier);
 
-            if (mipWidth > 1) mipWidth /= 2;
-            if (mipHeight > 1) mipHeight /= 2;
+            if (mipWidth > 1)
+                mipWidth /= 2;
+            if (mipHeight > 1)
+                mipHeight /= 2;
         }
 
         barrier.subresourceRange.baseMipLevel = image.mipLevels - 1;

@@ -103,9 +103,9 @@ namespace GWIN
         {
             ImGui::Image((ImTextureID)images[asset.image], ImVec2(100, 100), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(1.0f, 1.0f, 1.0f, 0.2f));
         }
-        else if (asset.type == ASSET_TYPE_TEXTURE) {
-            ImGui::Image((ImTextureID)frameInfo.currentInfo.textures.at(asset.info.index), ImVec2(100, 100), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(1.0f, 1.0f, 1.0f, 0.2f));
-        }
+        //else if (asset.type == ASSET_TYPE_TEXTURE) {
+            //ImGui::Image((ImTextureID)frameInfo.currentInfo.textures.at(asset.info.index), ImVec2(100, 100), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(1.0f, 1.0f, 1.0f, 0.2f));
+        //}
         else
         {
             ImGui::Dummy(ImVec2(100, 100));

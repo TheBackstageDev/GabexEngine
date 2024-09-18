@@ -16,21 +16,32 @@ layout(location = 5) out vec3 fragBitangent;
 struct Light {
   vec4 position; //w is type; 0 - Point, 1 - Spot
   vec4 color; // W is itensity
-  vec2 angles; // x - internal angles, y - external angles
+  vec4 direction; //SpotLight direction, W is cutoffAngle
+  mat4 lightSpaceMatrix[6]; 
+};
+
+struct Material
+{
+  vec4 color;
+  vec3 data; //x is metallic, y is roughness, z is id;
 };
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 projection;
   mat4 view;
-  mat4 inverseView;
+  mat4 invView;
   vec4 sunLight;
+  mat4 sunLightSpaceMatrix;
   vec4 ambientLightColor; // w is intensity
-  Light lights[10];
+  Light lights[20];
+  Material materials[100];
   int numLights;
 } ubo;
 
 layout(push_constant) uniform Push {
     mat4 modelMatrix;
+    uint materialIndex;
+    uint textureIndex[6];
 } push;
 
 void main() {

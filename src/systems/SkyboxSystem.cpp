@@ -11,6 +11,7 @@ namespace GWIN
     struct SpushConstant
     {
         glm::mat4 modelMatrix{1.f};
+        uint32_t textureID;
     };
 
     SkyboxSystem::SkyboxSystem(GWinDevice &device, VkRenderPass renderPass, std::vector<VkDescriptorSetLayout> setLayouts)
@@ -70,8 +71,8 @@ namespace GWIN
 
         pipeline = std::make_unique<GPipeLine>(
             device,
-            "../src/shaders/skybox.vert.spv",
-            "../src/shaders/skybox.frag.spv",
+            "src/shaders/skybox.vert.spv",
+            "src/shaders/skybox.frag.spv",
             pipelineConfig);
 
         if (!pipeline)

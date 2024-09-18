@@ -153,5 +153,6 @@ namespace GWIN
         };
 
         loadTexture(aiTextureType_DIFFUSE, TEXTURE_TYPE_DIFFUSE);
+        loadTexture(aiTextureType_DISPLACEMENT, TEXTURE_TYPE_NORMAL);
     }
 }

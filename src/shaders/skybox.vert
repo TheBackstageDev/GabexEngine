@@ -19,15 +19,18 @@ struct Light {
 layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 projection;
   mat4 view;
-  mat4 inverseView;
+  mat4 invView;
   vec4 sunLight;
+  mat4 sunLightSpaceMatrix;
   vec4 ambientLightColor; // w is intensity
-  Light lights[10];
+  Light lights[20];
   int numLights;
 } ubo;
 
+
 layout(push_constant) uniform Push {
     mat4 modelMatrix;
+    uint textureID;
 } push;
 
 void main()

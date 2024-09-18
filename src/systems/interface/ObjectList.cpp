@@ -351,7 +351,7 @@ namespace GWIN
         }
 
         CenteredText("Texture Visualization");
-        ImGui::Image((ImTextureID)frameInfo.currentInfo.textures[selectedAsset.info.index], ImGui::GetContentRegionAvail());
+        //ImGui::Image((ImTextureID)frameInfo.currentInfo.textures[selectedAsset.info.index], ImGui::GetContentRegionAvail());
     }
 
     void GWObjectList::assetList(FrameInfo &frameInfo)
