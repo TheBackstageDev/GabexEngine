@@ -2,6 +2,7 @@
 
 #include "GWindow.hpp"
 #include "vma/vk_mem_alloc.h"
+#include <vulkan/vulkan_core.h>
 
 #include <string>
 #include <vector>

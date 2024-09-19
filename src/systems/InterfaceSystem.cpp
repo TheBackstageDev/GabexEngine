@@ -200,9 +200,7 @@ namespace GWIN
         ImGui::Begin("DockSpace", nullptr, windowFlags);
         ImGui::PopStyleVar(2);
         ImGui::DockSpace(ImGui::GetID("DockSpace"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
-
-        ImGui::DockSpaceOverViewport(ImGui::GetID("##Dockspace"), ImGui::GetMainViewport());
-
+        
         //Top Menu
         if (ImGui::BeginMainMenuBar())
         {
@@ -284,7 +282,7 @@ namespace GWIN
         {
             auto &images = assets->getImages();
 
-            int32_t buttonSize = 32;
+            float buttonSize = 32;
 
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));           // Darker background
@@ -327,7 +325,7 @@ namespace GWIN
 
             ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
 
-            if (frameInfo.currentFrameSet)
+            if (frameInfo.currentFrameSet != VK_NULL_HANDLE)
             {
                 ImGui::Image((ImTextureID)frameInfo.currentFrameSet, viewportSize);
 

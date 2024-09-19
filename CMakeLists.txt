@@ -16,6 +16,7 @@ include_directories(
     "${CMAKE_SOURCE_DIR}/src/EC"
     "${CMAKE_SOURCE_DIR}/include"
     "C:/VulkanSDK/1.3.283.0/Include"
+    "${CMAKE_SOURCE_DIR}/include/volk" # Added VOLK include
 )
 
 # Specify the path for GLFW include and library directories
@@ -50,6 +51,7 @@ set(IMGUI_SOURCES
 add_executable(GabexEngine
     ${SOURCES}
     ${IMGUI_SOURCES}
+    ${VOLK_SOURCE}  # Added VOLK source
     "${CMAKE_SOURCE_DIR}/src/main.cpp"
 )
 
@@ -59,6 +61,8 @@ set(LIBS
     assimp-vc143-mt
     ${GLFW_LIBRARY_DIR}/libglfw3dll.a 
 )
+
+target_compile_definitions(GabexEngine PUBLIC VOLK_STATIC_DEFINE)
 
 target_link_libraries(GabexEngine PUBLIC ${LIBS})
 

@@ -16,7 +16,7 @@ namespace GWIN
     class ShadowSystem
     {
     public:
-        ShadowSystem(GWinDevice &device, VkRenderPass renderPass, std::vector<VkDescriptorSetLayout> setLayouts);
+        ShadowSystem(GWinDevice &device, std::vector<VkDescriptorSetLayout> setLayouts);
         ~ShadowSystem();
 
         ShadowSystem(const ShadowSystem &) = delete;
@@ -28,7 +28,7 @@ namespace GWIN
 
     private:
         void createPipelineLayout(std::vector<VkDescriptorSetLayout> setLayouts);
-        void createPipeline(VkRenderPass renderPass);
+        void createPipeline();
 
         VkPipelineLayout pipelineLayout;
 

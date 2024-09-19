@@ -10,11 +10,11 @@ namespace GWIN
         //glm::mat4 lightViewProj{0.f};
     };
 
-    ShadowSystem::ShadowSystem(GWinDevice &device, VkRenderPass renderPass, std::vector<VkDescriptorSetLayout> setLayouts)
+    ShadowSystem::ShadowSystem(GWinDevice &device, std::vector<VkDescriptorSetLayout> setLayouts)
         : GDevice(device)
     {
         createPipelineLayout(setLayouts);
-        createPipeline(renderPass);
+        createPipeline();
     }
 
     ShadowSystem::~ShadowSystem()
@@ -45,14 +45,13 @@ namespace GWIN
         }
     }
 
-    void ShadowSystem::createPipeline(VkRenderPass renderPass)
+    void ShadowSystem::createPipeline()
     {
         assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
         PipelineConfigInfo pipelineConfig{};
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
         // GPipeLine::enableAlphaBlending(pipelineConfig);
-        pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
 
         Pipeline = std::make_unique<GPipeLine>(

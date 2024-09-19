@@ -18,7 +18,6 @@ namespace GWIN
         GWOffscreenRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, float imageCount);
         ~GWOffscreenRenderer();
 
-        VkRenderPass getRenderPass() const { return renderPass; }
         VkImage getCurrentImage() const {images[imageIndex];}
         VkImageView getCurrentImageView() const { return imageViews[imageIndex]; }
 
@@ -39,8 +38,6 @@ namespace GWIN
         void createImageViews();
         void createDepthResources(float imageCount);
 
-        void createRenderPass();
-        void createFramebuffers();
 
         std::vector<VkImage> images;
         std::vector<VmaAllocation> imageAllocations;
@@ -50,12 +47,9 @@ namespace GWIN
         std::vector<VmaAllocation> depthImagesAllocation;
         std::vector<VkImageView> depthImageViews;
 
-        std::vector<VkFramebuffer> frameBuffers;
-
         VkFormat& depthFormat;
         
         VkSampler imageSampler;
-        VkRenderPass renderPass;
 
         uint32_t imageIndex{0};
     };

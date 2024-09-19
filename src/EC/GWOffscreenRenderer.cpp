@@ -27,13 +27,6 @@ namespace GWIN
             vmaFreeMemory(device.getAllocator(), imageAllocations[i]);
             vmaFreeMemory(device.getAllocator(), depthImagesAllocation[i]);
         }
-
-        for (auto frameBuffer : frameBuffers)
-        {
-            vkDestroyFramebuffer(device.device(), frameBuffer, nullptr);
-        }
-
-        vkDestroyRenderPass(device.device(), renderPass, nullptr);
     }
 
     void GWOffscreenRenderer::init(float imageCount)
@@ -41,127 +34,72 @@ namespace GWIN
         createImageSampler();
         createImages(imageCount);
         createImageViews();
-        createRenderPass();
         createDepthResources(imageCount);
-        createFramebuffers();
-    }
-
-    void GWOffscreenRenderer::createFramebuffers()
-    {
-        frameBuffers.resize(imageViews.size());
-
-        for (size_t i = 0; i < frameBuffers.size(); i++)
-        {
-            std::array<VkImageView, 2> attachments = {
-                imageViews[i],
-                depthImageViews[i]};
-
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = renderPass;
-            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = window.getExtent().width;
-            framebufferInfo.height = window.getExtent().height;
-            framebufferInfo.layers = 1;
-
-            if (vkCreateFramebuffer(device.device(), &framebufferInfo, nullptr, &frameBuffers[i]) != VK_SUCCESS)
-            {
-                throw std::runtime_error("Failed to create offscreen framebuffer!");
-            }
-        }
     }
 
     void GWOffscreenRenderer::createNextImage()
     {
         if (imageIndex >= images.size() - 1)
         {
-                for (size_t i = 0; i < images.size(); ++i)
+            for (size_t i = 0; i < images.size(); ++i)
+            {
+
+                if (imageViews[i] != VK_NULL_HANDLE)
                 {
-                    if (frameBuffers[i] != VK_NULL_HANDLE)
-                    {
-                        vkDestroyFramebuffer(device.device(), frameBuffers[i], nullptr);
-                        frameBuffers[i] = VK_NULL_HANDLE;
-                    }
-
-                        if (imageViews[i] != VK_NULL_HANDLE)
-                        {
-                            vkDestroyImageView(device.device(), imageViews[i], nullptr);
-                            imageViews[i] = VK_NULL_HANDLE;
-                        }
-
-                        if (images[i] != VK_NULL_HANDLE)
-                        {
-                            vmaDestroyImage(device.getAllocator(), images[i], imageAllocations[i]);
-                            images[i] = VK_NULL_HANDLE;
-                            imageAllocations[i] = VK_NULL_HANDLE;
-                        }
+                    vkDestroyImageView(device.device(), imageViews[i], nullptr);
+                    imageViews[i] = VK_NULL_HANDLE;
                 }
 
-                    for (size_t i = 0; i < images.size(); ++i)
-                    {
-                        VkImageCreateInfo imageInfo{};
-                        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-                        imageInfo.imageType = VK_IMAGE_TYPE_2D;
-                        imageInfo.extent.width = window.getExtent().width;
-                        imageInfo.extent.height = window.getExtent().height;
-                        imageInfo.extent.depth = 1;
-                        imageInfo.mipLevels = 1;
-                        imageInfo.arrayLayers = 1;
-                        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-                        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-                        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-                        imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-                        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-                        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-                        VmaAllocationCreateInfo allocInfo{};
-                        allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-                        if (vmaCreateImage(device.getAllocator(), &imageInfo, &allocInfo, &images[i], &imageAllocations[i], nullptr) != VK_SUCCESS)
-                        {
-                            throw std::runtime_error("Failed to create offscreen image!");
-                        }
-                    }
-
-                    for (size_t i = 0; i < imageViews.size(); i++)
-                    {
-                        VkImageViewCreateInfo viewInfo{};
-                        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-                        viewInfo.image = images[i];
-                        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-                        viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-                        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                        viewInfo.subresourceRange.baseMipLevel = 0;
-                        viewInfo.subresourceRange.levelCount = 1;
-                        viewInfo.subresourceRange.baseArrayLayer = 0;
-                        viewInfo.subresourceRange.layerCount = 1;
-
-                        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &imageViews[i]) != VK_SUCCESS)
-                        {
-                            throw std::runtime_error("Failed to create offscreen image views!");
-                        }
-                    }
-                
-
-            for (size_t i = 0; i < frameBuffers.size(); i++)
-            {
-                std::array<VkImageView, 2> attachments = {
-                    imageViews[i],
-                    depthImageViews[i]};
-
-                VkFramebufferCreateInfo framebufferInfo{};
-                framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-                framebufferInfo.renderPass = renderPass;
-                framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-                framebufferInfo.pAttachments = attachments.data();
-                framebufferInfo.width = window.getExtent().width;
-                framebufferInfo.height = window.getExtent().height;
-                framebufferInfo.layers = 1;
-
-                if (vkCreateFramebuffer(device.device(), &framebufferInfo, nullptr, &frameBuffers[i]) != VK_SUCCESS)
+                if (images[i] != VK_NULL_HANDLE)
                 {
-                    throw std::runtime_error("Failed to create offscreen framebuffer!");
+                    vmaDestroyImage(device.getAllocator(), images[i], imageAllocations[i]);
+                    images[i] = VK_NULL_HANDLE;
+                    imageAllocations[i] = VK_NULL_HANDLE;
+                }
+            }
+
+            for (size_t i = 0; i < images.size(); ++i)
+            {
+                VkImageCreateInfo imageInfo{};
+                imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+                imageInfo.imageType = VK_IMAGE_TYPE_2D;
+                imageInfo.extent.width = window.getExtent().width;
+                imageInfo.extent.height = window.getExtent().height;
+                imageInfo.extent.depth = 1;
+                imageInfo.mipLevels = 1;
+                imageInfo.arrayLayers = 1;
+                imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+                imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+                imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+                imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+                imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+                VmaAllocationCreateInfo allocInfo{};
+                allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+                if (vmaCreateImage(device.getAllocator(), &imageInfo, &allocInfo, &images[i], &imageAllocations[i], nullptr) != VK_SUCCESS)
+                {
+                    throw std::runtime_error("Failed to create offscreen image!");
+                }
+            }
+
+            for (size_t i = 0; i < imageViews.size(); i++)
+            {
+                VkImageViewCreateInfo viewInfo{};
+                viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+                viewInfo.image = images[i];
+                viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+                viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                viewInfo.subresourceRange.baseMipLevel = 1;
+                viewInfo.subresourceRange.levelCount = 1;
+                viewInfo.subresourceRange.baseArrayLayer = 0;
+                viewInfo.subresourceRange.layerCount = 1;
+
+                if (vkCreateImageView(device.device(), &viewInfo, nullptr, &imageViews[i]) != VK_SUCCESS)
+                {
+                    throw std::runtime_error("Failed to create offscreen image views!");
                 }
             }
 
@@ -171,6 +109,7 @@ namespace GWIN
 
         imageIndex++;
     }
+
 
     void GWOffscreenRenderer::createImageSampler()
     {
@@ -242,7 +181,7 @@ namespace GWIN
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
             viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.baseMipLevel = 1;
             viewInfo.subresourceRange.levelCount = 1;
             viewInfo.subresourceRange.baseArrayLayer = 0;
             viewInfo.subresourceRange.layerCount = 1;
@@ -297,58 +236,46 @@ namespace GWIN
         }
     }
 
-    void GWOffscreenRenderer::createRenderPass()
-    {
-        std::vector<VkAttachmentDescription> attachments(2);
-
-        // Color attachment
-        attachments[0].format = VK_FORMAT_R8G8B8A8_SRGB;
-        attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-        // Depth attachment
-        attachments[1].format = depthFormat;
-        attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        GWIN::createRenderPass(device, renderPass, attachments, true, true);
-    }
-
     void GWOffscreenRenderer::startOffscreenRenderPass(VkCommandBuffer commandBuffer)
     {
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = frameBuffers[imageIndex];
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = window.getExtent();
-
+        VkRenderingAttachmentInfoKHR colorAttachment{};
+        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        colorAttachment.imageView = imageViews[imageIndex];
+        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         VkClearValue clearColor = {{{0.01f, 0.0f, 0.0f, 1.0f}}};
+        colorAttachment.clearValue = clearColor;
+
+        VkRenderingAttachmentInfoKHR depthAttachment{};
+        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        depthAttachment.imageView = depthImageViews[imageIndex];
+        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         VkClearValue depthClear = {{1.0f, 0}};
+        depthAttachment.clearValue = depthClear;
 
-        std::array<VkClearValue, 2> clearValues = {clearColor, depthClear};
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
+        VkRenderingInfoKHR renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+        renderingInfo.renderArea.offset = {0, 0};
+        renderingInfo.renderArea.extent = window.getExtent();
+        renderingInfo.layerCount = 1;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachments = &colorAttachment;
+        renderingInfo.pDepthAttachment = &depthAttachment;
 
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        // Begin rendering with dynamic rendering
+        vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
 
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(renderPassInfo.renderArea.extent.width);
-        viewport.height = static_cast<float>(renderPassInfo.renderArea.extent.height);
+        viewport.width = static_cast<float>(renderingInfo.renderArea.extent.width);
+        viewport.height = static_cast<float>(renderingInfo.renderArea.extent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
+
         VkRect2D scissor{{0, 0}, window.getExtent()};
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
@@ -356,6 +283,6 @@ namespace GWIN
 
     void GWOffscreenRenderer::endOffscreenRenderPass(VkCommandBuffer commandBuffer)
     {
-        vkCmdEndRenderPass(commandBuffer);
+        vkCmdEndRenderingKHR(commandBuffer);
     }
 }

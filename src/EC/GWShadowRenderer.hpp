@@ -18,7 +18,6 @@ namespace GWIN
         GWShadowRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, float imageCount);
         ~GWShadowRenderer();
 
-        VkRenderPass getRenderPass() const { return renderPass; }
         VkImage getCurrentImage() const { depthImages[imageIndex]; }
         VkImageView getCurrentImageView() const { return depthImageViews[imageIndex]; }
 
@@ -38,19 +37,13 @@ namespace GWIN
 
         void createDepthResources(float imageCount);
 
-        void createRenderPass();
-        void createFramebuffers();
-
         std::vector<VkImage> depthImages;
         std::vector<VmaAllocation> depthImagesAllocation;
         std::vector<VkImageView> depthImageViews;
-
-        std::vector<VkFramebuffer> frameBuffers;
-
+        
         VkFormat &depthFormat;
 
         VkSampler imageSampler;
-        VkRenderPass renderPass;
 
         uint32_t imageIndex{0};
     };

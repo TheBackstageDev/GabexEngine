@@ -23,81 +23,18 @@ namespace GWIN
             vkDestroyImage(device.device(), depthImages[i], nullptr);
             vmaFreeMemory(device.getAllocator(), depthImagesAllocation[i]);
         }
-
-        for (auto frameBuffer : frameBuffers)
-        {
-            vkDestroyFramebuffer(device.device(), frameBuffer, nullptr);
-        }
-
-        vkDestroyRenderPass(device.device(), renderPass, nullptr);
     }
 
     void GWShadowRenderer::init(float imageCount)
     {
         createImageSampler();
-        createRenderPass();
         createDepthResources(imageCount);
-        createFramebuffers();
-    }
-
-    void GWShadowRenderer::createFramebuffers()
-    {
-        frameBuffers.resize(depthImageViews.size());
-
-        for (size_t i = 0; i < frameBuffers.size(); i++)
-        {
-            std::array<VkImageView, 1> attachments = {
-                depthImageViews[i]};
-
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = renderPass;
-            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = SHADOW_WIDTH;
-            framebufferInfo.height = SHADOW_HEIGHT;
-            framebufferInfo.layers = 1;
-
-            if (vkCreateFramebuffer(device.device(), &framebufferInfo, nullptr, &frameBuffers[i]) != VK_SUCCESS)
-            {
-                throw std::runtime_error("Failed to create offscreen framebuffer!");
-            }
-        }
     }
 
     void GWShadowRenderer::createNextImage()
     {
         if (imageIndex >= depthImages.size() - 1)
         {
-            for (size_t i = 0; i < depthImages.size(); ++i)
-            {
-                if (frameBuffers[i] != VK_NULL_HANDLE)
-                {
-                    vkDestroyFramebuffer(device.device(), frameBuffers[i], nullptr);
-                    frameBuffers[i] = VK_NULL_HANDLE;
-                }
-            }
-
-            for (size_t i = 0; i < frameBuffers.size(); i++)
-            {
-                std::array<VkImageView, 1> attachments = {
-                    depthImageViews[i]};
-
-                VkFramebufferCreateInfo framebufferInfo{};
-                framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-                framebufferInfo.renderPass = renderPass;
-                framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-                framebufferInfo.pAttachments = attachments.data();
-                framebufferInfo.width = SHADOW_WIDTH;
-                framebufferInfo.height = SHADOW_HEIGHT;
-                framebufferInfo.layers = 1;
-
-                if (vkCreateFramebuffer(device.device(), &framebufferInfo, nullptr, &frameBuffers[i]) != VK_SUCCESS)
-                {
-                    throw std::runtime_error("Failed to create offscreen framebuffer!");
-                }
-            }
-
             imageIndex = 0;
             return;
         }
@@ -174,47 +111,36 @@ namespace GWIN
         }
     }
 
-    void GWShadowRenderer::createRenderPass()
-    {
-        std::vector<VkAttachmentDescription> attachments(1);
-
-        // Depth attachment
-        attachments[0].format = depthFormat;
-        attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[0].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        GWIN::createRenderPass(device, renderPass, attachments, false, true);
-    }
-
     void GWShadowRenderer::startOffscreenRenderPass(VkCommandBuffer commandBuffer)
     {
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = frameBuffers[imageIndex];
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = VkExtent2D{SHADOW_WIDTH, SHADOW_HEIGHT};
-
+        VkRenderingAttachmentInfoKHR depthAttachment{};
+        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        depthAttachment.imageView = depthImageViews[imageIndex];
+        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         VkClearValue depthClear = {{1.0f, 0}};
+        depthAttachment.clearValue = depthClear;
 
-        std::array<VkClearValue, 1> clearValues = {depthClear};
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
+        VkRenderingInfoKHR renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+        renderingInfo.renderArea.offset = {0, 0};
+        renderingInfo.renderArea.extent = window.getExtent();
+        renderingInfo.layerCount = 1;
+        renderingInfo.colorAttachmentCount = 0;
+        renderingInfo.pColorAttachments = nullptr;
+        renderingInfo.pDepthAttachment = &depthAttachment;
 
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
 
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(SHADOW_WIDTH);
-        viewport.height = static_cast<float>(SHADOW_HEIGHT);
+        viewport.width = static_cast<float>(renderingInfo.renderArea.extent.width);
+        viewport.height = static_cast<float>(renderingInfo.renderArea.extent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
+
         VkRect2D scissor{{0, 0}, window.getExtent()};
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
@@ -222,6 +148,6 @@ namespace GWIN
 
     void GWShadowRenderer::endOffscreenRenderPass(VkCommandBuffer commandBuffer)
     {
-        vkCmdEndRenderPass(commandBuffer);
+        vkCmdEndRenderingKHR(commandBuffer);
     }
 }

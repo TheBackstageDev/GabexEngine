@@ -17,8 +17,6 @@ namespace GWIN
         {
             auto currentTexture = textures[i];
             vkDestroySampler(device.device(), currentTexture.textureSampler, nullptr);
-            vkDestroyImageView(device.device(), currentTexture.textureImage.imageView, nullptr);
-            vmaDestroyImage(device.getAllocator(), currentTexture.textureImage.image, currentTexture.textureImage.allocation);
         }
     }
 

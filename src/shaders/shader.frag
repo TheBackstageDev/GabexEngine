@@ -166,5 +166,5 @@ void main() {
     vec3 finalColor = (diffuseLight + specularLight) * fragColor * material.color.rgb * sampledColor.rgb;
 
     // Gamma correction
-    outColor = vec4(pow(finalColor, vec3(1.0 / 2.2)), sampledColor.a);
+    outColor = vec4(pow(finalColor, vec3(1.0 / 2.2)), 1.0);
 }

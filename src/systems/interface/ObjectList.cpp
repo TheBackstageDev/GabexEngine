@@ -506,9 +506,8 @@ namespace GWIN
 
     void GWObjectList::Draw(FrameInfo &frameInfo)
     {
-        auto io = ImGui::GetIO();
-
         ImGui::SetNextWindowDockID(ImGui::GetID("##Dockspace"), ImGuiCond_FirstUseEver);
+
         if (ImGui::Begin("Scene Hierarchy##", nullptr))
         {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(.1f, 1.0f, .0f, .5f));
@@ -517,9 +516,7 @@ namespace GWIN
                 ImGui::OpenPopup("##addObjectPopup");
             }
             ImGui::PopStyleColor();
-
             ImGui::SameLine();
-
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, .1f, 0.f, .5f));
             if (ImGui::ImageButton((ImTextureID)assets->getImages().at("minus_sign"), ImVec2(16, 16)))
             {
@@ -527,7 +524,6 @@ namespace GWIN
                 {
                     removeObjectCallback(selectedItem);
                     assets->deselect();
-
                     selectedItem = -1;
                 }
             }
@@ -542,25 +538,14 @@ namespace GWIN
                         createObjectCallback(GameObjectType::BasicObject);
                         ImGui::CloseCurrentPopup();
                     }
-
                     if (ImGui::Button("Plane"))
-                    {
                         ImGui::CloseCurrentPopup();
-                    }
-
                     if (ImGui::Button("Cube"))
-                    {
                         ImGui::CloseCurrentPopup();
-                    }
-
                     if (ImGui::Button("Sphere"))
-                    {
                         ImGui::CloseCurrentPopup();
-                    }
-
                     ImGui::EndCombo();
                 }
-
                 if (ImGui::BeginCombo("##Light", "Light"))
                 {
                     if (ImGui::Button("PointLight"))
@@ -568,21 +553,17 @@ namespace GWIN
                         createObjectCallback(GameObjectType::PointLight);
                         ImGui::CloseCurrentPopup();
                     }
-
                     if (ImGui::Button("SpotLight"))
                     {
                         createObjectCallback(GameObjectType::SpotLight);
                         ImGui::CloseCurrentPopup();
                     }
-
                     ImGui::EndCombo();
                 }
-                
                 ImGui::EndPopup();
             }
 
             ImGui::BeginChild("##ScrollingRegion1", ImVec2(0, 0), ImGuiChildFlags_None);
-
             for (auto &kv : frameInfo.currentInfo.gameObjects)
             {
                 std::string objId = kv.second.getName() + "##" + (char)kv.first;
@@ -592,22 +573,21 @@ namespace GWIN
                     rotationBuffer = kv.second.transform.getRotation();
                     scaleBuffer = kv.second.transform.scale;
                 }
-
                 if (ImGui::Selectable(objId.c_str(), (selectedItem == kv.second.getId()) && !AssetSelected))
                 {
-                    selectedItem = kv.second.getId(); 
+                    selectedItem = kv.second.getId();
                     strncpy_s(nameBuffer, kv.second.getName().c_str(), sizeof(nameBuffer) - 1);
                     nameBuffer[sizeof(nameBuffer) - 1] = '\0';
                     isEditingName = false;
                     AssetSelected = false;
                     assets->setDisable(true);
                 }
-            }
-        
-            ImGui::EndChild();
+            } 
+            ImGui::EndChild(); 
             ImGui::End();
         }
 
+        // Inspector
         ImGui::SetNextWindowDockID(ImGui::GetID("##Dockspace"), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Inspector##", nullptr, ImGuiWindowFlags_NoCollapse))
         {
@@ -615,12 +595,10 @@ namespace GWIN
 
             if (selectedItem != -1 || assets->getSelectedAsset() != -1)
             {
-                // Only sets isAssetSelected to true if the last selected
-                // Asset is not still Active
-                if (assets->isNewAssetSelected() && ((assets->getSelectedAsset() != selectedItem) && !AssetSelected)) 
-                    AssetSelected = true;                                                                             
+                if (assets->isNewAssetSelected() && ((assets->getSelectedAsset() != selectedItem) && !AssetSelected))
+                    AssetSelected = true;
 
-                if (!AssetSelected) 
+                if (!AssetSelected)
                 {
                     GWGameObject &selectedObject = frameInfo.currentInfo.gameObjects.at(selectedItem);
                     glm::vec3 position = selectedObject.transform.translation;
@@ -644,15 +622,13 @@ namespace GWIN
                     }
 
                     inspectorGuis(selectedObject, frameInfo);
-
                     if (rotationChanged)
                     {
                         selectedObject.transform.rotate(rotationBuffer);
                     }
-
                     addComponent(frameInfo);
                 }
-                else 
+                else
                 {
                     assetList(frameInfo);
                 }
@@ -661,9 +637,7 @@ namespace GWIN
             {
                 ImGui::Text("Select an Object or Asset");
             }
-
             ImGui::EndChild();
-
             ImGui::End();
         }
     }

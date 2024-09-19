@@ -11,14 +11,13 @@ namespace GWIN
     struct SpushConstant
     {
         glm::mat4 modelMatrix{1.f};
-        uint32_t textureID;
     };
 
-    SkyboxSystem::SkyboxSystem(GWinDevice &device, VkRenderPass renderPass, std::vector<VkDescriptorSetLayout> setLayouts)
+    SkyboxSystem::SkyboxSystem(GWinDevice &device, std::vector<VkDescriptorSetLayout> setLayouts)
     : device(device)
     {
         createPipelineLayout(setLayouts);
-        createPipeline(renderPass);
+        createPipeline();
     }
 
     SkyboxSystem::~SkyboxSystem()
@@ -47,13 +46,12 @@ namespace GWIN
         }
     }
 
-    void SkyboxSystem::createPipeline(VkRenderPass renderPass)
+    void SkyboxSystem::createPipeline()
     {
         assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
         PipelineConfigInfo pipelineConfig{};
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
-        pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
         pipelineConfig.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         pipelineConfig.depthStencilInfo.depthTestEnable = VK_TRUE;

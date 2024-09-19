@@ -271,7 +271,7 @@ namespace GWIN
 
     void AssetsWindow::createDefaultImages()
     {
-        std::string relativePath = "..\\src\\systems\\interface\\images";
+        std::string relativePath = "src\\systems\\interface\\images";
         fs::path imageDirectory = fs::current_path() / relativePath;
 
         if (fs::exists(imageDirectory) && fs::is_directory(imageDirectory))

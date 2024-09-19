@@ -12,11 +12,11 @@ namespace GWIN
         alignas(16) uint32_t TextureIndex[6];
     };
 
-    RenderSystem::RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, std::vector<VkDescriptorSetLayout> setLayouts)
+    RenderSystem::RenderSystem(GWinDevice &device, bool isWireFrame, std::vector<VkDescriptorSetLayout> setLayouts)
         : GDevice(device)
     {
         createPipelineLayout(setLayouts);
-        createPipeline(renderPass, isWireFrame);
+        createPipeline(isWireFrame);
     }
 
     RenderSystem::~RenderSystem()
@@ -47,14 +47,13 @@ namespace GWIN
         }
     }
 
-    void RenderSystem::createPipeline(VkRenderPass renderPass, bool isWireFrame)
+    void RenderSystem::createPipeline(bool isWireFrame)
     {
         assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
         PipelineConfigInfo pipelineConfig{};
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
         //GPipeLine::enableAlphaBlending(pipelineConfig);
-        pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
 
         if (isWireFrame)
@@ -78,16 +77,13 @@ namespace GWIN
     {
         assert(Pipeline && "Pipeline must be created before calling renderGameObjects");
 
-        std::cout << "global Set: " << frameInfo.globalDescriptorSet << std::endl;
-
         Pipeline->bind(frameInfo.commandBuffer);
-
         vkCmdBindDescriptorSets(
             frameInfo.commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipelineLayout,
-            1, 1,
-            &frameInfo.currentInfo.textures,
+            0, 1,
+            &frameInfo.globalDescriptorSet,
             0,
             nullptr);
 
@@ -95,8 +91,8 @@ namespace GWIN
             frameInfo.commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipelineLayout,
-            0, 1,
-            &frameInfo.globalDescriptorSet,
+            1, 1,
+            &frameInfo.currentInfo.textures,
             0,
             nullptr);
 
@@ -110,6 +106,26 @@ namespace GWIN
                 continue;
 
             auto &model = frameInfo.currentInfo.meshes.at(obj.model);
+
+            SpushConstant push{};
+            push.modelMatrix = obj.transform.mat4();
+            push.MaterialIndex = model->Material;
+
+            for (uint32_t i = 0; i < model->Textures.size(); ++i)
+            {
+                push.TextureIndex[i] = model->Textures[i];
+            }
+
+            vkCmdPushConstants(
+                frameInfo.commandBuffer,
+                pipelineLayout,
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                0,
+                sizeof(SpushConstant),
+                &push);
+
+            model->bind(frameInfo.commandBuffer);
+            model->draw(frameInfo.commandBuffer);
 
             if (model->hasSubModels())
             {
@@ -136,26 +152,6 @@ namespace GWIN
                     subModel->draw(frameInfo.commandBuffer);
                 }
             }
-
-            SpushConstant push{};
-            push.modelMatrix = obj.transform.mat4();
-            push.MaterialIndex = model->Material;
-
-            for (uint32_t i = 0; i < model->Textures.size(); ++i)
-            {
-                push.TextureIndex[i] = model->Textures[i];
-            }
-
-            vkCmdPushConstants(
-                frameInfo.commandBuffer,
-                pipelineLayout,
-                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                0,
-                sizeof(SpushConstant),
-                &push);
-
-            model->bind(frameInfo.commandBuffer);
-            model->draw(frameInfo.commandBuffer);
         }
     }
 }

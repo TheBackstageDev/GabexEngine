@@ -74,6 +74,16 @@ namespace GWIN
                                    .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
                                    .build();
 
+        texturePool = GWDescriptorPool::Builder(device)
+                          .setMaxSets(1)
+                          .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, device.properties.limits.maxPerStageDescriptorSampledImages)
+                          .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT | VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT)
+                          .build();
+
+        textureSetLayout = GWDescriptorSetLayout::Builder(device)
+                               .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, device.properties.limits.maxPerStageDescriptorSamplers)
+                               .build();
+
         auto minOffsetAlignment = std::lcm(
             device.properties.limits.minUniformBufferOffsetAlignment,
             device.properties.limits.nonCoherentAtomSize);
@@ -98,16 +108,6 @@ namespace GWIN
                 .build(globalDescriptorSets[i]);
         }
 
-        texturePool = GWDescriptorPool::Builder(device)
-                          .setMaxSets(1)
-                          .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4096)
-                          .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT | VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT)
-                          .build();
-
-        textureSetLayout = GWDescriptorSetLayout::Builder(device)
-                               .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 100)
-                               .build();
-
         std::vector<VkDescriptorSetLayout> setLayouts = {globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
 
         textureHandler = std::make_unique<GWTextureHandler>(imageLoader, device);
@@ -119,11 +119,11 @@ namespace GWIN
         
         currentScene = std::make_unique<GWScene>(createInfo);
 
-        renderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), false, setLayouts);
-        wireframeRenderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), true, setLayouts);
-        lightSystem = std::make_unique<LightSystem>(device, offscreenRenderer->getRenderPass(), globalSetLayout->getDescriptorSetLayout());
-        skyboxSystem = std::make_unique<SkyboxSystem>(device, offscreenRenderer->getRenderPass(), setLayouts);
-        shadowSystem = std::make_unique<ShadowSystem>(device, offscreenRenderer->getRenderPass(), setLayouts);
+        renderSystem = std::make_unique<RenderSystem>(device, false, setLayouts);
+        wireframeRenderSystem = std::make_unique<RenderSystem>(device, true, setLayouts);
+        lightSystem = std::make_unique<LightSystem>();
+        skyboxSystem = std::make_unique<SkyboxSystem>(device, setLayouts);
+        shadowSystem = std::make_unique<ShadowSystem>(device, setLayouts);
     }
 
     void MasterRenderSystem::updateCamera(FrameInfo& frameInfo)
@@ -229,8 +229,8 @@ namespace GWIN
 
                 shadowMapRenderer->createNextImage();
                 auto shadowImageView = shadowMapRenderer->getCurrentImageView();
-                auto shadowSampler = shadowMapRenderer->getImageSampler(); */
-
+                auto shadowSampler = shadowMapRenderer->getImageSampler(); 
+ */
                 offscreenRenderer->startOffscreenRenderPass(commandBuffer);
 /* 
                 if (!isLoading)
@@ -242,12 +242,8 @@ namespace GWIN
                 {
                     wireframeRenderSystem->renderGameObjects(frameInfo);
                 }
-                else
-                {
-                    renderSystem->renderGameObjects(frameInfo);
-                }
 
-                //lightSystem->render(frameInfo);
+                renderSystem->renderGameObjects(frameInfo);
 
                 if (isLoading)
                 {
