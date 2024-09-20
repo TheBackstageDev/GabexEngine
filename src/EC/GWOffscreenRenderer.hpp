@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../GWindow.hpp"
 #include "../GWDevice.hpp"
 #include "GWRendererToolkit.hpp"
 

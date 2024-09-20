@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <vulkan/vulkan.h>
+#include <volk/volk.h>
 #include "GWDevice.hpp"
 
 namespace GWIN

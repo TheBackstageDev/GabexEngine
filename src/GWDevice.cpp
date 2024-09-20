@@ -19,7 +19,6 @@ bool enableValidationLayers = false;
 
 namespace GWIN
 {
-
     // local callback functions
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -95,6 +94,12 @@ namespace GWIN
 
     void GWinDevice::createInstance()
     {
+        if (volkInitialize() != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to initialize volk!");
+        }
+
+
         if (enableValidationLayers && !checkValidationLayerSupport())
         {
             throw std::runtime_error("validation layers requested, but not available!");
@@ -135,6 +140,8 @@ namespace GWIN
         {
             throw std::runtime_error("failed to create instance!");
         }
+
+        volkLoadInstance(instance);
 
         hasGflwRequiredInstanceExtensions();
     }
@@ -232,6 +239,8 @@ namespace GWIN
         {
             throw std::runtime_error("failed to create logical device!");
         }
+
+        volkLoadDevice(device_);
 
         vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
         vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
@@ -659,10 +668,15 @@ namespace GWIN
 
     void GWinDevice::createAllocator()
     {
+        VmaVulkanFunctions vulkanFunctions{};
+        vulkanFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+        vulkanFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+
         VmaAllocatorCreateInfo allocatorInfo{};
         allocatorInfo.device = device_;
         allocatorInfo.physicalDevice = physicalDevice;
         allocatorInfo.instance = instance;
+        allocatorInfo.pVulkanFunctions = &vulkanFunctions;
 
         vmaCreateAllocator(&allocatorInfo, &allocator_);
     }

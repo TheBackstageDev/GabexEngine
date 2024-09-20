@@ -3,7 +3,7 @@
 #include "GWDevice.hpp"
 
 // vulkan headers
-#include <vulkan/vulkan.h>
+#include <volk/volk.h>
 
 // std lib headers
 #include <string>

@@ -53,7 +53,6 @@ namespace GWIN
         init_info.MinImageCount = 2;
         init_info.ImageCount = GWinSwapChain::MAX_FRAMES_IN_FLIGHT;
         init_info.UseDynamicRendering = true;
-        init_info.Subpass = 0;
 
         init_info.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
         init_info.PipelineRenderingCreateInfo.colorAttachmentCount = 1;

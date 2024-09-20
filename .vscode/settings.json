@@ -2,6 +2,8 @@
     "files.associations": {
         ".fantomasignore": "ignore",
         "utility": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "vector": "cpp",
+        "volk.h": "c"
     }
 }
