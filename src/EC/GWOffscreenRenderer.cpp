@@ -5,7 +5,7 @@
 
 namespace GWIN
 {
-    GWOffscreenRenderer::GWOffscreenRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, float imageCount) : window(window), device(device), depthFormat(depthFormat)
+    GWOffscreenRenderer::GWOffscreenRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, size_t imageCount) : window(window), device(device), depthFormat(depthFormat)
     {
         init(imageCount);
     }
@@ -29,7 +29,7 @@ namespace GWIN
         }
     }
 
-    void GWOffscreenRenderer::init(float imageCount)
+    void GWOffscreenRenderer::init(size_t imageCount)
     {
         createImageSampler();
         createImages(imageCount);
@@ -41,9 +41,9 @@ namespace GWIN
     {
         if (imageIndex >= images.size() - 1)
         {
+            vkDeviceWaitIdle(device.device());
             for (size_t i = 0; i < images.size(); ++i)
             {
-
                 if (imageViews[i] != VK_NULL_HANDLE)
                 {
                     vkDestroyImageView(device.device(), imageViews[i], nullptr);
@@ -137,7 +137,7 @@ namespace GWIN
         }
     }
 
-    void GWOffscreenRenderer::createImages(float imageCount)
+    void GWOffscreenRenderer::createImages(size_t imageCount)
     {
         images.resize(imageCount);
         imageAllocations.resize(imageCount);
@@ -147,8 +147,8 @@ namespace GWIN
             VkImageCreateInfo imageInfo{};
             imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             imageInfo.imageType = VK_IMAGE_TYPE_2D;
-            imageInfo.extent.width = window.getExtent().width;
-            imageInfo.extent.height = window.getExtent().height;
+            imageInfo.extent.width = 2000;
+            imageInfo.extent.height = 2000;
             imageInfo.extent.depth = 1;
             imageInfo.mipLevels = 1;
             imageInfo.arrayLayers = 1;
@@ -193,7 +193,7 @@ namespace GWIN
         }
     }
 
-    void GWOffscreenRenderer::createDepthResources(float imageCount)
+    void GWOffscreenRenderer::createDepthResources(size_t imageCount)
     {
         depthImages.resize(imageCount);
         depthImagesAllocation.resize(imageCount);
@@ -204,8 +204,8 @@ namespace GWIN
             VkImageCreateInfo imageInfo{};
             imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             imageInfo.imageType = VK_IMAGE_TYPE_2D;
-            imageInfo.extent.width = 2000;
-            imageInfo.extent.height = 2000;
+            imageInfo.extent.width = window.getExtent().width;
+            imageInfo.extent.height = window.getExtent().height;
             imageInfo.extent.depth = 1;
             imageInfo.mipLevels = 1;
             imageInfo.arrayLayers = 1;
@@ -236,6 +236,34 @@ namespace GWIN
         }
     }
 
+    void transitionImageLayout(VkCommandBuffer commandBuffer, VkImage image)
+    {
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = image;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // Or the access mask of your last rendering step
+        barrier.dstAccessMask = 0;
+
+        vkCmdPipelineBarrier(
+            commandBuffer,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // Source stage
+            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,          // Destination stage
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &barrier);
+    }
+
     void GWOffscreenRenderer::startOffscreenRenderPass(VkCommandBuffer commandBuffer)
     {
         VkRenderingAttachmentInfoKHR colorAttachment{};
@@ -263,9 +291,8 @@ namespace GWIN
         renderingInfo.layerCount = 1;
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &colorAttachment;
-        renderingInfo.pDepthAttachment = &depthAttachment;
+       // renderingInfo.pDepthAttachment = &depthAttachment;
 
-        // Begin rendering with dynamic rendering
         vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
 
         VkViewport viewport{};
@@ -284,5 +311,7 @@ namespace GWIN
     void GWOffscreenRenderer::endOffscreenRenderPass(VkCommandBuffer commandBuffer)
     {
         vkCmdEndRenderingKHR(commandBuffer);
+
+        transitionImageLayout(commandBuffer, getCurrentImage());
     }
 }

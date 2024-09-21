@@ -18,7 +18,7 @@ namespace GWIN
         GWShadowRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, float imageCount);
         ~GWShadowRenderer();
 
-        VkImage getCurrentImage() const { depthImages[imageIndex]; }
+        VkImage getCurrentImage() const { return depthImages[imageIndex]; }
         VkImageView getCurrentImageView() const { return depthImageViews[imageIndex]; }
 
         void startOffscreenRenderPass(VkCommandBuffer commandBuffer);

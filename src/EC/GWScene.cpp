@@ -21,9 +21,7 @@ namespace GWIN
             skybox.model = createMesh("src/models/cube.obj", std::nullopt, std::nullopt);
 
             auto directionalLight = GWGameObject::createGameObject("Directional Light");
-            directionalLight.transform.rotation.y = -.25f * glm::two_pi<float>();
-            directionalLight.transform.rotation.x = .25f * glm::two_pi<float>();
-            directionalLight.transform.rotation.z = .15f * glm::two_pi<float>();
+            directionalLight.transform.rotateEuler({45.f, 45.f, 45.f});
 
             gameObjects.emplace(skybox.getId(), std::move(skybox));
             gameObjects.emplace(directionalLight.getId(), std::move(directionalLight));

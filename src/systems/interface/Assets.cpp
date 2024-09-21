@@ -15,13 +15,7 @@ namespace GWIN
         createDefaultImages();
     }
 
-    AssetsWindow::~AssetsWindow()
-    {
-        for (auto &image : images)
-        {
-            ImGui_ImplVulkan_RemoveTexture(image.second);
-        }
-    }
+    AssetsWindow::~AssetsWindow() {}
 
     void AssetsWindow::assetMenu()
     {

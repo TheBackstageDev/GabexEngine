@@ -138,21 +138,34 @@ namespace GWIN
             assert(hasFrameStarted && "Can't call startSwapChainRenderPass when frame not in progress!");
             assert(commandBuffer == getCurrentCommandBuffer() && "Cannot startSwapChainRenderPass on commandBuffer from Different frame!");
 
-            VkRenderPassBeginInfo renderPassInfo{};
-            renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            renderPassInfo.renderPass = swapChain->getRenderPass();
-            renderPassInfo.framebuffer = swapChain->getFrameBuffer(currentImageIndex);
+            VkRenderingAttachmentInfoKHR colorAttachment{};
+            colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+            colorAttachment.imageView = swapChain->getImageView(currentImageIndex);
+            colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            VkClearValue clearColor = {{{0.01f, 0.0f, 0.0f, 1.0f}}};
+            colorAttachment.clearValue = clearColor;
 
-            renderPassInfo.renderArea.offset = {0, 0};
-            renderPassInfo.renderArea.extent = swapChain->getSwapChainExtent();
+            VkRenderingAttachmentInfoKHR depthAttachment{};
+            depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+            depthAttachment.imageView = swapChain->getDepthImageView(currentImageIndex);
+            depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            VkClearValue depthClear = {{1.0f, 0}};
+            depthAttachment.clearValue = depthClear;
 
-            std::array<VkClearValue, 2> clearValues{};
-            clearValues[0].color = {0.01f, 0.01f, 0.01f, 1.0f};
-            clearValues[1].depthStencil = {1.0f, 0};
-            renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-            renderPassInfo.pClearValues = clearValues.data();
+            VkRenderingInfoKHR renderingInfo{};
+            renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+            renderingInfo.renderArea.offset = {0, 0};
+            renderingInfo.renderArea.extent = swapChain->getSwapChainExtent();
+            renderingInfo.layerCount = 1;
+            renderingInfo.colorAttachmentCount = 1;
+            renderingInfo.pColorAttachments = &colorAttachment;
+            renderingInfo.pDepthAttachment = &depthAttachment;
 
-            vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+            vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
 
             VkViewport viewport{};
             viewport.x = 0.0f;
@@ -171,6 +184,31 @@ namespace GWIN
             assert(hasFrameStarted && "Can't call endSwapChainRenderPass when frame not in progress!");
             assert(commandBuffer == getCurrentCommandBuffer() && "Cannot endSwapChainRenderPass on commandBuffer from Different frame!");
 
-            vkCmdEndRenderPass(commandBuffer);
+            vkCmdEndRenderingKHR(commandBuffer);
+
+            VkImageMemoryBarrier barrier{};
+            barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image = swapChain->getCurrentImage(currentImageIndex);
+            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            barrier.subresourceRange.baseMipLevel = 0;
+            barrier.subresourceRange.levelCount = 1;
+            barrier.subresourceRange.baseArrayLayer = 0;
+            barrier.subresourceRange.layerCount = 1;
+
+            barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; 
+            barrier.dstAccessMask = 0;
+
+            vkCmdPipelineBarrier(
+                commandBuffer,
+                VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+                VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,          
+                0,
+                0, nullptr,
+                0, nullptr,
+                1, &barrier);
         }
 }

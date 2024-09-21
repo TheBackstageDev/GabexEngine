@@ -229,8 +229,8 @@ namespace GWIN
 
                 shadowMapRenderer->createNextImage();
                 auto shadowImageView = shadowMapRenderer->getCurrentImageView();
-                auto shadowSampler = shadowMapRenderer->getImageSampler(); 
- */
+                auto shadowSampler = shadowMapRenderer->getImageSampler();  */
+ 
                 offscreenRenderer->startOffscreenRenderPass(commandBuffer);
 /* 
                 if (!isLoading)
@@ -241,9 +241,9 @@ namespace GWIN
                 if (isWireFrame)
                 {
                     wireframeRenderSystem->renderGameObjects(frameInfo);
+                } else {
+                    renderSystem->renderGameObjects(frameInfo);
                 }
-
-                renderSystem->renderGameObjects(frameInfo);
 
                 if (isLoading)
                 {
@@ -274,24 +274,26 @@ namespace GWIN
                 isWireFrame = false;
             }
         }
+
+        vkDeviceWaitIdle(device.device());
     }
 
     void MasterRenderSystem::loadGameObjects()
     {
         Texture no_texture = textureHandler->createTexture(std::string("../src/textures/no_texture.png"), true);
 
-/*         CubeMapInfo info{};
-        info.negX = "../src/textures/cubeMap/nx.png";
-        info.posX = "../src/textures/cubeMap/px.png";
-        info.negY = "../src/textures/cubeMap/ny.png";
-        info.posY = "../src/textures/cubeMap/py.png"; 
-        info.negZ = "../src/textures/cubeMap/nz.png";
-        info.posZ = "../src/textures/cubeMap/pz.png";
+        CubeMapInfo info{};
+        info.negX = "src/textures/cubeMap/nx.png";
+        info.posX = "src/textures/cubeMap/px.png";
+        info.negY = "src/textures/cubeMap/ny.png";
+        info.posY = "src/textures/cubeMap/py.png"; 
+        info.negZ = "src/textures/cubeMap/nz.png";
+        info.posZ = "src/textures/cubeMap/pz.png";
         CubeMap cubeMap = cubemapHandler->createCubeMap(info);
         Texture texture2{};
         texture2.textureImage = cubeMap.Cubeimage;
         GWIN::createSampler(device, texture2.textureSampler, 0);
- */
+
         currentScene->createSet(no_texture);
         //skyboxSystem->setSkybox(currentScene->getTextures(), texture2.id);
 

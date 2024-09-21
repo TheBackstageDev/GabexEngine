@@ -92,7 +92,7 @@ void calculateLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseL
 
   if (currentLight.position.w == 0.0) { // Point light
     intensity /= (lightInfo.distance * lightInfo.distance);
-    computeLighting(lightInfo, intensity, diffuseLight, specularLight, shadowFactor);
+    computeLighting(lightInfo, intensity, diffuseLight, specularLight, 1.0);
   } else if (currentLight.position.w == 1.0) { // Spot light
     currentLight.direction.xyz = normalize(currentLight.direction.xyz);
     float cosTheta = dot(lightInfo.directionToLight, currentLight.direction.xyz);
@@ -101,7 +101,7 @@ void calculateLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseL
       float smoothFactor = 0.01;
       float spotEffect = smoothstep(currentLight.direction.w, currentLight.direction.w + smoothFactor, cosTheta);
       intensity *= spotEffect / lightInfo.distance;
-      computeLighting(lightInfo, intensity, diffuseLight, specularLight, shadowFactor);
+      computeLighting(lightInfo, intensity, diffuseLight, specularLight, 1.0);
     }
   }
 }

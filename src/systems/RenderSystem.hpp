@@ -11,6 +11,8 @@
 #include <vector>
 #include <stdexcept>
 
+#include "../GWSwapChain.hpp"
+
 namespace GWIN
 {
     class RenderSystem
