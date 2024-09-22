@@ -92,7 +92,7 @@ namespace GWIN
                 viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
                 viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
                 viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                viewInfo.subresourceRange.baseMipLevel = 1;
+                viewInfo.subresourceRange.baseMipLevel = 0;
                 viewInfo.subresourceRange.levelCount = 1;
                 viewInfo.subresourceRange.baseArrayLayer = 0;
                 viewInfo.subresourceRange.layerCount = 1;
@@ -147,8 +147,8 @@ namespace GWIN
             VkImageCreateInfo imageInfo{};
             imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             imageInfo.imageType = VK_IMAGE_TYPE_2D;
-            imageInfo.extent.width = 2000;
-            imageInfo.extent.height = 2000;
+            imageInfo.extent.width = window.getExtent().width;
+            imageInfo.extent.height = window.getExtent().height;
             imageInfo.extent.depth = 1;
             imageInfo.mipLevels = 1;
             imageInfo.arrayLayers = 1;
@@ -181,7 +181,7 @@ namespace GWIN
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
             viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            viewInfo.subresourceRange.baseMipLevel = 1;
+            viewInfo.subresourceRange.baseMipLevel = 0;
             viewInfo.subresourceRange.levelCount = 1;
             viewInfo.subresourceRange.baseArrayLayer = 0;
             viewInfo.subresourceRange.layerCount = 1;
@@ -204,8 +204,8 @@ namespace GWIN
             VkImageCreateInfo imageInfo{};
             imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             imageInfo.imageType = VK_IMAGE_TYPE_2D;
-            imageInfo.extent.width = window.getExtent().width;
-            imageInfo.extent.height = window.getExtent().height;
+            imageInfo.extent.width = 2000;
+            imageInfo.extent.height = 2000;
             imageInfo.extent.depth = 1;
             imageInfo.mipLevels = 1;
             imageInfo.arrayLayers = 1;
@@ -251,7 +251,7 @@ namespace GWIN
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount = 1;
 
-        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; // Or the access mask of your last rendering step
+        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT; 
         barrier.dstAccessMask = 0;
 
         vkCmdPipelineBarrier(
@@ -291,7 +291,7 @@ namespace GWIN
         renderingInfo.layerCount = 1;
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &colorAttachment;
-       // renderingInfo.pDepthAttachment = &depthAttachment;
+        renderingInfo.pDepthAttachment = &depthAttachment;
 
         vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
 

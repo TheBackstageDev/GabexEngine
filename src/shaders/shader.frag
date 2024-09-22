@@ -163,7 +163,7 @@ void main() {
     }
 
     vec4 sampledColor = texture(texSampler[push.textureIndex[DIFFUSE_TEX]], fragUv);
-    vec3 finalColor = (diffuseLight + specularLight) * fragColor * material.color.rgb * sampledColor.rgb;
+    vec3 finalColor = (diffuseLight + specularLight) * fragColor * material.color.rgb;
 
     // Gamma correction
     outColor = vec4(pow(finalColor, vec3(1.0 / 2.2)), 1.0);

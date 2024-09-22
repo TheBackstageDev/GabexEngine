@@ -140,14 +140,6 @@ namespace GWIN
                         subPush.TextureIndex[i] = subModel->Textures[i]; 
                     }
 
-                    vkCmdPushConstants(
-                        frameInfo.commandBuffer,
-                        pipelineLayout,
-                        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                        0,
-                        sizeof(SpushConstant),
-                        &subPush);
-
                     subModel->bind(frameInfo.commandBuffer);
                     subModel->draw(frameInfo.commandBuffer);
                 }

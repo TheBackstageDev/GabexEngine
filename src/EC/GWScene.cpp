@@ -150,7 +150,7 @@ namespace GWIN
         imageInfo.sampler = texture.textureSampler;
 
         GWDescriptorWriter(*textureLayout, *texturePool)
-            .writeImage(0, &imageInfo, texture.id)
+            .writeImage(0, &imageInfo, 0)
             .build(this->textures);
     }
 
