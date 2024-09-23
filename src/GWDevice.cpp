@@ -9,7 +9,7 @@
 #include <set>
 #include <unordered_set>
 
-//#define NDEBUG
+#define NDEBUG
 
 #ifndef NDEBUG
 bool enableValidationLayers = true;

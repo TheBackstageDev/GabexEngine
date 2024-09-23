@@ -206,10 +206,9 @@ namespace GWIN
 
         configInfo.pipelineRenderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
         configInfo.pipelineRenderingInfo.colorAttachmentCount = 1;
-       // configInfo.colorFormat = GWinSwapChain::getSwapChainImageFormat();
+        //configInfo.colorFormat = GWinSwapChain::getSwapChainImageFormat();
         configInfo.pipelineRenderingInfo.pColorAttachmentFormats = &configInfo.colorFormat;
         configInfo.pipelineRenderingInfo.depthAttachmentFormat = GWinSwapChain::getSwapChainDepthFormat();
-        configInfo.pipelineRenderingInfo.stencilAttachmentFormat = GWinSwapChain::getSwapChainDepthFormat();
 
         configInfo.dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
         configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;

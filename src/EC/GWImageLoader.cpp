@@ -38,7 +38,8 @@ namespace GWIN
         newImage.size = {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)};
         newImage.format = VK_FORMAT_R8G8B8A8_SRGB;
         newImage.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-        newImage.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+        newImage.mipLevels = 
+        isMipMapped ? newImage.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1 : 1;
 
         VkImage image;
         VmaAllocation allocation;
@@ -59,6 +60,8 @@ namespace GWIN
         stagingBuffer.writeToBuffer(pixels, imageSize);
         stagingBuffer.unmap();
 
+        createImageView(newImage);
+
         stbi_image_free(pixels);
 
         transitionImageLayout(newImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -69,8 +72,6 @@ namespace GWIN
             generateMipMaps(newImage);
 
         transitionImageLayout(newImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-        createImageView(newImage);
 
         imagesForDeletion.push_back(newImage);
 
@@ -98,7 +99,8 @@ namespace GWIN
         imageInfo.format = format;
         imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = usage;
+
+        imageInfo.usage = mipLevels > 1 ? usage | VK_IMAGE_USAGE_TRANSFER_SRC_BIT : usage;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.flags = 0;

@@ -150,8 +150,8 @@ namespace GWIN
         imageInfo.sampler = texture.textureSampler;
 
         GWDescriptorWriter(*textureLayout, *texturePool)
-            .writeImage(0, &imageInfo, 0)
-            .build(this->textures);
+            .writeImage(0, &imageInfo, texture.id)
+            .build(this->textures, true);
     }
 
     void GWScene::retcreateSet(VkImageLayout layout, VkImageView &imageView, VkSampler &sampler, uint32_t binding)

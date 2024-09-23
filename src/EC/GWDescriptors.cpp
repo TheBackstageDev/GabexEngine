@@ -159,51 +159,41 @@ GWDescriptorWriter &GWDescriptorWriter::writeBuffer(
  
 GWDescriptorWriter &GWDescriptorWriter::writeImage(
     uint32_t binding, VkDescriptorImageInfo *imageInfo, uint32_t dstArrayPos) {
-  assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
- 
-  auto &bindingDescription = setLayout.bindings[binding];
+    
+    assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
 
-  std::cout << "dstArrayPos: " << dstArrayPos << " Descriptor Count: " << bindingDescription.descriptorCount << std::endl;
- 
-  assert(bindingDescription.descriptorCount > dstArrayPos && "Array position out of bounds"); 
+    auto &bindingDescription = setLayout.bindings[binding];
+    
+    assert(bindingDescription.descriptorCount > dstArrayPos && "Array position out of bounds");
 
-  VkWriteDescriptorSet write{};
-  write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  write.descriptorType = bindingDescription.descriptorType;
-  write.dstArrayElement = dstArrayPos;
-  write.dstBinding = binding;
-  write.pImageInfo = imageInfo;
-  write.descriptorCount = 1;
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.descriptorType = bindingDescription.descriptorType;
+    write.dstArrayElement = dstArrayPos; 
+    write.dstBinding = binding;
+    write.pImageInfo = imageInfo;
+    write.descriptorCount = 1;  
 
-  writes.push_back(write);
-  return *this;
+    writes.push_back(write);
+    return *this;
 }
 
-/* GWDescriptorWriter &GWDescriptorWriter::writeImage(
-    uint32_t binding, const std::vector<VkDescriptorImageInfo> &imageInfoAll) {
-  assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
-
-  auto &bindingDescription = setLayout.bindings[binding];
-
-  VkWriteDescriptorSet write{};
-  write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  write.descriptorType = bindingDescription.descriptorType;
-  write.dstArrayElement = 0;
-  write.dstBinding = binding;
-  write.pImageInfo = imageInfoAll.data();
-  write.descriptorCount = static_cast<uint32_t>(imageInfoAll.size());
-
-  writes.push_back(write);
-  return *this;
-}
- */
-bool GWDescriptorWriter::build(VkDescriptorSet &set) {
+bool GWDescriptorWriter::build(VkDescriptorSet &set, bool arraySet) {
   bool success = pool.allocateDescriptor(setLayout.getDescriptorSetLayout(), set);
-  if (!success) {
-    return false;
-    std::cout << "failed";
+  //If not a success, it means for the single set its a error, but for the array that it probably just
+  //alreadly created a set for it to be
+  if (!arraySet)
+  {
+    if (!success)
+    {
+      std::cout << "failed" << std::endl;
+      return false;
+    }
+    overwrite(set);
+  } else {
+    overwrite(set);
   }
-  overwrite(set);
+
   return true;
 }
  

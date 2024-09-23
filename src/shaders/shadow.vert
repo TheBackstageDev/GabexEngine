@@ -2,7 +2,6 @@
 
 layout(push_constant) uniform PushConstants {
     mat4 modelMatrix;      // Model matrix to transform the object
-    //mat4 lightViewProj;   
 } pushConstants;
 
 layout(location = 0) in vec3 position;

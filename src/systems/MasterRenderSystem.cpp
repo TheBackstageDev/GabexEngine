@@ -77,7 +77,7 @@ namespace GWIN
         texturePool = GWDescriptorPool::Builder(device)
                           .setMaxSets(1)
                           .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, device.properties.limits.maxPerStageDescriptorSampledImages)
-                          .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT | VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT)
+                          .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT | VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT_EXT)
                           .build();
 
         textureSetLayout = GWDescriptorSetLayout::Builder(device)
@@ -268,6 +268,7 @@ namespace GWIN
                 renderer->endSwapChainRenderPass(commandBuffer);
                 renderer->endFrame();
 
+                vkDeviceWaitIdle(device.device());
                 ImGui_ImplVulkan_RemoveTexture(frameInfo.currentFrameSet);
                 frameInfo.currentFrameSet = VK_NULL_HANDLE;
 
@@ -280,8 +281,6 @@ namespace GWIN
 
     void MasterRenderSystem::loadGameObjects()
     {
-        Texture no_texture = textureHandler->createTexture(std::string("../src/textures/no_texture.png"), true);
-
         CubeMapInfo info{};
         info.negX = "src/textures/cubeMap/nx.png";
         info.posX = "src/textures/cubeMap/px.png";
@@ -292,10 +291,12 @@ namespace GWIN
         CubeMap cubeMap = cubemapHandler->createCubeMap(info);
         Texture texture2{};
         texture2.textureImage = cubeMap.Cubeimage;
-        GWIN::createSampler(device, texture2.textureSampler, 0);
+        GWIN::createSampler(device, texture2.textureSampler, 1);
 
-        currentScene->createSet(no_texture);
         //skyboxSystem->setSkybox(currentScene->getTextures(), texture2.id);
+
+        Texture no_texture = textureHandler->createTexture(std::string("src/textures/no_texture.png"), true);
+        currentScene->createSet(no_texture);
 
         uint32_t model = currentScene->createMesh("src/models/Sponza/sponza.obj", std::nullopt);
         GWGameObject& obj = GWGameObject::createGameObject("Sponza");

@@ -8,8 +8,8 @@ namespace GWIN
     struct SpushConstant
     {
         glm::mat4 modelMatrix{1.f};
-        alignas(16) uint32_t MaterialIndex;
-        alignas(16) uint32_t TextureIndex[6];
+        uint32_t MaterialIndex;
+        uint32_t TextureIndex[6];
     };
 
     RenderSystem::RenderSystem(GWinDevice &device, bool isWireFrame, std::vector<VkDescriptorSetLayout> setLayouts)
@@ -53,7 +53,7 @@ namespace GWIN
 
         PipelineConfigInfo pipelineConfig{};
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
-        //GPipeLine::enableAlphaBlending(pipelineConfig);
+        GPipeLine::enableAlphaBlending(pipelineConfig);
         pipelineConfig.pipelineLayout = pipelineLayout;
 
         if (isWireFrame)
@@ -107,6 +107,32 @@ namespace GWIN
 
             auto &model = frameInfo.currentInfo.meshes.at(obj.model);
 
+            if (model->hasSubModels())
+            {
+                for (auto &subModel : model->getSubModels())
+                {
+                    SpushConstant subPush{};
+                    subPush.modelMatrix = obj.transform.mat4(); 
+                    subPush.MaterialIndex = subModel->Material;
+
+                    for (uint32_t i = 0; i < subModel->Textures.size(); ++i)
+                    {
+                        subPush.TextureIndex[i] = subModel->Textures[i]; 
+                    }
+
+                    vkCmdPushConstants(
+                        frameInfo.commandBuffer,
+                        pipelineLayout,
+                        VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                        0,
+                        sizeof(SpushConstant),
+                        &subPush);
+
+                    subModel->bind(frameInfo.commandBuffer);
+                    subModel->draw(frameInfo.commandBuffer);
+                }
+            }
+
             SpushConstant push{};
             push.modelMatrix = obj.transform.mat4();
             push.MaterialIndex = model->Material;
@@ -126,24 +152,6 @@ namespace GWIN
 
             model->bind(frameInfo.commandBuffer);
             model->draw(frameInfo.commandBuffer);
-
-            if (model->hasSubModels())
-            {
-                for (auto &subModel : model->getSubModels())
-                {
-                    SpushConstant subPush{};
-                    subPush.modelMatrix = obj.transform.mat4(); 
-                    subPush.MaterialIndex = subModel->Material;
-
-                    for (uint32_t i = 0; i < subModel->Textures.size(); ++i)
-                    {
-                        subPush.TextureIndex[i] = subModel->Textures[i]; 
-                    }
-
-                    subModel->bind(frameInfo.commandBuffer);
-                    subModel->draw(frameInfo.commandBuffer);
-                }
-            }
         }
     }
 }

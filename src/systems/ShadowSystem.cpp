@@ -7,7 +7,6 @@ namespace GWIN
     struct SpushConstant
     {
         glm::mat4 modelMatrix{1.f};
-        //glm::mat4 lightViewProj{0.f};
     };
 
     ShadowSystem::ShadowSystem(GWinDevice &device, std::vector<VkDescriptorSetLayout> setLayouts)
@@ -31,6 +30,8 @@ namespace GWIN
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstant.offset = 0;
         pushConstant.size = sizeof(SpushConstant);
+
+        std::cout << sizeof(SpushConstant) << " ShadowSystem \n";
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
