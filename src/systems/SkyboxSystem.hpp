@@ -9,7 +9,7 @@ namespace GWIN
     class SkyboxSystem
     {
     public:
-        SkyboxSystem(GWinDevice &device, VkRenderPass renderPass, std::vector<VkDescriptorSetLayout> setLayouts);
+        SkyboxSystem(GWinDevice &device, std::vector<VkDescriptorSetLayout> setLayouts);
         ~SkyboxSystem();
 
         SkyboxSystem(const SkyboxSystem &) = delete;
@@ -22,7 +22,7 @@ namespace GWIN
 
     private:
         void createPipelineLayout(std::vector<VkDescriptorSetLayout> setLayouts);
-        void createPipeline(VkRenderPass renderPass);
+        void createPipeline();
 
         VkPipelineLayout pipelineLayout;
         std::unique_ptr<GPipeLine> pipeline;

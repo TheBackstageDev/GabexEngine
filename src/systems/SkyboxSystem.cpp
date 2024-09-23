@@ -13,11 +13,11 @@ namespace GWIN
         glm::mat4 modelMatrix{1.f};
     };
 
-    SkyboxSystem::SkyboxSystem(GWinDevice &device, VkRenderPass renderPass, std::vector<VkDescriptorSetLayout> setLayouts)
+    SkyboxSystem::SkyboxSystem(GWinDevice &device, std::vector<VkDescriptorSetLayout> setLayouts)
     : device(device)
     {
         createPipelineLayout(setLayouts);
-        createPipeline(renderPass);
+        createPipeline();
     }
 
     SkyboxSystem::~SkyboxSystem()
@@ -32,6 +32,8 @@ namespace GWIN
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstant.offset = 0;
         pushConstant.size = sizeof(SpushConstant);
+
+        std::cout << sizeof(SpushConstant) << " SkyboxSystem \n";
         
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -46,13 +48,12 @@ namespace GWIN
         }
     }
 
-    void SkyboxSystem::createPipeline(VkRenderPass renderPass)
+    void SkyboxSystem::createPipeline()
     {
         assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
         PipelineConfigInfo pipelineConfig{};
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
-        pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
         pipelineConfig.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         pipelineConfig.depthStencilInfo.depthTestEnable = VK_TRUE;
@@ -70,8 +71,8 @@ namespace GWIN
 
         pipeline = std::make_unique<GPipeLine>(
             device,
-            "../src/shaders/skybox.vert.spv",
-            "../src/shaders/skybox.frag.spv",
+            "src/shaders/skybox.vert.spv",
+            "src/shaders/skybox.frag.spv",
             pipelineConfig);
 
         if (!pipeline)

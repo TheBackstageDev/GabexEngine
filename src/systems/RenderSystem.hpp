@@ -11,12 +11,14 @@
 #include <vector>
 #include <stdexcept>
 
+#include "../GWSwapChain.hpp"
+
 namespace GWIN
 {
     class RenderSystem
     {
     public:
-        RenderSystem(GWinDevice &device, VkRenderPass renderPass, bool isWireFrame, std::vector<VkDescriptorSetLayout> setLayouts);
+        RenderSystem(GWinDevice &device, bool isWireFrame, std::vector<VkDescriptorSetLayout> setLayouts);
         ~RenderSystem();
 
         RenderSystem(const RenderSystem &) = delete;
@@ -27,7 +29,7 @@ namespace GWIN
         VkPipeline getPipeline() const { return Pipeline->pipeline(); };
     private:
         void createPipelineLayout(std::vector<VkDescriptorSetLayout> setLayouts);
-        void createPipeline(VkRenderPass renderPass, bool isWireFrame);
+        void createPipeline(bool isWireFrame);
 
         VkPipelineLayout pipelineLayout;
 

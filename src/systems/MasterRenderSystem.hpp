@@ -5,6 +5,7 @@
 #include "../EC/keyboard_movement_controller.hpp"
 #include "RenderSystem.hpp"
 #include "lightSystem.hpp"
+#include "ShadowSystem.hpp"
 #include "InterfaceSystem.hpp"
 #include "GWTextureHandler.hpp"
 #include "GWMaterialHandler.hpp"
@@ -13,6 +14,7 @@
 
 #include "GWRendererToolkit.hpp"
 #include "GWOffscreenRenderer.hpp"
+#include "GWShadowRenderer.hpp"
 
 #include <stdexcept>
 #include <chrono>
@@ -36,13 +38,13 @@ namespace GWIN
         void loadGameObjects();
 
         void loadNewScene(const std::string pathToFile);
-        
+
         GWindow& window;
         GWinDevice& device;
 
         std::unique_ptr<GWRenderer> renderer;
         std::unique_ptr<GWOffscreenRenderer> offscreenRenderer;
-        std::unique_ptr<GWOffscreenRenderer> shadowMapRenderer;
+        std::unique_ptr<GWShadowRenderer> shadowMapRenderer;
 
         //Render Systems
         std::unique_ptr<RenderSystem> renderSystem;
@@ -50,6 +52,7 @@ namespace GWIN
         std::unique_ptr<LightSystem> lightSystem;
         std::unique_ptr<SkyboxSystem> skyboxSystem;
         std::unique_ptr<GWInterface> interfaceSystem;
+        std::unique_ptr<ShadowSystem> shadowSystem;
 
         std::unique_ptr<GWBuffer> globalUboBuffer;
         std::vector<VkDescriptorSet> globalDescriptorSets;

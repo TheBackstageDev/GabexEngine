@@ -11,14 +11,18 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/include/volk) 
+
+set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
+
 # Include directories
 include_directories(
     "${CMAKE_SOURCE_DIR}/src/EC"
     "${CMAKE_SOURCE_DIR}/include"
     "C:/VulkanSDK/1.3.283.0/Include"
+    "${CMAKE_SOURCE_DIR}/include/volk" 
 )
 
-# Specify the path for GLFW include and library directories
 set(GLFW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include/glfw/include")
 set(GLFW_LIBRARY_DIR "${CMAKE_SOURCE_DIR}/include/glfw/lib-mingw-w64")
 
@@ -46,25 +50,25 @@ set(IMGUI_SOURCES
     "${CMAKE_SOURCE_DIR}/include/imguizmo/ImGuizmo.cpp"
 )
 
-# Add executable
+set(VOLK_SOURCE "${CMAKE_SOURCE_DIR}/include/volk/volk.c")
+
 add_executable(GabexEngine
     ${SOURCES}
     ${IMGUI_SOURCES}
+    ${VOLK_SOURCE}  # Added VOLK source
     "${CMAKE_SOURCE_DIR}/src/main.cpp"
 )
 
 # Define libraries
 set(LIBS
-    vulkan-1
     assimp-vc143-mt
     ${GLFW_LIBRARY_DIR}/libglfw3dll.a 
 )
+
+target_compile_definitions(GabexEngine PUBLIC VOLK_STATIC_DEFINE ${VOLK_STATIC_DEFINES})
 
 target_link_libraries(GabexEngine PUBLIC ${LIBS})
 
 target_compile_definitions(GabexEngine PUBLIC DEBUG)
 
-# Set output directory
-set_target_properties(GabexEngine PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/"
-)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/DEBUG)

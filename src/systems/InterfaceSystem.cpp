@@ -53,11 +53,11 @@ namespace GWIN
         init_info.MinImageCount = 2;
         init_info.ImageCount = GWinSwapChain::MAX_FRAMES_IN_FLIGHT;
         init_info.UseDynamicRendering = true;
-        init_info.Subpass = 0;
 
         init_info.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
         init_info.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
         init_info.PipelineRenderingCreateInfo.pColorAttachmentFormats = &imageFormat;
+        init_info.PipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
 
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
@@ -200,9 +200,7 @@ namespace GWIN
         ImGui::Begin("DockSpace", nullptr, windowFlags);
         ImGui::PopStyleVar(2);
         ImGui::DockSpace(ImGui::GetID("DockSpace"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
-
-        ImGui::DockSpaceOverViewport(ImGui::GetID("##Dockspace"), ImGui::GetMainViewport());
-
+        
         //Top Menu
         if (ImGui::BeginMainMenuBar())
         {
@@ -284,7 +282,7 @@ namespace GWIN
         {
             auto &images = assets->getImages();
 
-            int32_t buttonSize = 32;
+            float buttonSize = 32;
 
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));           // Darker background
@@ -319,7 +317,7 @@ namespace GWIN
 
         ImDrawList* drawList;
 
-        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar))
+        if (ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
         {
             ImVec2 viewportPos = ImGui::GetWindowPos();   
             ImVec2 viewportSize = ImGui::GetWindowSize(); 
@@ -327,7 +325,7 @@ namespace GWIN
 
             ImGuizmo::SetRect(viewportPos.x, viewportPos.y, viewportSize.x, viewportSize.y);
 
-            if (frameInfo.currentFrameSet)
+            if (frameInfo.currentFrameSet != VK_NULL_HANDLE)
             {
                 ImGui::Image((ImTextureID)frameInfo.currentFrameSet, viewportSize);
 

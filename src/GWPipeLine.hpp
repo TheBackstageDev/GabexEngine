@@ -1,8 +1,9 @@
 #pragma once
 
 #include <vector>
-#include <vulkan/vulkan.h>
+#include <volk/volk.h>
 #include "GWDevice.hpp"
+#include "GWSwapChain.hpp"
 
 namespace GWIN
 {
@@ -19,11 +20,13 @@ namespace GWIN
         VkPipelineColorBlendAttachmentState colorBlendAttachment;
         VkPipelineColorBlendStateCreateInfo colorBlendInfo;
         VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
+        VkPipelineRenderingCreateInfo pipelineRenderingInfo;
         std::vector<VkDynamicState> dynamicStateEnables;
         VkPipelineDynamicStateCreateInfo dynamicStateInfo;
         VkPipelineLayout pipelineLayout = nullptr;
-        VkRenderPass renderPass = nullptr;
-        uint32_t subpass = 0;
+
+        VkFormat colorFormat = VK_FORMAT_R8G8B8A8_SRGB;
+        VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
     };
 
     class GPipeLine

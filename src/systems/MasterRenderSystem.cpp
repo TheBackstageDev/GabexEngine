@@ -19,7 +19,7 @@ namespace GWIN
     {
         renderer = std::make_unique<GWRenderer>(window, device);
         offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount());
-        //shadowMapRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount(), true);
+        shadowMapRenderer = std::make_unique<GWShadowRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount());
         cubemapHandler = std::make_unique<GWCubemapHandler>(device);
         materialHandler = std::make_unique<GWMaterialHandler>(device);
 
@@ -75,16 +75,14 @@ namespace GWIN
                                    .build();
 
         texturePool = GWDescriptorPool::Builder(device)
-                          .setMaxSets(1000)
-                          .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
-                          .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
+                          .setMaxSets(1)
+                          .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, device.properties.limits.maxPerStageDescriptorSampledImages)
+                          .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT | VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT_EXT)
                           .build();
 
         textureSetLayout = GWDescriptorSetLayout::Builder(device)
-                               .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+                               .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, device.properties.limits.maxPerStageDescriptorSamplers)
                                .build();
-
-        std::vector<VkDescriptorSetLayout> setLayouts = {globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
 
         auto minOffsetAlignment = std::lcm(
             device.properties.limits.minUniformBufferOffsetAlignment,
@@ -99,13 +97,8 @@ namespace GWIN
             minOffsetAlignment);
 
         globalUboBuffer->map();
-        
+
         globalDescriptorSets.resize(GWinSwapChain::MAX_FRAMES_IN_FLIGHT);
-
-        textureHandler = std::make_unique<GWTextureHandler>(imageLoader, device);
-
-        modelLoader.setCreateTextureCallback([this](Texture &texture, bool replace = false)
-                                             { currentScene->createSet(texture, replace); });
 
         for (int i = 0; i < globalDescriptorSets.size(); ++i)
         {
@@ -115,14 +108,22 @@ namespace GWIN
                 .build(globalDescriptorSets[i]);
         }
 
+        std::vector<VkDescriptorSetLayout> setLayouts = {globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
+
+        textureHandler = std::make_unique<GWTextureHandler>(imageLoader, device);
+
+        modelLoader.setCreateTextureCallback([this](Texture &texture, bool replace = false)
+                                             { currentScene->createSet(texture, replace); });
+
         SceneCreateInfo createInfo{device, textureSetLayout, texturePool, modelLoader, jsonHandler, textureHandler, materialHandler};
         
         currentScene = std::make_unique<GWScene>(createInfo);
 
-        renderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), false, setLayouts);
-        wireframeRenderSystem = std::make_unique<RenderSystem>(device, offscreenRenderer->getRenderPass(), true, setLayouts);
-        lightSystem = std::make_unique<LightSystem>(device, offscreenRenderer->getRenderPass(), globalSetLayout->getDescriptorSetLayout());
-        skyboxSystem = std::make_unique<SkyboxSystem>(device, offscreenRenderer->getRenderPass(), setLayouts);
+        renderSystem = std::make_unique<RenderSystem>(device, false, setLayouts);
+        wireframeRenderSystem = std::make_unique<RenderSystem>(device, true, setLayouts);
+        lightSystem = std::make_unique<LightSystem>();
+        skyboxSystem = std::make_unique<SkyboxSystem>(device, setLayouts);
+        shadowSystem = std::make_unique<ShadowSystem>(device, setLayouts);
     }
 
     void MasterRenderSystem::updateCamera(FrameInfo& frameInfo)
@@ -222,27 +223,31 @@ namespace GWIN
                     isWireFrame = true;
                 }
 
-                offscreenRenderer->startOffscreenRenderPass(commandBuffer);
+/*                 shadowMapRenderer->startOffscreenRenderPass(commandBuffer);
+                shadowSystem->render(frameInfo);
+                shadowMapRenderer->endOffscreenRenderPass(commandBuffer);
 
+                shadowMapRenderer->createNextImage();
+                auto shadowImageView = shadowMapRenderer->getCurrentImageView();
+                auto shadowSampler = shadowMapRenderer->getImageSampler();  */
+ 
+                offscreenRenderer->startOffscreenRenderPass(commandBuffer);
+/* 
                 if (!isLoading)
                 {
                     skyboxSystem->render(frameInfo);
                 }
-
+ */
                 if (isWireFrame)
                 {
                     wireframeRenderSystem->renderGameObjects(frameInfo);
-                }
-                else
-                {
+                } else {
                     renderSystem->renderGameObjects(frameInfo);
                 }
 
-                //lightSystem->render(frameInfo);
-
                 if (isLoading)
                 {
-                    skyboxSystem->render(frameInfo);
+/*                     skyboxSystem->render(frameInfo); */
                     isLoading = false;
                 }
 
@@ -263,46 +268,40 @@ namespace GWIN
                 renderer->endSwapChainRenderPass(commandBuffer);
                 renderer->endFrame();
 
+                vkDeviceWaitIdle(device.device());
                 ImGui_ImplVulkan_RemoveTexture(frameInfo.currentFrameSet);
                 frameInfo.currentFrameSet = VK_NULL_HANDLE;
 
                 isWireFrame = false;
             }
         }
+
+        vkDeviceWaitIdle(device.device());
     }
 
     void MasterRenderSystem::loadGameObjects()
     {
-        Texture no_texture = textureHandler->createTexture(std::string("../src/textures/no_texture.png"), true);
-
         CubeMapInfo info{};
-        info.negX = "../src/textures/cubeMap/nx.png";
-        info.posX = "../src/textures/cubeMap/px.png";
-        info.negY = "../src/textures/cubeMap/ny.png";
-        info.posY = "../src/textures/cubeMap/py.png"; 
-        info.negZ = "../src/textures/cubeMap/nz.png";
-        info.posZ = "../src/textures/cubeMap/pz.png";
+        info.negX = "src/textures/cubeMap/nx.png";
+        info.posX = "src/textures/cubeMap/px.png";
+        info.negY = "src/textures/cubeMap/ny.png";
+        info.posY = "src/textures/cubeMap/py.png"; 
+        info.negZ = "src/textures/cubeMap/nz.png";
+        info.posZ = "src/textures/cubeMap/pz.png";
         CubeMap cubeMap = cubemapHandler->createCubeMap(info);
         Texture texture2{};
         texture2.textureImage = cubeMap.Cubeimage;
-        GWIN::createSampler(device, texture2.textureSampler, 0);
+        GWIN::createSampler(device, texture2.textureSampler, 1);
 
+        //skyboxSystem->setSkybox(currentScene->getTextures(), texture2.id);
+
+        Texture no_texture = textureHandler->createTexture(std::string("src/textures/no_texture.png"), true);
         currentScene->createSet(no_texture);
 
-        currentScene->createSet(texture2);
-        skyboxSystem->setSkybox(currentScene->getTextures().at(1), texture2.id);
-
-        uint32_t model = currentScene->createMesh("../src/models/Sponza/sponza.obj", std::nullopt);
+        uint32_t model = currentScene->createMesh("src/models/Sponza/sponza.obj", std::nullopt);
         GWGameObject& obj = GWGameObject::createGameObject("Sponza");
         obj.model = model;
         obj.transform.scale = glm::vec3{0.02f, 0.02f, 0.02f};
-
-        auto& subModels = currentScene->getMeshes().at(model)->getSubModels();
-        std::vector<std::string> texturePaths = {
-            "../src/models/Sponza/textures/background.tga",
-            "../src/models/Sponza/textures/chain_texture.tga",
-            "../src/models/Sponza/textures/lion.tga",
-            "../src/models/Sponza/textures/spnza_bricks_a_diff.tga"};
 
         currentScene->createGameObject(obj);
     }

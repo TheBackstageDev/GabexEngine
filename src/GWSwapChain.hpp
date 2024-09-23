@@ -3,7 +3,7 @@
 #include "GWDevice.hpp"
 
 // vulkan headers
-#include <vulkan/vulkan.h>
+#include <volk/volk.h>
 
 // std lib headers
 #include <string>
@@ -28,9 +28,11 @@ namespace GWIN
         VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
         VkRenderPass getRenderPass() { return renderPass; }
         VkImageView getImageView(int index) { return swapChainImageViews[index]; }
+        VkImage getCurrentImage(int index) { return swapChainImages[index]; }
+        VkImageView getDepthImageView(int index) { return depthImageViews[index]; }
         size_t imageCount() { return swapChainImages.size(); }
-        VkFormat getSwapChainImageFormat() { return swapChainImageFormat; }
-        VkFormat getSwapChainDepthFormat() { return swapChainDepthFormat; }
+        static VkFormat getSwapChainImageFormat() { return swapChainImageFormat; }
+        static VkFormat getSwapChainDepthFormat() { return swapChainDepthFormat; }
         VkExtent2D getSwapChainExtent() { return swapChainExtent; }
         uint32_t width() { return swapChainExtent.width; }
         uint32_t height() { return swapChainExtent.height; }
@@ -65,8 +67,8 @@ namespace GWIN
             const std::vector<VkPresentModeKHR> &availablePresentModes);
         VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
-        VkFormat swapChainImageFormat;
-        VkFormat swapChainDepthFormat;
+        static VkFormat swapChainImageFormat;
+        static VkFormat swapChainDepthFormat;
         VkExtent2D swapChainExtent;
 
         std::vector<VkFramebuffer> swapChainFramebuffers;

@@ -19,7 +19,6 @@ bool enableValidationLayers = false;
 
 namespace GWIN
 {
-
     // local callback functions
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -95,6 +94,12 @@ namespace GWIN
 
     void GWinDevice::createInstance()
     {
+        if (volkInitialize() != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to initialize volk!");
+        }
+
+
         if (enableValidationLayers && !checkValidationLayerSupport())
         {
             throw std::runtime_error("validation layers requested, but not available!");
@@ -106,7 +111,7 @@ namespace GWIN
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "Gabex Engine";
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
+        appInfo.apiVersion = VK_API_VERSION_1_3;
 
         VkInstanceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -135,6 +140,8 @@ namespace GWIN
         {
             throw std::runtime_error("failed to create instance!");
         }
+
+        volkLoadInstance(instance);
 
         hasGflwRequiredInstanceExtensions();
     }
@@ -194,20 +201,29 @@ namespace GWIN
         deviceFeatures.fillModeNonSolid = VK_TRUE;
         deviceFeatures.robustBufferAccess = VK_TRUE;
 
+        VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures = {};
+        indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+        indexingFeatures.runtimeDescriptorArray = VK_TRUE;
+        indexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+        indexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
+        indexingFeatures.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE;
+        indexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+        indexingFeatures.shaderStorageImageArrayNonUniformIndexing = VK_TRUE;
+
         VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures = {};
         dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
         dynamicRenderingFeatures.dynamicRendering = VK_TRUE;
 
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-        createInfo.pNext = &dynamicRenderingFeatures;
+
+        indexingFeatures.pNext = &dynamicRenderingFeatures;
+        createInfo.pNext = &indexingFeatures;
 
         if (enableValidationLayers)
         {
@@ -223,6 +239,8 @@ namespace GWIN
         {
             throw std::runtime_error("failed to create logical device!");
         }
+
+        volkLoadDevice(device_);
 
         vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
         vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
@@ -262,8 +280,19 @@ namespace GWIN
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
+        VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures = {};
+        indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+
+        VkPhysicalDeviceFeatures2 deviceFeatures2 = {};
+        deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        deviceFeatures2.pNext = &indexingFeatures;
+
+        vkGetPhysicalDeviceFeatures2(device, &deviceFeatures2);
+
+        bool bindlessSupported = indexingFeatures.descriptorBindingPartiallyBound && indexingFeatures.runtimeDescriptorArray;
+
         return indices.isComplete() && extensionsSupported && swapChainAdequate &&
-               supportedFeatures.samplerAnisotropy && supportedFeatures.robustBufferAccess;
+               supportedFeatures.samplerAnisotropy && bindlessSupported;
     }
 
     void GWinDevice::populateDebugMessengerCreateInfo(
@@ -639,10 +668,15 @@ namespace GWIN
 
     void GWinDevice::createAllocator()
     {
+        VmaVulkanFunctions vulkanFunctions{};
+        vulkanFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+        vulkanFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+
         VmaAllocatorCreateInfo allocatorInfo{};
         allocatorInfo.device = device_;
         allocatorInfo.physicalDevice = physicalDevice;
         allocatorInfo.instance = instance;
+        allocatorInfo.pVulkanFunctions = &vulkanFunctions;
 
         vmaCreateAllocator(&allocatorInfo, &allocator_);
     }

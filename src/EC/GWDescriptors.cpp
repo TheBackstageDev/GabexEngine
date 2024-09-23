@@ -158,33 +158,42 @@ GWDescriptorWriter &GWDescriptorWriter::writeBuffer(
 }
  
 GWDescriptorWriter &GWDescriptorWriter::writeImage(
-    uint32_t binding, VkDescriptorImageInfo *imageInfo) {
-  assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
- 
-  auto &bindingDescription = setLayout.bindings[binding];
- 
-  assert(
-      bindingDescription.descriptorCount == 1 &&
-      "Binding single descriptor info, but binding expects multiple");
- 
-  VkWriteDescriptorSet write{};
-  write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  write.descriptorType = bindingDescription.descriptorType;
-  write.dstBinding = binding;
-  write.pImageInfo = imageInfo;
-  write.descriptorCount = 1;
- 
-  writes.push_back(write);
-  return *this;
+    uint32_t binding, VkDescriptorImageInfo *imageInfo, uint32_t dstArrayPos) {
+    
+    assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
+
+    auto &bindingDescription = setLayout.bindings[binding];
+    
+    assert(bindingDescription.descriptorCount > dstArrayPos && "Array position out of bounds");
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.descriptorType = bindingDescription.descriptorType;
+    write.dstArrayElement = dstArrayPos; 
+    write.dstBinding = binding;
+    write.pImageInfo = imageInfo;
+    write.descriptorCount = 1;  
+
+    writes.push_back(write);
+    return *this;
 }
- 
-bool GWDescriptorWriter::build(VkDescriptorSet &set) {
+
+bool GWDescriptorWriter::build(VkDescriptorSet &set, bool arraySet) {
   bool success = pool.allocateDescriptor(setLayout.getDescriptorSetLayout(), set);
-  if (!success) {
-    return false;
-    std::cout << "failed";
+  //If not a success, it means for the single set its a error, but for the array that it probably just
+  //alreadly created a set for it to be
+  if (!arraySet)
+  {
+    if (!success)
+    {
+      std::cout << "failed" << std::endl;
+      return false;
+    }
+    overwrite(set);
+  } else {
+    overwrite(set);
   }
-  overwrite(set);
+
   return true;
 }
  

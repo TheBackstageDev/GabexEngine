@@ -11,6 +11,8 @@
 
 namespace GWIN
 {
+    VkFormat GWinSwapChain::swapChainImageFormat = VK_FORMAT_UNDEFINED;
+    VkFormat GWinSwapChain::swapChainDepthFormat = VK_FORMAT_UNDEFINED;
 
     GWinSwapChain::GWinSwapChain(GWinDevice &deviceRef, VkExtent2D extent)
         : device{deviceRef}, windowExtent{extent}

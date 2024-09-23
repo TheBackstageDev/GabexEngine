@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include <volk/volk.h>
 #include "GWCamera.hpp"
 #include "GWGameObject.hpp"
 #include <vector>
@@ -43,7 +43,7 @@ namespace GWIN
         GWCamera &currentCamera;
         GWGameObject::map &gameObjects;
         GWModel::map &meshes;
-        std::vector<VkDescriptorSet>& textures;
+        VkDescriptorSet& textures;
     };
 
     struct FrameFlags
@@ -59,6 +59,7 @@ namespace GWIN
         VkDescriptorSet globalDescriptorSet;
         SceneInfo& currentInfo;
         VkDescriptorSet currentFrameSet;
+        VkDescriptorSet shadowMapSet;
         FrameFlags flags;
     };
 }

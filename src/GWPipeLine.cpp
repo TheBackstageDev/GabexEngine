@@ -55,9 +55,6 @@ namespace GWIN
         assert(
             configInfo.pipelineLayout != VK_NULL_HANDLE &&
             "Cannot create graphics pipeline: no pipelineLayout provided in configInfo");
-        assert(
-            configInfo.renderPass != VK_NULL_HANDLE &&
-            "Cannot create graphics pipeline: no renderPass provided in configInfo");
 
         auto vertCode = readFile(vertFilepath);
         auto fragCode = readFile(fragFilepath);
@@ -105,8 +102,10 @@ namespace GWIN
         pipelineInfo.pDynamicState = &configInfo.dynamicStateInfo;
 
         pipelineInfo.layout = configInfo.pipelineLayout;
-        pipelineInfo.renderPass = configInfo.renderPass;
-        pipelineInfo.subpass = configInfo.subpass;
+/*         pipelineInfo.renderPass = configInfo.renderPass;
+        pipelineInfo.subpass = configInfo.subpass; */
+
+        pipelineInfo.pNext = &configInfo.pipelineRenderingInfo;
 
         pipelineInfo.basePipelineIndex = -1;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -185,7 +184,7 @@ namespace GWIN
         configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;            
 
         configInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        configInfo.colorBlendInfo.logicOpEnable = VK_TRUE;
+        configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
         configInfo.colorBlendInfo.logicOp = VK_LOGIC_OP_COPY; // Optional
         configInfo.colorBlendInfo.attachmentCount = 1;
         configInfo.colorBlendInfo.pAttachments = &configInfo.colorBlendAttachment;
@@ -199,17 +198,22 @@ namespace GWIN
         configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
         configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
         configInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
-        configInfo.depthStencilInfo.minDepthBounds = 0.0f; // Optional
+        configInfo.depthStencilInfo.minDepthBounds = 0.0f; // Optionalhy
         configInfo.depthStencilInfo.maxDepthBounds = 1.0f; // Optional
         configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
         configInfo.depthStencilInfo.front = {}; // Optional
         configInfo.depthStencilInfo.back = {};  // Optional
 
+        configInfo.pipelineRenderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+        configInfo.pipelineRenderingInfo.colorAttachmentCount = 1;
+        //configInfo.colorFormat = GWinSwapChain::getSwapChainImageFormat();
+        configInfo.pipelineRenderingInfo.pColorAttachmentFormats = &configInfo.colorFormat;
+        configInfo.pipelineRenderingInfo.depthAttachmentFormat = GWinSwapChain::getSwapChainDepthFormat();
+
         configInfo.dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
         configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
-        configInfo.dynamicStateInfo.dynamicStateCount =
-            static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
+        configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
         configInfo.dynamicStateInfo.flags = 0;
     }
 

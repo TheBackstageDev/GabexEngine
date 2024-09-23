@@ -18,12 +18,10 @@ namespace GWIN
         if (createInfo.sceneJson == "")
         {
             auto skybox = GWGameObject::createGameObject("Skybox");
-            skybox.model = createMesh("../src/models/cube.obj", std::nullopt, std::nullopt);
+            skybox.model = createMesh("src/models/cube.obj", std::nullopt, std::nullopt);
 
             auto directionalLight = GWGameObject::createGameObject("Directional Light");
-            directionalLight.transform.rotation.y = -.25f * glm::two_pi<float>();
-            directionalLight.transform.rotation.x = .25f * glm::two_pi<float>();
-            directionalLight.transform.rotation.z = .15f * glm::two_pi<float>();
+            directionalLight.transform.rotateEuler({45.f, 45.f, 45.f});
 
             gameObjects.emplace(skybox.getId(), std::move(skybox));
             gameObjects.emplace(directionalLight.getId(), std::move(directionalLight));
@@ -146,24 +144,26 @@ namespace GWIN
 
     void GWScene::createSet(Texture &texture, bool replace)
     {
-        VkDescriptorSet set;
-
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = texture.textureImage.layout;
         imageInfo.imageView = texture.textureImage.imageView;
         imageInfo.sampler = texture.textureSampler;
 
         GWDescriptorWriter(*textureLayout, *texturePool)
-            .writeImage(0, &imageInfo)
-            .build(set);
+            .writeImage(0, &imageInfo, texture.id)
+            .build(this->textures, true);
+    }
 
-        if (replace)
-        {
-            textures.at(texture.id) = VK_NULL_HANDLE;
-            textures.at(texture.id) = set;
-        } else {
-            textures.push_back(std::move(set));
-        }
+    void GWScene::retcreateSet(VkImageLayout layout, VkImageView &imageView, VkSampler &sampler, uint32_t binding)
+    {
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = layout;
+        imageInfo.imageView = imageView;
+        imageInfo.sampler = sampler;
+
+        GWDescriptorWriter(*textureLayout, *texturePool)
+            .writeImage(binding, &imageInfo)
+            .build(this->textures);
     }
 
     void GWScene::createCamera()

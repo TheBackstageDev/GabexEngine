@@ -90,16 +90,16 @@ class GWDescriptorWriter {
   GWDescriptorWriter(GWDescriptorSetLayout &setLayout, GWDescriptorPool &pool);
  
   GWDescriptorWriter &writeBuffer(uint32_t binding, VkDescriptorBufferInfo *bufferInfo);
-  GWDescriptorWriter &writeImage(uint32_t binding, VkDescriptorImageInfo *imageInfo);
- 
-  bool build(VkDescriptorSet &set);
+  GWDescriptorWriter &writeImage(uint32_t binding, VkDescriptorImageInfo *imageInfo, uint32_t dstArrayPos = 0);
+
+  bool build(VkDescriptorSet &set, bool arraySet = false);
   void overwrite(VkDescriptorSet &set);
- 
- private:
+
+private:
   GWDescriptorSetLayout &setLayout;
   GWDescriptorPool &pool;
   std::vector<VkWriteDescriptorSet> writes;
-};
+  };
 
 class GWPoolHandler
 {

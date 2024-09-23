@@ -20,8 +20,7 @@ namespace GWIN
         
         GWRenderer(const GWRenderer &) = delete;
         GWRenderer &operator=(const GWRenderer &) = delete;
-
-        VkRenderPass getRenderPass() const { return swapChain->getRenderPass(); }
+        
         float getAspectRatio() const { return swapChain->extentAspectRatio(); }
         float getImageCount() const { return swapChain->imageCount(); }
 

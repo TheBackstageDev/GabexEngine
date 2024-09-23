@@ -15,13 +15,7 @@ namespace GWIN
         createDefaultImages();
     }
 
-    AssetsWindow::~AssetsWindow()
-    {
-        for (auto &image : images)
-        {
-            ImGui_ImplVulkan_RemoveTexture(image.second);
-        }
-    }
+    AssetsWindow::~AssetsWindow() {}
 
     void AssetsWindow::assetMenu()
     {
@@ -103,9 +97,9 @@ namespace GWIN
         {
             ImGui::Image((ImTextureID)images[asset.image], ImVec2(100, 100), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(1.0f, 1.0f, 1.0f, 0.2f));
         }
-        else if (asset.type == ASSET_TYPE_TEXTURE) {
-            ImGui::Image((ImTextureID)frameInfo.currentInfo.textures.at(asset.info.index), ImVec2(100, 100), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(1.0f, 1.0f, 1.0f, 0.2f));
-        }
+        //else if (asset.type == ASSET_TYPE_TEXTURE) {
+            //ImGui::Image((ImTextureID)frameInfo.currentInfo.textures.at(asset.info.index), ImVec2(100, 100), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(1.0f, 1.0f, 1.0f, 0.2f));
+        //}
         else
         {
             ImGui::Dummy(ImVec2(100, 100));
@@ -271,7 +265,7 @@ namespace GWIN
 
     void AssetsWindow::createDefaultImages()
     {
-        std::string relativePath = "..\\src\\systems\\interface\\images";
+        std::string relativePath = "src\\systems\\interface\\images";
         fs::path imageDirectory = fs::current_path() / relativePath;
 
         if (fs::exists(imageDirectory) && fs::is_directory(imageDirectory))
