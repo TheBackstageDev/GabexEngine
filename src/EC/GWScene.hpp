@@ -66,8 +66,7 @@ namespace GWIN
         void removeMesh(uint32_t id);
 
         void createSet(Texture &texture, bool replace = false);
-        void retcreateSet(VkImageLayout layout, VkImageView& imageView, VkSampler& sampler, uint32_t binding);
-        void createSet(VkDescriptorSet& set, CubeMap &texture);
+        VkDescriptorSet retcreateSet(VkImageLayout layout, VkImageView &imageView, VkSampler &sampler, uint32_t binding);
 
         void saveScene(const std::string path);
         GWCamera& getCurrentCamera() { return cameras.at(currentCamera); }

@@ -75,13 +75,14 @@ namespace GWIN
                                    .build();
 
         texturePool = GWDescriptorPool::Builder(device)
-                          .setMaxSets(1)
+                          .setMaxSets(2)
                           .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, device.properties.limits.maxPerStageDescriptorSampledImages)
                           .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT | VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT_EXT)
                           .build();
 
         textureSetLayout = GWDescriptorSetLayout::Builder(device)
                                .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, device.properties.limits.maxPerStageDescriptorSamplers)
+                               .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
                                .build();
 
         auto minOffsetAlignment = std::lcm(
@@ -232,12 +233,12 @@ namespace GWIN
                 auto shadowSampler = shadowMapRenderer->getImageSampler();  */
  
                 offscreenRenderer->startOffscreenRenderPass(commandBuffer);
-/* 
+
                 if (!isLoading)
                 {
                     skyboxSystem->render(frameInfo);
                 }
- */
+
                 if (isWireFrame)
                 {
                     wireframeRenderSystem->renderGameObjects(frameInfo);
@@ -247,7 +248,7 @@ namespace GWIN
 
                 if (isLoading)
                 {
-/*                     skyboxSystem->render(frameInfo); */
+                    skyboxSystem->render(frameInfo);
                     isLoading = false;
                 }
 
@@ -281,11 +282,14 @@ namespace GWIN
 
     void MasterRenderSystem::loadGameObjects()
     {
+        Texture no_texture = textureHandler->createTexture(std::string("src/textures/no_texture.png"), true);
+        currentScene->createSet(no_texture);
+
         CubeMapInfo info{};
         info.negX = "src/textures/cubeMap/nx.png";
         info.posX = "src/textures/cubeMap/px.png";
         info.negY = "src/textures/cubeMap/ny.png";
-        info.posY = "src/textures/cubeMap/py.png"; 
+        info.posY = "src/textures/cubeMap/py.png";
         info.negZ = "src/textures/cubeMap/nz.png";
         info.posZ = "src/textures/cubeMap/pz.png";
         CubeMap cubeMap = cubemapHandler->createCubeMap(info);
@@ -293,10 +297,12 @@ namespace GWIN
         texture2.textureImage = cubeMap.Cubeimage;
         GWIN::createSampler(device, texture2.textureSampler, 1);
 
-        //skyboxSystem->setSkybox(currentScene->getTextures(), texture2.id);
+        VkDescriptorSet skyboxSet = currentScene->retcreateSet(
+        texture2.textureImage.layout, 
+        texture2.textureImage.imageView,
+        texture2.textureSampler, 1);
 
-        Texture no_texture = textureHandler->createTexture(std::string("src/textures/no_texture.png"), true);
-        currentScene->createSet(no_texture);
+        skyboxSystem->setSkybox(skyboxSet, texture2.id);
 
         uint32_t model = currentScene->createMesh("src/models/Sponza/sponza.obj", std::nullopt);
         GWGameObject& obj = GWGameObject::createGameObject("Sponza");

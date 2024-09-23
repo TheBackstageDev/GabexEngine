@@ -3,7 +3,7 @@
 layout(location = 0) in vec3 fragUvw;
 layout(location = 0) out vec4 outColor;
 
-layout(set = 1, binding = 0) uniform samplerCube skyboxSampler;
+layout(set = 1, binding = 1) uniform samplerCube skyboxSampler;
 
 struct Light {
   vec4 position; //w is type; 0 - Point, 1 - Spot

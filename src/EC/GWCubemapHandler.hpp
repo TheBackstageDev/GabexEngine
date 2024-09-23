@@ -31,7 +31,7 @@ namespace GWIN
     {
     public:
         GWCubemapHandler(GWinDevice& device);
-        ~GWCubemapHandler();
+        //~GWCubemapHandler();
         
         GWCubemapHandler(const GWCubemapHandler &) = delete;
         GWCubemapHandler &operator=(const GWCubemapHandler &) = delete;

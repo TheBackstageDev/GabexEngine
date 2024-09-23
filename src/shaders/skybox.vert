@@ -8,8 +8,6 @@ layout(location = 4) in vec3 tangent;
 
 layout(location = 0) out vec3 fragUvw;
 
-layout(set = 1, binding = 0) uniform samplerCube skyboxSampler;
-
 struct Light {
   vec4 position; //w is type; 0 - Point, 1 - Spot
   vec4 color; // W is itensity
@@ -30,7 +28,6 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 
 layout(push_constant) uniform Push {
     mat4 modelMatrix;
-    uint textureID;
 } push;
 
 void main()

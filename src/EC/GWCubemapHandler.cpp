@@ -7,15 +7,6 @@ namespace GWIN
 {
     GWCubemapHandler::GWCubemapHandler(GWinDevice& device) : device(device) {};
 
-    GWCubemapHandler::~GWCubemapHandler()
-    {
-        for (auto &cubeMap : cubeMapsForDeletion)
-        {
-            vkDestroyImageView(device.device(), cubeMap.Cubeimage.imageView, nullptr);
-            vmaDestroyImage(device.getAllocator(), cubeMap.Cubeimage.image, cubeMap.Cubeimage.allocation);
-        }
-    }
-
     CubeMap GWCubemapHandler::createCubeMap(CubeMapInfo& info)
     {
         ++lastCubemapId;

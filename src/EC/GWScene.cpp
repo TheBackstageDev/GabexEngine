@@ -154,8 +154,10 @@ namespace GWIN
             .build(this->textures, true);
     }
 
-    void GWScene::retcreateSet(VkImageLayout layout, VkImageView &imageView, VkSampler &sampler, uint32_t binding)
+    VkDescriptorSet GWScene::retcreateSet(VkImageLayout layout, VkImageView &imageView, VkSampler &sampler, uint32_t binding)
     {
+        VkDescriptorSet set = VK_NULL_HANDLE;
+
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = layout;
         imageInfo.imageView = imageView;
@@ -163,7 +165,9 @@ namespace GWIN
 
         GWDescriptorWriter(*textureLayout, *texturePool)
             .writeImage(binding, &imageInfo)
-            .build(this->textures);
+            .build(set);
+
+        return set;
     }
 
     void GWScene::createCamera()
