@@ -44,6 +44,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 
 const uint DIFFUSE_TEX = 0;
 const uint NORMAL_TEX = 1;
+const uint SHADOW_MAP_TEX = 0;
 
 layout(set = 1, binding = 0) uniform sampler2D texSampler[];
 
@@ -53,37 +54,66 @@ layout(push_constant) uniform Push {
     uint textureIndex[6];
 } push;
 
-void computeLighting(LightInfo lightInfo, vec3 intensity, inout vec3 diffuseLight, inout vec3 specularLight, float shadowFactor) {
-  float cosAngIncidence = max(dot(lightInfo.fragNormalWorld, lightInfo.directionToLight), 0.0);
-  vec3 diffuse = intensity * cosAngIncidence * (1.0 - lightInfo.material.data.x);
+float shadowCalculation(vec4 fragPosLightSpace, vec3 direction) {
+    // Normalize the coordinates to [0, 1]
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords *= 0.5 + 0.5; 
 
-  vec3 halfAngle = normalize(lightInfo.directionToLight + lightInfo.viewDirection);
-  float blinnTerm = max(dot(lightInfo.fragNormalWorld, halfAngle), 0.0);
-  blinnTerm = pow(blinnTerm, mix(50.0, 4.0, lightInfo.material.data.y));
+    float shadow = 0.0;
+/* 
+    if(projCoords.z > 1.0)
+        return shadow; //returns 0 */
+    
+    float closestDepth = texture(texSampler[SHADOW_MAP_TEX], projCoords.xy).r; 
+    float currentDepth = projCoords.z;
 
-  vec3 specular = intensity * blinnTerm * mix(0.04, 1.0, lightInfo.material.data.x);
+    float bias = max(0.05 * (1.0 - dot(fragNormalWorld, normalize(direction))), 0.005);  
 
-  diffuseLight += diffuse;
-  specularLight += specular;
+    vec2 texelSize = 1.0 / textureSize(texSampler[SHADOW_MAP_TEX], 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(texSampler[SHADOW_MAP_TEX], projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+        }    
+    }
+    shadow /= 9.0;
+    
+    return shadow;
 }
 
-void calculateLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseLight, inout vec3 specularLight, vec4 fragPosLightSpace) {
-  vec3 intensity = currentLight.color.xyz * currentLight.color.w;
+void computeLighting(LightInfo lightInfo, vec3 intensity, inout vec3 diffuseLight, inout vec3 specularLight, float shadowFactor) {
+    float cosAngIncidence = max(dot(lightInfo.fragNormalWorld, lightInfo.directionToLight), 0.0);
+    vec3 diffuse = intensity * cosAngIncidence * (1.0 - lightInfo.material.data.x);
 
-  if (currentLight.position.w == 0.0) { // Point light
-    intensity /= (lightInfo.distance * lightInfo.distance);
-    computeLighting(lightInfo, intensity, diffuseLight, specularLight, 1.0);
-  } else if (currentLight.position.w == 1.0) { // Spot light
-    currentLight.direction.xyz = normalize(currentLight.direction.xyz);
-    float cosTheta = dot(lightInfo.directionToLight, currentLight.direction.xyz);
+    vec3 halfAngle = normalize(lightInfo.directionToLight + lightInfo.viewDirection);
+    float blinnTerm = max(dot(lightInfo.fragNormalWorld, halfAngle), 0.0);
+    blinnTerm = pow(blinnTerm, mix(50.0, 4.0, lightInfo.material.data.y));
 
-    if (cosTheta > currentLight.direction.w) {
-      float smoothFactor = 0.01;
-      float spotEffect = smoothstep(currentLight.direction.w, currentLight.direction.w + smoothFactor, cosTheta);
-      intensity *= spotEffect / lightInfo.distance;
-      computeLighting(lightInfo, intensity, diffuseLight, specularLight, 1.0);
+    vec3 specular = intensity * blinnTerm * mix(0.04, 1.0, lightInfo.material.data.x);
+
+    diffuseLight += diffuse * shadowFactor;
+    specularLight += specular * shadowFactor; 
+}
+
+void calculateLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseLight, inout vec3 specularLight, vec4 fragPosLightSpace, float shadowfactor) {
+    vec3 intensity = currentLight.color.xyz * currentLight.color.w;
+
+    if (currentLight.position.w == 0.0) { // Point light
+        intensity /= (lightInfo.distance * lightInfo.distance);
+        computeLighting(lightInfo, intensity, diffuseLight, specularLight, shadowfactor);
+    } else if (currentLight.position.w == 1.0) { // Spot light
+        currentLight.direction.xyz = normalize(currentLight.direction.xyz);
+        float cosTheta = dot(lightInfo.directionToLight, currentLight.direction.xyz);
+
+        if (cosTheta > currentLight.direction.w) {
+            float smoothFactor = 0.01;
+            float spotEffect = smoothstep(currentLight.direction.w, currentLight.direction.w + smoothFactor, cosTheta);
+            intensity *= spotEffect / lightInfo.distance;
+            computeLighting(lightInfo, intensity, diffuseLight, specularLight, shadowfactor);
+        }
     }
-  }
 }
 
 void main() {
@@ -102,16 +132,18 @@ void main() {
         vec3 sunDirection = normalize(ubo.sunLight.xyz);
         vec4 fragPosLightSpace = ubo.sunLightSpaceMatrix * vec4(fragPosWorld, 1.0);
         
+        float shadowFactor = shadowCalculation(fragPosLightSpace, sunDirection); 
+
         float cosAngSunIncidence = max(dot(normalMap, sunDirection), 0.0);
-        diffuseLight += cosAngSunIncidence * ubo.sunLight.w;
+        diffuseLight += cosAngSunIncidence * ubo.sunLight.w * shadowFactor; 
 
         vec3 sunHalfAngle = normalize(sunDirection + viewDirection);
         float sunBlinnTerm = max(dot(normalMap, sunHalfAngle), 0.0);
         sunBlinnTerm = pow(sunBlinnTerm, mix(50.0, 4.0, material.data.y)); 
 
-        specularLight += ubo.sunLight.w * sunBlinnTerm * mix(0.04, 1.0, material.data.x);
+        specularLight += ubo.sunLight.w * sunBlinnTerm * mix(0.04, 1.0, material.data.x) * shadowFactor; 
     }
-
+    
     // Light contributions
     for (int i = 0; i < ubo.numLights; i++) {
         Light light = ubo.lights[i];
@@ -131,8 +163,8 @@ void main() {
           lightInfo.material = material;
 
           vec4 fragPosLightSpace = light.lightSpaceMatrix[0] * vec4(fragPosWorld, 1.0);
-
-          calculateLight(light, lightInfo, diffuseLight, specularLight, fragPosLightSpace);
+          //float shadowFactor = shadowCalculation(fragPosLightSpace); 
+          calculateLight(light, lightInfo, diffuseLight, specularLight, fragPosLightSpace, 1.0);
         }
     }
 

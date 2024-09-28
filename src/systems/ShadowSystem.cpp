@@ -27,11 +27,9 @@ namespace GWIN
     void ShadowSystem::createPipelineLayout(std::vector<VkDescriptorSetLayout> setLayouts)
     {
         VkPushConstantRange pushConstant{};
-        pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pushConstant.offset = 0;
         pushConstant.size = sizeof(SpushConstant);
-
-        std::cout << sizeof(SpushConstant) << " ShadowSystem \n";
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -52,7 +50,7 @@ namespace GWIN
 
         PipelineConfigInfo pipelineConfig{};
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
-        // GPipeLine::enableAlphaBlending(pipelineConfig);
+        pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_FRONT_BIT;
         pipelineConfig.pipelineLayout = pipelineLayout;
 
         Pipeline = std::make_unique<GPipeLine>(
@@ -84,31 +82,37 @@ namespace GWIN
         for (auto &kv : frameInfo.currentInfo.gameObjects)
         {
             auto &obj = kv.second;
-            if (obj.model == -1 || obj.getName() == "Skybox")
+            if (!obj.castShadow || obj.model == -1)
                 continue;
 
             auto &model = frameInfo.currentInfo.meshes.at(obj.model);
-
             SpushConstant push{};
-            push.modelMatrix = obj.transform.mat4();
-            //push.lightViewProj
-
-            vkCmdPushConstants(
-                frameInfo.commandBuffer,
-                pipelineLayout,
-                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                0,
-                sizeof(SpushConstant),
-                &push);
+            push.modelMatrix = obj.transform.mat4(); 
 
             if (model->hasSubModels())
             {
                 for (auto &subModel : model->getSubModels())
                 {
+                    vkCmdPushConstants(
+                        frameInfo.commandBuffer,
+                        pipelineLayout,
+                        VK_SHADER_STAGE_VERTEX_BIT,
+                        0,
+                        sizeof(SpushConstant),
+                        &push);
+
                     subModel->bind(frameInfo.commandBuffer);
                     subModel->draw(frameInfo.commandBuffer);
                 }
             }
+
+            vkCmdPushConstants(
+                frameInfo.commandBuffer,
+                pipelineLayout,
+                VK_SHADER_STAGE_VERTEX_BIT,
+                0,
+                sizeof(SpushConstant),
+                &push);
 
             model->bind(frameInfo.commandBuffer);
             model->draw(frameInfo.commandBuffer);

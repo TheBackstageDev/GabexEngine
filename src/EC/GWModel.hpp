@@ -70,7 +70,7 @@ namespace GWIN
 
         uint32_t numVertices() { return vertexCount; }
 
-        std::array<uint32_t, 6> Textures{0, 0, 0, 0, 0, 0}; // ID of the textures
+        std::array<uint32_t, 6> Textures{1, 1, 1, 1, 1, 1}; // ID of the textures
         uint32_t Material = 0; //ID of the material
     private:
         void createVertexBuffers(const std::vector<Vertex> &vertices);

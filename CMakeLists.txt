@@ -55,7 +55,7 @@ set(VOLK_SOURCE "${CMAKE_SOURCE_DIR}/include/volk/volk.c")
 add_executable(GabexEngine
     ${SOURCES}
     ${IMGUI_SOURCES}
-    ${VOLK_SOURCE}  # Added VOLK source
+    ${VOLK_SOURCE} 
     "${CMAKE_SOURCE_DIR}/src/main.cpp"
 )
 
@@ -72,3 +72,10 @@ target_link_libraries(GabexEngine PUBLIC ${LIBS})
 target_compile_definitions(GabexEngine PUBLIC DEBUG)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/DEBUG)
+
+add_custom_command(
+    TARGET GabexEngine POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Running shader compilation script..."
+    COMMAND ${CMAKE_SOURCE_DIR}/src/shaders/compiler.bat
+    COMMENT "Compiling shaders..."
+)

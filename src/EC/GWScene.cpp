@@ -154,6 +154,18 @@ namespace GWIN
             .build(this->textures, true);
     }
 
+    void GWScene::createSet(VkImageLayout layout, VkImageView &imageView, VkSampler &sampler, uint32_t id)
+    {
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = layout;
+        imageInfo.imageView = imageView;
+        imageInfo.sampler = sampler;
+
+        GWDescriptorWriter(*textureLayout, *texturePool)
+            .writeImage(0, &imageInfo, id)
+            .build(this->textures, true);
+    }
+
     VkDescriptorSet GWScene::retcreateSet(VkImageLayout layout, VkImageView &imageView, VkSampler &sampler, uint32_t binding)
     {
         VkDescriptorSet set = VK_NULL_HANDLE;

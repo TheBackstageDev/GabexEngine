@@ -2,7 +2,7 @@
 
 layout(push_constant) uniform PushConstants {
     mat4 modelMatrix;      // Model matrix to transform the object
-} pushConstants;
+} push;
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
@@ -36,7 +36,6 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 } ubo;
 
 void main() {
-    vec4 worldPosition = pushConstants.modelMatrix * vec4(position, 1.0);
-    
-    gl_Position = ubo.sunLightSpaceMatrix * worldPosition;
+    vec4 positionWorld = push.modelMatrix * vec4(position, 1.0);
+    gl_Position = ubo.sunLightSpaceMatrix * positionWorld;
 }

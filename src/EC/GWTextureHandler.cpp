@@ -22,6 +22,8 @@ namespace GWIN
 
     Texture GWTextureHandler::createTexture(std::string& pathToTexture, bool mipMap)
     {
+        ++lastTextureId;
+        
         Texture texture{};
 
         texture.id = lastTextureId;
@@ -32,8 +34,6 @@ namespace GWIN
         GWIN::createSampler(device, texture.textureSampler, texture.textureImage.mipLevels);
 
         textures.push_back(std::move(texture));
-
-        ++lastTextureId;
 
         return texture;
     }

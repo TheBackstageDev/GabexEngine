@@ -136,6 +136,7 @@ namespace GWIN
 
         float aspect = renderer->getAspectRatio();
         camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
+        //camera.setOrthographicProjection(-aspect, aspect, -1, 1, 0.1f, 100.f);
 
         if (frameInfo.flags.frustumCulling)
             camera.updateFrustumPlanes();
@@ -213,8 +214,8 @@ namespace GWIN
                 ubo.view = frameInfo.currentInfo.currentCamera.getView();
                 ubo.inverseView = frameInfo.currentInfo.currentCamera.getInverseView();
                 ubo.sunLight = interfaceSystem->getLightDirection(frameInfo.currentInfo.gameObjects.at(1));
+                ubo.sunLightSpaceMatrix = lightSystem->calculateDirectionalLightMatrix(10.f, ubo.sunLight);
                 lightSystem->update(frameInfo, ubo);
-                lightSystem->calculateDirectionalLightMatrix(ubo.sunLightSpaceMatrix, currentCam.getNearClip(), currentCam.getFarClip());
                 materialHandler->setMaterials(ubo);
                 globalUboBuffer->writeToIndex(&ubo, frameIndex);
                 globalUboBuffer->flushIndex(frameIndex);
@@ -224,14 +225,16 @@ namespace GWIN
                     isWireFrame = true;
                 }
 
-/*                 shadowMapRenderer->startOffscreenRenderPass(commandBuffer);
+                shadowMapRenderer->startOffscreenRenderPass(commandBuffer);
                 shadowSystem->render(frameInfo);
                 shadowMapRenderer->endOffscreenRenderPass(commandBuffer);
 
                 shadowMapRenderer->createNextImage();
                 auto shadowImageView = shadowMapRenderer->getCurrentImageView();
-                auto shadowSampler = shadowMapRenderer->getImageSampler();  */
- 
+                auto shadowSampler = shadowMapRenderer->getImageSampler();
+
+                currentScene->createSet(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, shadowImageView, shadowSampler, 0);
+
                 offscreenRenderer->startOffscreenRenderPass(commandBuffer);
 
                 if (!isLoading)
@@ -243,7 +246,7 @@ namespace GWIN
                 {
                     wireframeRenderSystem->renderGameObjects(frameInfo);
                 } else {
-                    renderSystem->renderGameObjects(frameInfo);
+                   renderSystem->renderGameObjects(frameInfo);
                 }
 
                 if (isLoading)
@@ -259,7 +262,7 @@ namespace GWIN
                     offscreenRenderer->getImageSampler(),
                     offscreenRenderer->getCurrentImageView(),
                     VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL);
-
+                
                 // render
                 interfaceSystem->newFrame(frameInfo);
 
@@ -284,7 +287,6 @@ namespace GWIN
     {
         Texture no_texture = textureHandler->createTexture(std::string("src/textures/no_texture.png"), true);
         currentScene->createSet(no_texture);
-
         CubeMapInfo info{};
         info.negX = "src/textures/cubeMap/nx.png";
         info.posX = "src/textures/cubeMap/px.png";
@@ -310,5 +312,13 @@ namespace GWIN
         obj.transform.scale = glm::vec3{0.02f, 0.02f, 0.02f};
 
         currentScene->createGameObject(obj);
+
+        uint32_t model2 = currentScene->createMesh("src/models/quad.obj", std::nullopt);
+        GWGameObject& obj2 = GWGameObject::createGameObject("Quad");
+        obj2.model = model2;
+
+        currentScene->getMeshes().at(model2)->Textures[0] = 0;
+
+        currentScene->createGameObject(obj2);
     }
 }
