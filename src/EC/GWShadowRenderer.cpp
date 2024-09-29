@@ -3,8 +3,8 @@
 #include <stdexcept>
 #include <iostream>
 
-#define SHADOW_HEIGHT 1024
-#define SHADOW_WIDTH 1024
+#define SHADOW_HEIGHT 2048
+#define SHADOW_WIDTH 2048
 
 namespace GWIN
 {
@@ -98,7 +98,7 @@ namespace GWIN
         samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER; 
         samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER; 
         samplerInfo.anisotropyEnable = VK_FALSE;
-        samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK; 
+        samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE; 
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_TRUE; 
         samplerInfo.compareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
@@ -191,12 +191,12 @@ namespace GWIN
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(SHADOW_WIDTH * 2);   
-        viewport.height = static_cast<float>(SHADOW_HEIGHT * 2);
+        viewport.width = static_cast<float>(SHADOW_WIDTH);   
+        viewport.height = static_cast<float>(SHADOW_HEIGHT);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
-        VkRect2D scissor{{0, 0}, {SHADOW_WIDTH * 2, SHADOW_HEIGHT * 2}}; 
+        VkRect2D scissor{{0, 0}, {SHADOW_WIDTH, SHADOW_HEIGHT}}; 
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 

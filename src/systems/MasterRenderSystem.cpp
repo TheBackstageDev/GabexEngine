@@ -214,7 +214,11 @@ namespace GWIN
                 ubo.view = frameInfo.currentInfo.currentCamera.getView();
                 ubo.inverseView = frameInfo.currentInfo.currentCamera.getInverseView();
                 ubo.sunLight = interfaceSystem->getLightDirection(frameInfo.currentInfo.gameObjects.at(1));
-                ubo.sunLightSpaceMatrix = lightSystem->calculateDirectionalLightMatrix(10.f, ubo.sunLight);
+                ubo.renderShadows = interfaceFlags.showShadows;
+
+                auto& currentViewerObj = currentScene->getGameObjects().at(frameInfo.currentInfo.currentCamera.getViewerObject());
+
+                ubo.sunLightSpaceMatrix = lightSystem->calculateDirectionalLightMatrix(currentViewerObj.transform.translation, ubo.sunLight);
                 lightSystem->update(frameInfo, ubo);
                 materialHandler->setMaterials(ubo);
                 globalUboBuffer->writeToIndex(&ubo, frameIndex);
@@ -225,15 +229,18 @@ namespace GWIN
                     isWireFrame = true;
                 }
 
-                shadowMapRenderer->startOffscreenRenderPass(commandBuffer);
-                shadowSystem->render(frameInfo);
-                shadowMapRenderer->endOffscreenRenderPass(commandBuffer);
+                if (interfaceFlags.showShadows)
+                {
+                    shadowMapRenderer->startOffscreenRenderPass(commandBuffer);
+                    shadowSystem->render(frameInfo);
+                    shadowMapRenderer->endOffscreenRenderPass(commandBuffer);
 
-                shadowMapRenderer->createNextImage();
-                auto shadowImageView = shadowMapRenderer->getCurrentImageView();
-                auto shadowSampler = shadowMapRenderer->getImageSampler();
+                    shadowMapRenderer->createNextImage();
+                    auto shadowImageView = shadowMapRenderer->getCurrentImageView();
+                    auto shadowSampler = shadowMapRenderer->getImageSampler();
 
-                currentScene->createSet(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, shadowImageView, shadowSampler, 0);
+                    currentScene->createSet(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, shadowImageView, shadowSampler, 0);
+                }
 
                 offscreenRenderer->startOffscreenRenderPass(commandBuffer);
 

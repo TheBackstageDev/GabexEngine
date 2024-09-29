@@ -22,7 +22,7 @@ namespace GWIN
         {
             vkDestroyPipelineLayout(GDevice.device(), pipelineLayout, nullptr);
         }
-    }
+    }    
 
     void ShadowSystem::createPipelineLayout(std::vector<VkDescriptorSetLayout> setLayouts)
     {
@@ -50,7 +50,7 @@ namespace GWIN
 
         PipelineConfigInfo pipelineConfig{};
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
-        pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_FRONT_BIT;
+        pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
         pipelineConfig.pipelineLayout = pipelineLayout;
 
         Pipeline = std::make_unique<GPipeLine>(

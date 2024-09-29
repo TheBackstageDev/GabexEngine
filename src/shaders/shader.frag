@@ -40,12 +40,14 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   Light lights[20];
   Material materials[100];
   int numLights;
+  bool renderShadows;
 } ubo;
 
 const uint DIFFUSE_TEX = 0;
 const uint NORMAL_TEX = 1;
 const uint SHADOW_MAP_TEX = 0;
 
+layout(set = 1, binding = 0) uniform sampler2DShadow texSamplerShadow[];
 layout(set = 1, binding = 0) uniform sampler2D texSampler[];
 
 layout(push_constant) uniform Push {
@@ -54,34 +56,39 @@ layout(push_constant) uniform Push {
     uint textureIndex[6];
 } push;
 
-float shadowCalculation(vec4 fragPosLightSpace, vec3 direction) {
-    // Normalize the coordinates to [0, 1]
+float shadowCalculation(vec4 fragPosLightSpace, vec3 lightDir, vec3 normal, bool renderShadows) {
+    if (!renderShadows)
+        return 1.0;
+    // Transform coordinates into normalized space [-1,1], then into [0,1] space
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords *= 0.5 + 0.5; 
 
-    float shadow = 0.0;
-/* 
-    if(projCoords.z > 1.0)
-        return shadow; //returns 0 */
-    
-    float closestDepth = texture(texSampler[SHADOW_MAP_TEX], projCoords.xy).r; 
-    float currentDepth = projCoords.z;
-
-    float bias = max(0.05 * (1.0 - dot(fragNormalWorld, normalize(direction))), 0.005);  
-
-    vec2 texelSize = 1.0 / textureSize(texSampler[SHADOW_MAP_TEX], 0);
-    for(int x = -1; x <= 1; ++x)
-    {
-        for(int y = -1; y <= 1; ++y)
-        {
-            float pcfDepth = texture(texSampler[SHADOW_MAP_TEX], projCoords.xy + vec2(x, y) * texelSize).r; 
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
-        }    
+    // If fragment is outside the light's frustum, return no shadow
+    if (projCoords.z >= 1.0) {
+        return 1.0;
     }
-    shadow /= 9.0;
-    
+
+    projCoords = projCoords * 0.5 + 0.5;
+
+    float diffuseFactor = dot(normal, normalize(lightDir));
+    float bias = mix(0.05, 0.0005, diffuseFactor);
+
+    // PCF kernel size (the larger, the softer)
+    float shadow = 0.0;
+    int samples = 2;
+    float radius = 1.0 / textureSize(texSamplerShadow[SHADOW_MAP_TEX], 0).x; 
+
+    for (int x = -samples; x <= samples; ++x) {
+        for (int y = -samples; y <= samples; ++y) {
+            vec2 offset = vec2(float(x), float(y)) * radius;
+            shadow += texture(texSamplerShadow[SHADOW_MAP_TEX], vec3(projCoords.xy + offset, projCoords.z - bias));
+        }
+    }
+
+    shadow /= float((samples * 2 + 1) * (samples * 2 + 1));
+
     return shadow;
 }
+
 
 void computeLighting(LightInfo lightInfo, vec3 intensity, inout vec3 diffuseLight, inout vec3 specularLight, float shadowFactor) {
     float cosAngIncidence = max(dot(lightInfo.fragNormalWorld, lightInfo.directionToLight), 0.0);
@@ -128,11 +135,16 @@ void main() {
     vec3 normalMap = texture(texSampler[push.textureIndex[NORMAL_TEX]], fragUv).xyz * 2.0 - 1.0;
     normalMap = normalize(fragTBN * normalMap);
 
+    if (length(normalMap) == 0.0)
+    {
+        normalMap = vec3(0.5, 0.5, 1.0);
+    }
+
     if (ubo.sunLight.w > 0.01) {
         vec3 sunDirection = normalize(ubo.sunLight.xyz);
         vec4 fragPosLightSpace = ubo.sunLightSpaceMatrix * vec4(fragPosWorld, 1.0);
         
-        float shadowFactor = shadowCalculation(fragPosLightSpace, sunDirection); 
+        float shadowFactor = shadowCalculation(fragPosLightSpace, sunDirection, normalMap, ubo.renderShadows); 
 
         float cosAngSunIncidence = max(dot(normalMap, sunDirection), 0.0);
         diffuseLight += cosAngSunIncidence * ubo.sunLight.w * shadowFactor; 

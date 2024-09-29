@@ -44,6 +44,7 @@ layout(push_constant) uniform Push {
 
 void main() {
     vec4 positionWorld = push.modelMatrix * vec4(position, 1.0);
+    //gl_Position = ubo.sunLightSpaceMatrix * positionWorld;
     gl_Position = ubo.projection * ubo.view * positionWorld;
 
     vec3 worldNormal = normalize(normalize(mat3(push.modelMatrix) * normal));

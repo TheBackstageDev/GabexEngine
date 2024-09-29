@@ -7,21 +7,13 @@ const uint32_t SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
 namespace GWIN
 {
-    glm::mat4 LightSystem::calculateDirectionalLightMatrix(float rotationAngle, glm::vec3 rotationAxis)
+    glm::mat4 LightSystem::calculateDirectionalLightMatrix(glm::vec3 cameraPosition, glm::vec3 lightRotation)
     {
-        glm::mat4 lightProjection = glm::orthoLH(-100.f, 100.f, -100.f, 100.f, 1.0f, 100.0f);
+        glm::vec3 lightPosition = cameraPosition - glm::normalize(lightRotation);
 
-        glm::vec3 lightPos(-2.0f, 20.0f, 1.0f);
+        glm::mat4 lightProjection = glm::orthoLH(-30.f, 30.f, -30.f, 30.f, 0.01f, 100.0f);
 
-        glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle), rotationAxis);
-
-        lightPos = glm::vec3(rotationMatrix * glm::vec4(lightPos, 1.0f));
-
-        glm::mat4 lightView = glm::lookAtLH(
-            lightPos,              
-            glm::vec3(0.0f, 0.0f, 0.0f), 
-            glm::vec3(0.0f, 1.0f, 0.0f) 
-        );
+        glm::mat4 lightView = glm::lookAtLH(lightPosition, cameraPosition, glm::vec3(0.0f, -1.0f, 0.0f));
 
         return lightProjection * lightView;
     }

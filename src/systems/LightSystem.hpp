@@ -26,6 +26,6 @@ namespace GWIN
         void update(FrameInfo& frameInfo, GlobalUbo& Ubo);
 
         void calculateLightMatrix(std::array<glm::mat4, 6> &matrix, float aspect, float Near, float Far);
-        glm::mat4 calculateDirectionalLightMatrix(float rotationAngle, glm::vec3 rotationAxis);
+        glm::mat4 calculateDirectionalLightMatrix(glm::vec3 cameraPosition, glm::vec3 lightRotation);
     };
 }
