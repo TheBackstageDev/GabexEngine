@@ -48,7 +48,7 @@ namespace GWIN
         void newFrame(FrameInfo& frameInfo);
         void render(VkCommandBuffer commandBuffer);
 
-        void setCreateTextureCallback(std::function<void(Texture &texture, bool replace)> callback) { createTextureCallback = callback; objectList.setCreateTextureCallback(callback); };
+        void setCreateTextureCallback(std::function<void(Texture &texture, uint32_t id)> callback) { createTextureCallback = callback; objectList.setCreateTextureCallback(callback); };
         void setSaveSceneCallback(std::function<void(const std::string path)> callback) { SaveSceneCallback = callback;  };
         void setLoadSceneCallback(std::function<void(const std::string path)> callback) { LoadSceneCallback = callback; };
         void setCreateMeshCallback(std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> callback) { createMeshCallback = callback; objectList.setCreateMeshCallback(callback); };
@@ -59,6 +59,7 @@ namespace GWIN
 
         GWConsole getConsole() const { return console; }
 
+        float getExposure() { return exposure; }
         glm::vec4 getLightDirection(GWGameObject& directionalLight) { return {directionalLight.transform.getRotation(), DirectionalLightingIntensity}; }
 
         Flags getFlags() { return flags; }
@@ -92,7 +93,8 @@ namespace GWIN
 
         //values
         float DirectionalLightingIntensity = 1.f;
-        
+        float exposure = 1.f;
+
         Flags flags; 
 
         std::unique_ptr<GWDescriptorPool> guipool;

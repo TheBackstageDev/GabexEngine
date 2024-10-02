@@ -5,7 +5,7 @@
 
 namespace GWIN
 {
-    GWOffscreenRenderer::GWOffscreenRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, size_t imageCount) : window(window), device(device), depthFormat(depthFormat)
+    GWOffscreenRenderer::GWOffscreenRenderer(GWindow &window, GWinDevice &device, size_t imageCount, VkFormat depthFormat, VkFormat colorFormat) : window(window), device(device), depthFormat(depthFormat), colorFormat(colorFormat)
     {
         init(imageCount);
     }
@@ -68,7 +68,7 @@ namespace GWIN
                 imageInfo.extent.depth = 1;
                 imageInfo.mipLevels = 1;
                 imageInfo.arrayLayers = 1;
-                imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+                imageInfo.format = colorFormat;
                 imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
                 imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
                 imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -80,17 +80,14 @@ namespace GWIN
 
                 if (vmaCreateImage(device.getAllocator(), &imageInfo, &allocInfo, &images[i], &imageAllocations[i], nullptr) != VK_SUCCESS)
                 {
-                    throw std::runtime_error("Failed to create offscreen image!");
+                    throw std::runtime_error("Failed to create offscreen images!");
                 }
-            }
 
-            for (size_t i = 0; i < imageViews.size(); i++)
-            {
                 VkImageViewCreateInfo viewInfo{};
                 viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
                 viewInfo.image = images[i];
                 viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-                viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+                viewInfo.format = colorFormat;
                 viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
                 viewInfo.subresourceRange.baseMipLevel = 0;
                 viewInfo.subresourceRange.levelCount = 1;
@@ -152,7 +149,7 @@ namespace GWIN
             imageInfo.extent.depth = 1;
             imageInfo.mipLevels = 1;
             imageInfo.arrayLayers = 1;
-            imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+            imageInfo.format = colorFormat;
             imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
             imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -179,7 +176,7 @@ namespace GWIN
             viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             viewInfo.image = images[i];
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+            viewInfo.format = colorFormat;
             viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             viewInfo.subresourceRange.baseMipLevel = 0;
             viewInfo.subresourceRange.levelCount = 1;

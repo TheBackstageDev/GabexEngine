@@ -68,7 +68,7 @@ namespace GWIN
 
     //Temporary to load Object
     char filePathBuffer[256];
-    char texturePathBuffer[256] = "C:\\Users\\cleve\\OneDrive\\Documents\\GitHub\\GabexEngine\\src\\textures\\no_texture.png";
+    char texturePathBuffer[256];
     float Objscale = 1,f;
     float Objposition[3] = {0.f, 0.f, 0.f};
     VkDescriptorSet texture = VK_NULL_HANDLE;
@@ -168,6 +168,7 @@ namespace GWIN
             if (ImGui::CollapsingHeader("Light Settings"))
             {
                 ImGui::DragFloat("LightIntensity", &DirectionalLightingIntensity, .1f, 0.f, 10.f);
+                ImGui::DragFloat("Exposure", &exposure, .01f, 0.f, 100.f);
                 ImGui::Checkbox("Render Shadows", &flags.showShadows);
             }
 

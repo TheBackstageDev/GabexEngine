@@ -14,7 +14,7 @@ namespace GWIN
     class GWOffscreenRenderer
     {
     public:
-        GWOffscreenRenderer(GWindow &window, GWinDevice &device, VkFormat depthFormat, size_t imageCount);
+        GWOffscreenRenderer(GWindow &window, GWinDevice &device, size_t imageCount, VkFormat depthFormat, VkFormat colorFormat);
         ~GWOffscreenRenderer();
 
         VkImage getCurrentImage() const { return images[imageIndex];}
@@ -45,7 +45,8 @@ namespace GWIN
         std::vector<VmaAllocation> depthImagesAllocation;
         std::vector<VkImageView> depthImageViews;
 
-        VkFormat& depthFormat;
+        VkFormat colorFormat = VK_FORMAT_UNDEFINED;
+        VkFormat depthFormat = VK_FORMAT_UNDEFINED;
         
         VkSampler imageSampler;
 

@@ -32,6 +32,15 @@ namespace GWIN
     alignmentSize = getAlignment(instanceSize, minOffsetAlignment);
     bufferSize = alignmentSize * instanceCount;
     device.createBuffer(bufferSize, usageFlags, memoryUsage, buffer, bufferAllocation);
+
+    if (usageFlags & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+    {
+      VkBufferDeviceAddressInfo bufferDeviceAddressInfo = {};
+      bufferDeviceAddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+      bufferDeviceAddressInfo.buffer = buffer;
+
+      bufferAddress = static_cast<DeviceAddress>(vkGetBufferDeviceAddress(device.device(), &bufferDeviceAddressInfo));
+    }
   }
 
   GWBuffer::~GWBuffer()

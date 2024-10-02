@@ -55,6 +55,8 @@ namespace GWIN
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
         GPipeLine::enableAlphaBlending(pipelineConfig);
         pipelineConfig.pipelineLayout = pipelineLayout;
+        pipelineConfig.colorFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+        pipelineConfig.depthFormat = VK_FORMAT_D32_SFLOAT;
 
         if (isWireFrame)
         {

@@ -32,8 +32,6 @@ namespace GWIN
         pushConstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstant.offset = 0;
         pushConstant.size = sizeof(SpushConstant);
-
-        std::cout << sizeof(SpushConstant) << " SkyboxSystem \n";
         
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -68,6 +66,8 @@ namespace GWIN
         pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
         pipelineConfig.rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         pipelineConfig.rasterizationInfo.depthBiasEnable = VK_FALSE;
+
+        pipelineConfig.colorFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
 
         pipeline = std::make_unique<GPipeLine>(
             device,

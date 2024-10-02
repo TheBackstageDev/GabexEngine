@@ -201,6 +201,7 @@ namespace GWIN
         deviceFeatures.fillModeNonSolid = VK_TRUE;
         deviceFeatures.robustBufferAccess = VK_TRUE;
 
+        // Bindless Descriptor Arrays Features
         VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures = {};
         indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
         indexingFeatures.runtimeDescriptorArray = VK_TRUE;
@@ -210,9 +211,17 @@ namespace GWIN
         indexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
         indexingFeatures.shaderStorageImageArrayNonUniformIndexing = VK_TRUE;
 
+        VkPhysicalDeviceBufferDeviceAddressFeaturesKHR bdaFeatures = {};
+        bdaFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_KHR;
+        bdaFeatures.bufferDeviceAddress = VK_TRUE;
+
         VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures = {};
         dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
         dynamicRenderingFeatures.dynamicRendering = VK_TRUE;
+
+        // Build the pNext chain (BDA -> Bindless -> Dynamic Rendering)
+        bdaFeatures.pNext = &indexingFeatures;
+        indexingFeatures.pNext = &dynamicRenderingFeatures;
 
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -221,9 +230,7 @@ namespace GWIN
         createInfo.pEnabledFeatures = &deviceFeatures;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
-        indexingFeatures.pNext = &dynamicRenderingFeatures;
-        createInfo.pNext = &indexingFeatures;
+        createInfo.pNext = &bdaFeatures; 
 
         if (enableValidationLayers)
         {
@@ -283,16 +290,22 @@ namespace GWIN
         VkPhysicalDeviceDescriptorIndexingFeaturesEXT indexingFeatures = {};
         indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
 
+        VkPhysicalDeviceBufferDeviceAddressFeaturesKHR bdaFeatures = {};
+        bdaFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_KHR;
+        bdaFeatures.pNext = &indexingFeatures; 
+
         VkPhysicalDeviceFeatures2 deviceFeatures2 = {};
         deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        deviceFeatures2.pNext = &indexingFeatures;
+        deviceFeatures2.pNext = &bdaFeatures;
 
         vkGetPhysicalDeviceFeatures2(device, &deviceFeatures2);
 
-        bool bindlessSupported = indexingFeatures.descriptorBindingPartiallyBound && indexingFeatures.runtimeDescriptorArray;
+        bool bindlessSupported = indexingFeatures.descriptorBindingPartiallyBound &&
+                                 indexingFeatures.runtimeDescriptorArray;
+        bool bdaSupported = bdaFeatures.bufferDeviceAddress;
 
         return indices.isComplete() && extensionsSupported && swapChainAdequate &&
-               supportedFeatures.samplerAnisotropy && bindlessSupported;
+               supportedFeatures.samplerAnisotropy && bindlessSupported && bdaSupported;
     }
 
     void GWinDevice::populateDebugMessengerCreateInfo(
@@ -677,6 +690,7 @@ namespace GWIN
         allocatorInfo.physicalDevice = physicalDevice;
         allocatorInfo.instance = instance;
         allocatorInfo.pVulkanFunctions = &vulkanFunctions;
+        allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
 
         vmaCreateAllocator(&allocatorInfo, &allocator_);
     }

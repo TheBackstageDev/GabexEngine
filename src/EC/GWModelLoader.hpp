@@ -20,7 +20,7 @@ namespace GWIN
         GWModelLoader(GWinDevice& device, std::unique_ptr<GWTextureHandler>& textureHandler) : device(device), textureHandler(textureHandler) {};
         bool importFile(const std::string &pfile, std::shared_ptr<GWModel> &model);
 
-        void setCreateTextureCallback(std::function<void(Texture &texture, bool replace)> callback)
+        void setCreateTextureCallback(std::function<void(Texture &texture)> callback)
         {
             this->createTextureCallback = callback;
         }
@@ -33,7 +33,7 @@ namespace GWIN
         std::shared_ptr<GWModel> processMesh(aiMesh *mesh, aiMaterial *material, const std::string &pfile);
         void processMaterialTextures(std::shared_ptr<GWModel>& model, aiMaterial* material, const std::string& pfile);
 
-        std::function<void(Texture &texture, bool replace)> createTextureCallback;
+        std::function<void(Texture &texture)> createTextureCallback;
         std::unique_ptr<GWTextureHandler>& textureHandler;
     };
 }

@@ -18,7 +18,7 @@ namespace GWIN
         : window(window), device(device)
     {
         renderer = std::make_unique<GWRenderer>(window, device);
-        offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount());
+        offscreenRenderer = std::make_unique<GWOffscreenRenderer>(window, device, renderer->getImageCount(), VK_FORMAT_D32_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT);
         shadowMapRenderer = std::make_unique<GWShadowRenderer>(window, device, renderer->getSwapChainDepthFormat(), renderer->getImageCount());
         cubemapHandler = std::make_unique<GWCubemapHandler>(device);
         materialHandler = std::make_unique<GWMaterialHandler>(device);
@@ -29,8 +29,8 @@ namespace GWIN
         //Initializes GUI
         interfaceSystem = std::make_unique<GWInterface>(window, device, renderer->getSwapChainImageFormat(), textureHandler, materialHandler);
 
-        interfaceSystem->setCreateTextureCallback([this](Texture& texture, bool replace = false) {
-            currentScene->createSet(texture, replace);
+        interfaceSystem->setCreateTextureCallback([this](Texture &texture, uint32_t id) {
+            currentScene->createSet(texture, id);
         });
 
         interfaceSystem->setSaveSceneCallback([this](const std::string path) {
@@ -113,8 +113,8 @@ namespace GWIN
 
         textureHandler = std::make_unique<GWTextureHandler>(imageLoader, device);
 
-        modelLoader.setCreateTextureCallback([this](Texture &texture, bool replace = false)
-                                             { currentScene->createSet(texture, replace); });
+        modelLoader.setCreateTextureCallback([this](Texture &texture)
+                                             { currentScene->createSet(texture); });
 
         SceneCreateInfo createInfo{device, textureSetLayout, texturePool, modelLoader, jsonHandler, textureHandler, materialHandler};
         
@@ -214,6 +214,7 @@ namespace GWIN
                 ubo.view = frameInfo.currentInfo.currentCamera.getView();
                 ubo.inverseView = frameInfo.currentInfo.currentCamera.getInverseView();
                 ubo.sunLight = interfaceSystem->getLightDirection(frameInfo.currentInfo.gameObjects.at(1));
+                ubo.exposure = interfaceSystem->getExposure();
                 ubo.renderShadows = interfaceFlags.showShadows;
 
                 auto& currentViewerObj = currentScene->getGameObjects().at(frameInfo.currentInfo.currentCamera.getViewerObject());
@@ -280,6 +281,7 @@ namespace GWIN
                 renderer->endFrame();
 
                 vkDeviceWaitIdle(device.device());
+
                 ImGui_ImplVulkan_RemoveTexture(frameInfo.currentFrameSet);
                 frameInfo.currentFrameSet = VK_NULL_HANDLE;
 

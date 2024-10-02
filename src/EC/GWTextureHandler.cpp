@@ -20,7 +20,7 @@ namespace GWIN
         }
     }
 
-    Texture GWTextureHandler::createTexture(std::string& pathToTexture, bool mipMap)
+    Texture GWTextureHandler::createTexture(std::string &pathToTexture, bool mipMap, TextureType type)
     {
         ++lastTextureId;
         
@@ -28,7 +28,7 @@ namespace GWIN
 
         texture.id = lastTextureId;
         
-        texture.textureImage = imageLoader.loadImage(pathToTexture, mipMap);
+        texture.textureImage = imageLoader.loadImage(pathToTexture, mipMap, type == TEXTURE_TYPE_DIFFUSE ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM);
         texture.pathToTexture = pathToTexture;
 
         GWIN::createSampler(device, texture.textureSampler, texture.textureImage.mipLevels);
@@ -40,10 +40,9 @@ namespace GWIN
 
     void GWTextureHandler::destroyTexture(uint32_t id)
     {
-        auto currentTexture = textures[id - 1];
+        auto currentTexture = textures[id];
         vkDestroySampler(device.device(), currentTexture.textureSampler, nullptr);
-        vkDestroyImageView(device.device(), currentTexture.textureImage.imageView, nullptr);
-        vmaDestroyImage(device.getAllocator(), currentTexture.textureImage.image, currentTexture.textureImage.allocation);
+        imageLoader.destroyImage(currentTexture.textureImage.id);
     }
 
     void GWTextureHandler::changeImageLayout(Texture &texture, VkImageLayout newLayout)

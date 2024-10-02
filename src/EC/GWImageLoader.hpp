@@ -20,6 +20,7 @@ namespace GWIN
         VkImage image;
         VkImageView imageView;
         VkImageLayout layout{VK_IMAGE_LAYOUT_UNDEFINED};
+        uint32_t id;
     };
 
     class GWImageLoader
@@ -28,9 +29,10 @@ namespace GWIN
         GWImageLoader(GWinDevice &device);
         ~GWImageLoader();
 
-        Image loadImage(const std::string &filepath, bool isMipMapped);
+        Image loadImage(const std::string &filepath, bool isMipMapped, VkFormat imageFormat = VK_FORMAT_R8G8B8A8_SRGB);
 
         void transitionImageLayout(Image &image, VkImageLayout newLayout);
+        void destroyImage(uint32_t id);
 
     private:
         GWinDevice& device;
@@ -49,5 +51,7 @@ namespace GWIN
         void generateMipMaps(Image& image);
 
         std::vector<Image> imagesForDeletion;
+
+        uint32_t lastImageID = 0;
     };
 }

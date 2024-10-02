@@ -43,7 +43,7 @@ namespace GWIN
         GWTextureHandler(const GWTextureHandler &) = delete;
         GWTextureHandler &operator=(const GWTextureHandler &) = delete;
 
-        Texture createTexture(std::string &pathToTexture, bool mipMap);
+        Texture createTexture(std::string &pathToTexture, bool mipMap, TextureType type = TEXTURE_TYPE_DIFFUSE);
         void destroyTexture(uint32_t id);
         void changeImageLayout(Texture& texture, VkImageLayout newLayout);
 

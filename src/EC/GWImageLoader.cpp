@@ -22,7 +22,7 @@ namespace GWIN
         }
     }
 
-    Image GWImageLoader::loadImage(const std::string &filepath, bool isMipMapped)
+    Image GWImageLoader::loadImage(const std::string &filepath, bool isMipMapped, VkFormat imageFormat)
     {
         int texWidth, texHeight, texChannels;
         Image newImage{};
@@ -36,7 +36,7 @@ namespace GWIN
         VkDeviceSize imageSize = texWidth * texHeight * 4;
 
         newImage.size = {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)};
-        newImage.format = VK_FORMAT_R8G8B8A8_SRGB;
+        newImage.format = imageFormat;
         newImage.layout = VK_IMAGE_LAYOUT_UNDEFINED;
         newImage.mipLevels = 
         isMipMapped ? newImage.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1 : 1;
@@ -73,9 +73,30 @@ namespace GWIN
 
         transitionImageLayout(newImage, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
+        newImage.id = ++lastImageID;
+
         imagesForDeletion.push_back(newImage);
 
         return newImage;
+    }
+
+    void GWImageLoader::destroyImage(uint32_t id)
+    {
+        auto &image = imagesForDeletion.at(id - 1);
+
+        if (image.imageView != VK_NULL_HANDLE)
+        {
+            vkDestroyImageView(device.device(), image.imageView, nullptr);
+            image.imageView = VK_NULL_HANDLE;
+        }
+
+        if (image.image != VK_NULL_HANDLE)
+        {
+            vmaDestroyImage(device.getAllocator(), image.image, image.allocation);
+            image.image = VK_NULL_HANDLE;
+        }
+
+        imagesForDeletion.erase(imagesForDeletion.begin() + id);
     }
 
     void GWImageLoader::createImage(

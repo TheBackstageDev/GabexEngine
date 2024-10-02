@@ -72,9 +72,9 @@ namespace GWIN
             if (ImGui::Button("Remove Model"))
             {
                 selectedObject.model = -1; 
-                GWConsole::addLog("Model removed from the selected object.");
             }
             ImGui::PopStyleColor();
+            ImGui::Checkbox("Cast Shadow", &selectedObject.castShadow);
 
             std::string modelName = "Placeholder Code";
             ImGui::Text("Current Model: %s", modelName.c_str());
@@ -83,7 +83,7 @@ namespace GWIN
 
     void GWObjectList::inputTexture(std::shared_ptr<GWModel> &selectedObject)
     {
-        if (selectedObject->Textures[0] == 0)
+        if (selectedObject->Textures[0] == 1)
             return;
 
         if (ImGui::CollapsingHeader("Texture", nullptr))
@@ -91,8 +91,7 @@ namespace GWIN
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.0f, 0.0f, 0.6f));
             if (ImGui::Button("Remove Texture"))
             {
-                selectedObject->Textures[0] = 0;
-                GWConsole::addLog("Texture removed from the selected object.");
+                selectedObject->Textures[0] = 1;
             }
             ImGui::PopStyleColor();
 
@@ -122,14 +121,19 @@ namespace GWIN
     }
 
     float cutOffAngleBuffer = 0.0f;
+    float lightColor[3] = {1.0f, 1.0f, 1.0f};
     void GWObjectList::inputLight(GWGameObject &selectedObject)
     {
         if (ImGui::CollapsingHeader("Light", nullptr))
         {
+            lightColor[0] = selectedObject.color.r;
+            lightColor[1] = selectedObject.color.g;
+            lightColor[2] = selectedObject.color.b;
+
             if (selectedObject.light->cutOffAngle != 0.0f)
             {
                 cutOffAngleBuffer = glm::degrees(selectedObject.light->cutOffAngle);
-                
+
                 ImGui::Text("Type: Spotlight");
                 ImGui::DragFloat("CutOff Angle: ", &cutOffAngleBuffer, .1f, 0.1f, 90.f, "%.1f");
 
@@ -139,6 +143,11 @@ namespace GWIN
             {
                 ImGui::Text("Type: Pointlight");
             }
+
+            ImGui::ColorEdit3("Light Color: ", lightColor);
+            selectedObject.color.r = lightColor[0];
+            selectedObject.color.g = lightColor[1];
+            selectedObject.color.b = lightColor[2];
 
             ImGui::DragFloat("Intensity: ", &selectedObject.light->lightIntensity, .1f, 0.f, FLT_MAX, "%.1f");
         }
@@ -268,10 +277,8 @@ namespace GWIN
                 {
                     removeMeshCallback(selectedAsset.info.index);
                     createMeshCallback(fullPath, selectedAsset.info.index);
-                    GWConsole::addLog("Mesh ID: " + std::to_string(selectedAsset.info.index));
                 } else {
                     selectedAsset.info.index = createMeshCallback(fullPath, std::nullopt);
-                    GWConsole::addLog("New Mesh ID: " + std::to_string(selectedAsset.info.index));
                 }
             }
             ImGuiFileDialog::Instance()->Close();
@@ -333,18 +340,16 @@ namespace GWIN
                 {
                     newTexture = assets->getTextureHandler()->createTexture(fullPath, true);
 
-                    createTextureCallback(newTexture, false);
+                    createTextureCallback(newTexture, newTexture.id);
 
                     selectedAsset.info.index = newTexture.id;
                 } else {
                     assets->getTextureHandler()->destroyTexture(selectedAsset.info.index);
-                    newTexture = assets->getTextureHandler()->createTexture(fullPath, true);
+                    newTexture = assets->getTextureHandler()->createTexture(fullPath, selectedAsset.info.index);
 
                     newTexture.id = selectedAsset.info.index;
 
-                    assets->getTextureHandler()->decreaseLastTextureID();
-
-                    createTextureCallback(newTexture, true);
+                    createTextureCallback(newTexture, newTexture.id);
                 }
             }
             ImGuiFileDialog::Instance()->Close();

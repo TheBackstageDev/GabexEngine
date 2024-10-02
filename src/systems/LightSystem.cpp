@@ -9,9 +9,9 @@ namespace GWIN
 {
     glm::mat4 LightSystem::calculateDirectionalLightMatrix(glm::vec3 cameraPosition, glm::vec3 lightRotation)
     {
-        glm::vec3 lightPosition = cameraPosition - glm::normalize(lightRotation);
+        glm::vec3 lightPosition = cameraPosition - glm::normalize(lightRotation) * 1.2f;
 
-        glm::mat4 lightProjection = glm::orthoLH(-30.f, 30.f, -30.f, 30.f, 0.01f, 100.0f);
+        glm::mat4 lightProjection = glm::orthoLH(-20.f, 20.f, -20.f, 20.f, 0.1f, 100.0f);
 
         glm::mat4 lightView = glm::lookAtLH(lightPosition, cameraPosition, glm::vec3(0.0f, -1.0f, 0.0f));
 

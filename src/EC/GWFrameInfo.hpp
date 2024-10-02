@@ -36,6 +36,7 @@ namespace GWIN
         Light lights[MAX_LIGHTS];
         Material materials[MAX_MATERIALS];
         int numLights;
+        float exposure;
         bool renderShadows;
     };
 

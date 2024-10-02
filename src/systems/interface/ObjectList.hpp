@@ -21,7 +21,7 @@ namespace GWIN
         uint32_t getSelectedObject() { return selectedItem; }
         bool isAssetSelected() { return AssetSelected; }
 
-        void setCreateTextureCallback(std::function<void(Texture &texture, bool replace)> callback) { createTextureCallback = callback; };
+        void setCreateTextureCallback(std::function<void(Texture &texture, uint32_t id)> callback) { createTextureCallback = callback; };
         void setCreateMeshCallback(std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> callback) { createMeshCallback = callback; };
         void setRemoveMeshCallback(std::function<void(uint32_t id)> callback) { removeMeshCallback = callback; };
         void setCreateObjectCallback(std::function<void(GameObjectType type)> callback) { createObjectCallback = callback; };
@@ -43,7 +43,7 @@ namespace GWIN
         glm::vec3 scaleBuffer = { 1.0f, 1.0f, 1.0f };
 
         std::function<uint32_t(const std::string path, std::optional<uint32_t> replaceId)> createMeshCallback;
-        std::function<void(Texture &texture, bool replace)> createTextureCallback; 
+        std::function<void(Texture &texture, uint32_t id)> createTextureCallback; 
         std::function<void(uint32_t id)> removeMeshCallback;
         std::function<void(GameObjectType type)> createObjectCallback;
         std::function<void(uint32_t id)> removeObjectCallback;

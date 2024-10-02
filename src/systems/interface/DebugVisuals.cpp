@@ -77,9 +77,7 @@ namespace GWIN
 
     ////// Debug Visuals //////
 
-    DebugVisuals::DebugVisuals()
-    {
-    }
+    DebugVisuals::DebugVisuals() {};
 
     void DebugVisuals::draw(FrameInfo& frameInfo) 
     {

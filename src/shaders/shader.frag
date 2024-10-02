@@ -1,6 +1,7 @@
 #version 450
 
 #extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_EXT_buffer_reference : enable
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec3 fragPosWorld;
@@ -18,8 +19,8 @@ struct Light {
 };
 
 struct Material {
-  vec4 color;
-  vec3 data;
+  vec4 color; 
+  vec3 data; // x is metallic, y is roughness, z is id
 };
 
 struct LightInfo {
@@ -40,6 +41,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   Light lights[20];
   Material materials[100];
   int numLights;
+  float exposure;
   bool renderShadows;
 } ubo;
 
@@ -59,10 +61,9 @@ layout(push_constant) uniform Push {
 float shadowCalculation(vec4 fragPosLightSpace, vec3 lightDir, vec3 normal, bool renderShadows) {
     if (!renderShadows)
         return 1.0;
-    // Transform coordinates into normalized space [-1,1], then into [0,1] space
+
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
 
-    // If fragment is outside the light's frustum, return no shadow
     if (projCoords.z >= 1.0) {
         return 1.0;
     }
@@ -70,7 +71,7 @@ float shadowCalculation(vec4 fragPosLightSpace, vec3 lightDir, vec3 normal, bool
     projCoords = projCoords * 0.5 + 0.5;
 
     float diffuseFactor = dot(normal, normalize(lightDir));
-    float bias = mix(0.05, 0.0005, diffuseFactor);
+    float bias = mix(0.005, 0.0005, diffuseFactor);
 
     // PCF kernel size (the larger, the softer)
     float shadow = 0.0;
@@ -88,7 +89,6 @@ float shadowCalculation(vec4 fragPosLightSpace, vec3 lightDir, vec3 normal, bool
 
     return shadow;
 }
-
 
 void computeLighting(LightInfo lightInfo, vec3 intensity, inout vec3 diffuseLight, inout vec3 specularLight, float shadowFactor) {
     float cosAngIncidence = max(dot(lightInfo.fragNormalWorld, lightInfo.directionToLight), 0.0);
@@ -135,7 +135,7 @@ void main() {
     vec3 normalMap = texture(texSampler[push.textureIndex[NORMAL_TEX]], fragUv).xyz * 2.0 - 1.0;
     normalMap = normalize(fragTBN * normalMap);
 
-    if (length(normalMap) == 0.0)
+    if (normalMap.z == 0.0)
     {
         normalMap = vec3(0.5, 0.5, 1.0);
     }
@@ -187,8 +187,14 @@ void main() {
       sampledColor.rgb = vec3(0.7, 0.7, 0.7);
     }
 
+    if (sampledColor.a < 0.1)
+        discard;
+
     vec3 finalColor = (diffuseLight + specularLight) * fragColor * material.color.rgb * sampledColor.rgb;
 
-    // Gamma correction
-    outColor = vec4(pow(finalColor, vec3(1.0 / 2.2)), sampledColor.a);
+    vec3 mapped = vec3(1.0) - exp(-finalColor * ubo.exposure);
+
+    const float gamma = 2.2;
+
+    outColor = vec4(pow(mapped, vec3(1.0 / gamma)), sampledColor.a);
 }

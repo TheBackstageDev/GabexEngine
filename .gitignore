@@ -14,5 +14,5 @@ ipch
 ## Build artifacts
 
 Build*/
-*logs
+*.logs
 .fake

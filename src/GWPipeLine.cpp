@@ -33,7 +33,6 @@ namespace GWIN
 
         if (!file.is_open())
         {
-            std::cout << "File Not Open! " + filepath << "\n";
             throw std::runtime_error("Failed to open file: " + filepath);
         }
 

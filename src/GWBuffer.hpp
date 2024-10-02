@@ -4,6 +4,8 @@
 #include "vma/vk_mem_alloc.h"
 
 namespace GWIN {
+
+enum class DeviceAddress : uint64_t { Invalid = 0 };
  
 class GWBuffer {
  public:
@@ -39,6 +41,7 @@ class GWBuffer {
    VkDeviceSize getAlignmentSize() const { return instanceSize; }
    VkBufferUsageFlags getUsageFlags() const { return usageFlags; }
    VkDeviceSize getBufferSize() const { return bufferSize; }
+   DeviceAddress getBufferDeviceAddress() const { return bufferAddress; }
  
  private:
    static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
@@ -46,6 +49,7 @@ class GWBuffer {
    GWinDevice &device;
    void *mapped = nullptr;
    VkBuffer buffer = VK_NULL_HANDLE;
+   DeviceAddress bufferAddress;
    VmaAllocation bufferAllocation = VK_NULL_HANDLE;
 
    VkDeviceSize bufferSize;

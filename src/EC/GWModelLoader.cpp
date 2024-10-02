@@ -122,7 +122,7 @@ namespace GWIN
 
     void GWModelLoader::processMaterialTextures(std::shared_ptr<GWModel> &model, aiMaterial *material, const std::string &pfile)
     {
-        auto loadTexture = [&](aiTextureType type, const uint32_t textureType)
+        auto loadTexture = [&](aiTextureType type, const TextureType textureType)
         {
             if (material->GetTextureCount(type) > 0)
             {
@@ -141,12 +141,12 @@ namespace GWIN
                     }
                     else
                     {
-                        Texture tex = textureHandler->createTexture(fullPath, true);
+                        Texture tex = textureHandler->createTexture(fullPath, true, textureType);
                         model->Textures[textureType] = tex.id;
 
                         textureCache[fullPath] = tex;
 
-                        createTextureCallback(tex, false);
+                        createTextureCallback(tex);
                     }
                 }
             }
