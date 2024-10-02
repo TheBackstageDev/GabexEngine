@@ -127,7 +127,7 @@ namespace GWIN
         shadowSystem = std::make_unique<ShadowSystem>(device, setLayouts);
     }
 
-    void MasterRenderSystem::updateCamera(FrameInfo& frameInfo)
+    void MasterRenderSystem::updateCamera(FrameInfo& frameInfo, float FOV)
     {
         auto& camera = frameInfo.currentInfo.currentCamera;
         auto &viewerObject = frameInfo.currentInfo.gameObjects.at(camera.getViewerObject());
@@ -135,7 +135,7 @@ namespace GWIN
         camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.getRotation());
 
         float aspect = renderer->getAspectRatio();
-        camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
+        camera.setPerspectiveProjection(glm::radians(FOV), aspect, 0.1f, 100.f);
         //camera.setOrthographicProjection(-aspect, aspect, -1, 1, 0.1f, 100.f);
 
         if (frameInfo.flags.frustumCulling)
@@ -207,7 +207,7 @@ namespace GWIN
 
                 frameInfo.flags.frustumCulling = interfaceFlags.frustumCulling;
 
-                updateCamera(frameInfo);
+                updateCamera(frameInfo, interfaceSystem->getFOV());
 
                 GlobalUbo ubo{};
                 ubo.projection = frameInfo.currentInfo.currentCamera.getProjection();

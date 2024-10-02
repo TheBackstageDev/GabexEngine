@@ -11,6 +11,9 @@ layout(location = 4) in mat3 fragTBN;
 
 layout(location = 0) out vec4 outColor;
 
+#define Buffer(Alignment) \
+  layout(buffer_reference, std430, buffer_reference_align = Alignment) buffer
+
 struct Light {
   vec4 position;
   vec4 color;
@@ -45,9 +48,8 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   bool renderShadows;
 } ubo;
 
-const uint DIFFUSE_TEX = 0;
-const uint NORMAL_TEX = 1;
-const uint SHADOW_MAP_TEX = 0;
+#define DIFFUSE_TEX 0
+#define NORMAL_TEX 1
 
 layout(set = 1, binding = 0) uniform sampler2DShadow texSamplerShadow[];
 layout(set = 1, binding = 0) uniform sampler2D texSampler[];
@@ -76,12 +78,12 @@ float shadowCalculation(vec4 fragPosLightSpace, vec3 lightDir, vec3 normal, bool
     // PCF kernel size (the larger, the softer)
     float shadow = 0.0;
     int samples = 2;
-    float radius = 1.0 / textureSize(texSamplerShadow[SHADOW_MAP_TEX], 0).x; 
+    float radius = 1.0 / textureSize(texSamplerShadow[DIFFUSE_TEX], 0).x; 
 
     for (int x = -samples; x <= samples; ++x) {
         for (int y = -samples; y <= samples; ++y) {
             vec2 offset = vec2(float(x), float(y)) * radius;
-            shadow += texture(texSamplerShadow[SHADOW_MAP_TEX], vec3(projCoords.xy + offset, projCoords.z - bias));
+            shadow += texture(texSamplerShadow[DIFFUSE_TEX], vec3(projCoords.xy + offset, projCoords.z - bias));
         }
     }
 
@@ -121,6 +123,15 @@ void calculateLight(Light currentLight, LightInfo lightInfo, inout vec3 diffuseL
             computeLighting(lightInfo, intensity, diffuseLight, specularLight, shadowfactor);
         }
     }
+}
+
+vec3 ACESFilm(vec3 x) {
+    float a = 2.51;
+    float b = 0.03;
+    float c = 2.43;
+    float d = 0.59;
+    float e = 0.14;
+    return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 
 void main() {
@@ -192,9 +203,9 @@ void main() {
 
     vec3 finalColor = (diffuseLight + specularLight) * fragColor * material.color.rgb * sampledColor.rgb;
 
-    vec3 mapped = vec3(1.0) - exp(-finalColor * ubo.exposure);
+    vec3 mapped = ACESFilm(finalColor * ubo.exposure);
+
 
     const float gamma = 2.2;
-
     outColor = vec4(pow(mapped, vec3(1.0 / gamma)), sampledColor.a);
 }

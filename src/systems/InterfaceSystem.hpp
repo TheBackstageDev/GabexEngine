@@ -60,6 +60,7 @@ namespace GWIN
         GWConsole getConsole() const { return console; }
 
         float getExposure() { return exposure; }
+        float getFOV() { return fieldOfView; }
         glm::vec4 getLightDirection(GWGameObject& directionalLight) { return {directionalLight.transform.getRotation(), DirectionalLightingIntensity}; }
 
         Flags getFlags() { return flags; }
@@ -94,6 +95,7 @@ namespace GWIN
         //values
         float DirectionalLightingIntensity = 1.f;
         float exposure = 1.f;
+        float fieldOfView = 50.f;
 
         Flags flags; 
 

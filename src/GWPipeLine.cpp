@@ -101,8 +101,6 @@ namespace GWIN
         pipelineInfo.pDynamicState = &configInfo.dynamicStateInfo;
 
         pipelineInfo.layout = configInfo.pipelineLayout;
-/*         pipelineInfo.renderPass = configInfo.renderPass;
-        pipelineInfo.subpass = configInfo.subpass; */
 
         pipelineInfo.pNext = &configInfo.pipelineRenderingInfo;
 

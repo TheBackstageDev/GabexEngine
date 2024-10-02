@@ -175,6 +175,7 @@ namespace GWIN
             if (ImGui::CollapsingHeader("Camera Settings"))
             {
                 ImGui::Checkbox("Frustum Culling", &flags.frustumCulling);
+                ImGui::DragFloat("FOV", &fieldOfView, 0.5f, 0.f, FLT_MAX);
             }
         }
 

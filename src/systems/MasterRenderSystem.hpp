@@ -34,7 +34,7 @@ namespace GWIN
 
     private:
         void initialize();
-        void updateCamera(FrameInfo &frameInfo);
+        void updateCamera(FrameInfo &frameInfo, float FOV);
         void loadGameObjects();
 
         void loadNewScene(const std::string pathToFile);
