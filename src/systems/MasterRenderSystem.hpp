@@ -12,7 +12,7 @@
 #include "SkyboxSystem.hpp"
 #include "GWScene.hpp"
 
-#include "GWRendererToolkit.hpp"
+#include "../GWRendererToolkit.hpp"
 #include "GWOffscreenRenderer.hpp"
 #include "GWShadowRenderer.hpp"
 
@@ -55,6 +55,8 @@ namespace GWIN
         std::unique_ptr<ShadowSystem> shadowSystem;
 
         std::unique_ptr<GWBuffer> globalUboBuffer;
+        std::unique_ptr<GWBuffer> lightBuffer;
+        std::unique_ptr<GWBuffer> materialBuffer;
         std::vector<VkDescriptorSet> globalDescriptorSets;
         std::unique_ptr<GWDescriptorPool> globalPool{};
         std::unique_ptr<GWDescriptorPool> texturePool{};

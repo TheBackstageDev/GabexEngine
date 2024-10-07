@@ -15,10 +15,13 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/include/volk)
 
 set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
 
+set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+
 # Include directories
 include_directories(
     "${CMAKE_SOURCE_DIR}/src/EC"
-    "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/src/EC/Components"
+    ${INCLUDE_DIR}
     "C:/VulkanSDK/1.3.283.0/Include"
     "${CMAKE_SOURCE_DIR}/include/volk" 
 )

@@ -20,8 +20,7 @@ namespace GWIN
         for (size_t i = 0; i < depthImages.size(); i++)
         {
             vkDestroyImageView(device.device(), depthImageViews[i], nullptr);
-            vkDestroyImage(device.device(), depthImages[i], nullptr);
-            vmaFreeMemory(device.getAllocator(), depthImagesAllocation[i]);
+            vmaDestroyImage(device.getAllocator(), depthImages[i], depthImagesAllocation[i]);
         }
     }
 

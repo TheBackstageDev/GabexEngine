@@ -3,7 +3,7 @@
 #include "GWImageLoader.hpp"
 #include "GWDescriptors.hpp"
 #include "../GWBuffer.hpp"
-#include "GWRendererToolkit.hpp"
+#include "../GWRendererToolkit.hpp"
 
 #include <string>
 #include <memory>

@@ -23,9 +23,9 @@ namespace GWIN
         LightSystem(const LightSystem &) = delete;
         LightSystem &operator=(const LightSystem &) = delete;
 
-        void update(FrameInfo& frameInfo, GlobalUbo& Ubo);
+        void update(FrameInfo& frameInfo, LightBuffer& Ubo);
 
-        void calculateLightMatrix(std::array<glm::mat4, 6> &matrix, float aspect, float Near, float Far);
+        glm::mat4 calculateLightMatrix(std::array<glm::mat4, 6> &matrix, float aspect, float Near, float Far);
         glm::mat4 calculateDirectionalLightMatrix(glm::vec3 cameraPosition, glm::vec3 lightRotation);
     };
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../GWDevice.hpp"
+#include "GWDevice.hpp"
 #include <stdexcept>
 
 namespace GWIN
@@ -46,6 +46,19 @@ namespace GWIN
         if (vkCreateImageView(device.device(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create image view!");
+        }
+    }
+
+    static void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule, GWinDevice& device)
+    {
+        VkShaderModuleCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = code.size();
+        createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
+
+        if (vkCreateShaderModule(device.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create shader module");
         }
     }
 }

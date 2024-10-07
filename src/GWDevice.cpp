@@ -495,19 +495,20 @@ namespace GWIN
     }
 
     VkFormat GWinDevice::findSupportedFormat(
-        const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+        const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags2 features)
     {
         for (VkFormat format : candidates)
         {
-            VkFormatProperties props;
-            vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
+            VkFormatProperties2 formatProps{};
+            formatProps.sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
 
-            if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
+            vkGetPhysicalDeviceFormatProperties2(physicalDevice, format, &formatProps);
+
+            if (tiling == VK_IMAGE_TILING_LINEAR && (formatProps.formatProperties.linearTilingFeatures & features) == features)
             {
                 return format;
             }
-            else if (
-                tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
+            else if (tiling == VK_IMAGE_TILING_OPTIMAL && (formatProps.formatProperties.optimalTilingFeatures & features) == features)
             {
                 return format;
             }

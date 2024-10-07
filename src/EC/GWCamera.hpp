@@ -1,8 +1,6 @@
 #pragma once
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
+#include "Components/Frustum.hpp"
 
 #include <string>
 #include "../json.hpp"
@@ -37,8 +35,8 @@ namespace GWIN
 
     std::string toJson() const;
 
-    void updateFrustumPlanes();
-    bool isPointInFrustum(const glm::vec3& point) const;
+    void updateFrustumPlanes() { cameraFrustum.updateFrustumPlanes(viewMatrix * projectionMatrix); }
+    bool isPointInFrustum(const glm::vec3 point) { return cameraFrustum.isPointInFrustum(point); }
 
     private:
     
@@ -50,11 +48,12 @@ namespace GWIN
         float farPlane;
         float fovy;
 
+        Frustum cameraFrustum{};
+
         uint32_t viewerObject = 0; //None
         uint32_t id{0};
 
         glm::vec4 frustumPlanes[6];
-        float bias = 0.5f;
     };
     
 } // namespace GWIN

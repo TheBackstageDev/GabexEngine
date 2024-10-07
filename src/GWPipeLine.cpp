@@ -1,6 +1,7 @@
 #include "GWPipeLine.hpp"
 
 #include "./EC/GWModel.hpp"
+#include "GWRendererToolkit.hpp"
 
 // std
 #include <cassert>
@@ -58,8 +59,8 @@ namespace GWIN
         auto vertCode = readFile(vertFilepath);
         auto fragCode = readFile(fragFilepath);
 
-        createShaderModule(vertCode, &vertShaderModule);
-        createShaderModule(fragCode, &fragShaderModule);
+        GWIN::createShaderModule(vertCode, &vertShaderModule, gDevice);
+        GWIN::createShaderModule(fragCode, &fragShaderModule, gDevice);
 
         VkPipelineShaderStageCreateInfo shaderStages[2];
         shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -116,19 +117,6 @@ namespace GWIN
                 &graphicsPipeline) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create graphics pipeline");
-        }
-    }
-
-    void GPipeLine::createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule)
-    {
-        VkShaderModuleCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        createInfo.codeSize = code.size();
-        createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
-
-        if (vkCreateShaderModule(gDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create shader module");
         }
     }
 

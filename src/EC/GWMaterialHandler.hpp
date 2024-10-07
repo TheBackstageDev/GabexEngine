@@ -18,7 +18,7 @@ namespace GWIN
         //~GWMaterialHandler();
 
         uint32_t createMaterial(float roughness, float metallic, glm::vec4 color, std::string name);
-        void setMaterials(GlobalUbo& ubo);
+        void setMaterials(MaterialBuffer &ubo);
 
         std::array<Material, MAX_MATERIALS> getMaterials() { return materials; }
         std::vector<MaterialData>& getMaterialData() { return materialsData; };

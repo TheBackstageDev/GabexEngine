@@ -50,7 +50,7 @@ namespace GWIN
         uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevice); }
         VkFormat findSupportedFormat(
-            const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+            const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags2 features);
 
         // Buffer Helper Functions
         void createBuffer(
@@ -111,7 +111,7 @@ namespace GWIN
 
         VmaAllocator allocator_;
         VkDevice device_;
-        VkSurfaceKHR surface_;
+        VkSurfaceKHR surface_;  
         VkQueue graphicsQueue_;
         VkQueue presentQueue_;
 

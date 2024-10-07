@@ -96,6 +96,7 @@ namespace GWIN
             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
             VMA_MEMORY_USAGE_CPU_TO_GPU,
             minOffsetAlignment);
+            
 
         globalUboBuffer->map();
 
@@ -108,6 +109,24 @@ namespace GWIN
                 .writeBuffer(0, &bufferInfo)
                 .build(globalDescriptorSets[i]);
         }
+
+        lightBuffer = std::make_unique<GWBuffer>(
+            device,
+            sizeof(LightBuffer),
+            1,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+            VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+        lightBuffer->map();
+
+        materialBuffer = std::make_unique<GWBuffer>(
+            device,
+            sizeof(MaterialBuffer),
+            1,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+            VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+        materialBuffer->map();
 
         std::vector<VkDescriptorSetLayout> setLayouts = {globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout()};
 
@@ -209,6 +228,18 @@ namespace GWIN
 
                 updateCamera(frameInfo, interfaceSystem->getFOV());
 
+                LightBuffer light{};
+                lightSystem->update(frameInfo, light);
+
+                MaterialBuffer material{};
+                materialHandler->setMaterials(material);
+
+                lightBuffer->writeToIndex(&light, 0);
+                lightBuffer->flushIndex(0);
+
+                materialBuffer->writeToIndex(&material, 0);
+                materialBuffer->flushIndex(0);
+
                 GlobalUbo ubo{};
                 ubo.projection = frameInfo.currentInfo.currentCamera.getProjection();
                 ubo.view = frameInfo.currentInfo.currentCamera.getView();
@@ -216,12 +247,12 @@ namespace GWIN
                 ubo.sunLight = interfaceSystem->getLightDirection(frameInfo.currentInfo.gameObjects.at(1));
                 ubo.exposure = interfaceSystem->getExposure();
                 ubo.renderShadows = interfaceFlags.showShadows;
+                ubo.light = lightBuffer->getBufferDeviceAddress();
+                ubo.material = materialBuffer->getBufferDeviceAddress();
 
                 auto& currentViewerObj = currentScene->getGameObjects().at(frameInfo.currentInfo.currentCamera.getViewerObject());
 
                 ubo.sunLightSpaceMatrix = lightSystem->calculateDirectionalLightMatrix(currentViewerObj.transform.translation, ubo.sunLight);
-                lightSystem->update(frameInfo, ubo);
-                materialHandler->setMaterials(ubo);
                 globalUboBuffer->writeToIndex(&ubo, frameIndex);
                 globalUboBuffer->flushIndex(frameIndex);
 

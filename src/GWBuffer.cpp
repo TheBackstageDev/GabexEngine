@@ -125,5 +125,4 @@ namespace GWIN
   {
     return invalidate(alignmentSize, index * alignmentSize);
   }
-
 } // namespace GWIN

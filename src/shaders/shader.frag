@@ -11,14 +11,10 @@ layout(location = 4) in mat3 fragTBN;
 
 layout(location = 0) out vec4 outColor;
 
-#define Buffer(Alignment) \
-  layout(buffer_reference, std430, buffer_reference_align = Alignment) buffer
-
 struct Light {
   vec4 position;
   vec4 color;
   vec4 direction;
-  mat4 lightSpaceMatrix[6]; 
 };
 
 struct Material {
@@ -34,16 +30,26 @@ struct LightInfo {
     Material material;
 };
 
+layout(buffer_reference, std430, buffer_reference_align = 16) readonly buffer lightBuffer
+{
+    Light lights[20];
+    vec4 ambientLightColor;
+    int numLights;
+};
+
+layout(buffer_reference, std430, buffer_reference_align = 16) readonly buffer materialBuffer
+{
+    Material materials[100];
+};
+
 layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 projection;
   mat4 view;
   mat4 invView;
   vec4 sunLight;
   mat4 sunLightSpaceMatrix;
-  vec4 ambientLightColor;
-  Light lights[20];
-  Material materials[100];
-  int numLights;
+  lightBuffer light;
+  materialBuffer material;
   float exposure;
   bool renderShadows;
 } ubo;
@@ -135,9 +141,9 @@ vec3 ACESFilm(vec3 x) {
 }
 
 void main() {
-    Material material = ubo.materials[push.materialIndex];
+    Material material = ubo.material.materials[push.materialIndex];
 
-    vec3 diffuseLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
+    vec3 diffuseLight = ubo.light.ambientLightColor.xyz * ubo.light.ambientLightColor.w;
     vec3 specularLight = vec3(0.0);
 
     vec3 cameraPosWorld = ubo.invView[3].xyz;
@@ -168,8 +174,8 @@ void main() {
     }
     
     // Light contributions
-    for (int i = 0; i < ubo.numLights; i++) {
-        Light light = ubo.lights[i];
+    for (int i = 0; i < ubo.light.numLights; i++) {
+        Light light = ubo.light.lights[i];
 
         vec3 directionToLight = light.position.xyz - fragPosWorld;
         float lightRadius = sqrt(light.color.w / 0.01); 
@@ -185,9 +191,7 @@ void main() {
           lightInfo.viewDirection = viewDirection;
           lightInfo.material = material;
 
-          vec4 fragPosLightSpace = light.lightSpaceMatrix[0] * vec4(fragPosWorld, 1.0);
-          //float shadowFactor = shadowCalculation(fragPosLightSpace); 
-          calculateLight(light, lightInfo, diffuseLight, specularLight, fragPosLightSpace, 1.0);
+          calculateLight(light, lightInfo, diffuseLight, specularLight, vec4(1.0), 1.0);
         }
     }
 

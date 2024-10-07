@@ -57,11 +57,14 @@ namespace GWIN
             const std::string &fragFilepath,
             const PipelineConfigInfo &configInfo);
 
-        void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule);
-
         GWinDevice &gDevice;
         VkPipeline graphicsPipeline;
         VkShaderModule vertShaderModule;
         VkShaderModule fragShaderModule;
+    };
+
+    class GComputePipeline
+    {
+
     };
 }

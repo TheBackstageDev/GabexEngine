@@ -3,6 +3,10 @@
 #include "GWDevice.hpp"
 #include "vma/vk_mem_alloc.h"
 
+#include <string>
+
+#include <unordered_map>
+
 namespace GWIN {
 
 enum class DeviceAddress : uint64_t { Invalid = 0 };
@@ -59,5 +63,4 @@ class GWBuffer {
    VkBufferUsageFlags usageFlags;
    VmaMemoryUsage memoryUsage;
 };
- 
 }  // namespace GWIN

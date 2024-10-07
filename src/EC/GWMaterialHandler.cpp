@@ -9,7 +9,7 @@ namespace GWIN
         createMaterial(0.5f, .5f, {1.0f, 1.0f, 1.0f, 1.0f}, "Default Material"); //Default material
     }
 
-    void GWMaterialHandler::setMaterials(GlobalUbo& ubo)
+    void GWMaterialHandler::setMaterials(MaterialBuffer& ubo)
     {
         for (uint32_t i = 0; i < lastId; ++i)
         {

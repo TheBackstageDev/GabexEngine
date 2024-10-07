@@ -380,6 +380,8 @@ namespace GWIN
     {
         imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        computeInFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+        computeFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
         imagesInFlight.resize(imageCount(), VK_NULL_HANDLE);
 
@@ -396,7 +398,11 @@ namespace GWIN
                     VK_SUCCESS ||
                 vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) !=
                     VK_SUCCESS ||
-                vkCreateFence(device.device(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
+                vkCreateFence(device.device(), &fenceInfo, nullptr, &inFlightFences[i]) !=
+                    VK_SUCCESS ||
+                vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &computeFinishedSemaphores[i]) != 
+                    VK_SUCCESS ||
+                vkCreateFence(device.device(), &fenceInfo, nullptr, &computeInFlightFences[i]) != VK_SUCCESS)
             {
                 throw std::runtime_error("failed to create synchronization objects for a frame!");
             }
@@ -466,6 +472,6 @@ namespace GWIN
         return device.findSupportedFormat(
             {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
             VK_IMAGE_TILING_OPTIMAL,
-            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+            VK_FORMAT_FEATURE_2_DEPTH_STENCIL_ATTACHMENT_BIT);
     }
 } // namespace GWIN

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../GWDevice.hpp"
-#include "GWRendererToolkit.hpp"
 
 // std
 #include <array>

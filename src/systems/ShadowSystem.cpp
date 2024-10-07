@@ -51,6 +51,7 @@ namespace GWIN
         PipelineConfigInfo pipelineConfig{};
         GPipeLine::defaultPipelineConfigInfo(pipelineConfig);
         pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+        pipelineConfig.pipelineRenderingInfo.colorAttachmentCount = 0;
         pipelineConfig.pipelineLayout = pipelineLayout;
 
         Pipeline = std::make_unique<GPipeLine>(
@@ -87,24 +88,7 @@ namespace GWIN
 
             auto &model = frameInfo.currentInfo.meshes.at(obj.model);
             SpushConstant push{};
-            push.modelMatrix = obj.transform.mat4(); 
-
-            if (model->hasSubModels())
-            {
-                for (auto &subModel : model->getSubModels())
-                {
-                    vkCmdPushConstants(
-                        frameInfo.commandBuffer,
-                        pipelineLayout,
-                        VK_SHADER_STAGE_VERTEX_BIT,
-                        0,
-                        sizeof(SpushConstant),
-                        &push);
-
-                    subModel->bind(frameInfo.commandBuffer);
-                    subModel->draw(frameInfo.commandBuffer);
-                }
-            }
+            push.modelMatrix = obj.transform.mat4();
 
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
@@ -113,6 +97,15 @@ namespace GWIN
                 0,
                 sizeof(SpushConstant),
                 &push);
+
+            if (model->hasSubModels())
+            {
+                for (auto &subModel : model->getSubModels())
+                {
+                    subModel->bind(frameInfo.commandBuffer);
+                    subModel->draw(frameInfo.commandBuffer);
+                }
+            }
 
             model->bind(frameInfo.commandBuffer);
             model->draw(frameInfo.commandBuffer);

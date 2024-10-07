@@ -2,7 +2,6 @@
 
 #include "../GWindow.hpp"
 #include "../GWDevice.hpp"
-#include "GWRendererToolkit.hpp"
 
 // std
 #include <array>

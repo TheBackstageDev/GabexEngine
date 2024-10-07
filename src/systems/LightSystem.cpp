@@ -18,12 +18,14 @@ namespace GWIN
         return lightProjection * lightView;
     }
 
-    void LightSystem::calculateLightMatrix(std::array<glm::mat4, 6> &matrix, float aspect, float Near, float Far)
+    glm::mat4 LightSystem::calculateLightMatrix(std::array<glm::mat4, 6> &matrix, float aspect, float Near, float Far)
     {
         glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, Near, Far);
+
+        return shadowProj;
     }
 
-    void LightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
+    void LightSystem::update(FrameInfo& frameInfo, LightBuffer& ubo) {
         int lightIndex = 0;
 
         auto& camera = frameInfo.currentInfo.currentCamera;
@@ -45,7 +47,7 @@ namespace GWIN
                 light.Direction = glm::vec4(obj.transform.getRotation(), glm::cos(obj.light->cutOffAngle));
             }
 
-            calculateLightMatrix(light.lightSpaceMatrix, SHADOW_WIDTH / SHADOW_HEIGHT, camera.getNearClip(), camera.getFarClip());
+            //calculateLightMatrix(light.lightSpaceMatrix, SHADOW_WIDTH / SHADOW_HEIGHT, camera.getNearClip(), camera.getFarClip());
             light.Color = glm::vec4(obj.color, obj.light->lightIntensity);
 
             lightIndex += 1;

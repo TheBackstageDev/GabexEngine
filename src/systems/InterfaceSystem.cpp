@@ -57,7 +57,7 @@ namespace GWIN
         init_info.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
         init_info.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
         init_info.PipelineRenderingCreateInfo.pColorAttachmentFormats = &imageFormat;
-        init_info.PipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
+        init_info.PipelineRenderingCreateInfo.depthAttachmentFormat = GWinSwapChain::getSwapChainDepthFormat();
 
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 

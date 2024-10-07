@@ -88,8 +88,10 @@ namespace GWIN
 
         std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;
+        std::vector<VkSemaphore> computeFinishedSemaphores;
         std::vector<VkFence> inFlightFences;
         std::vector<VkFence> imagesInFlight;
+        std::vector<VkFence> computeInFlightFences;
         size_t currentFrame = 0;
     };
 
